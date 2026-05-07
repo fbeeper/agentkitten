@@ -1,0 +1,17 @@
+/* Custom overrides */
+"structuredOutput.anthropicInstructionFormat" = "CUSTOM TEST SCHEMA:\n%@\nRETURN RAW JSON VALUE. OBJECT ROOT -> START { END }. ARRAY ROOT -> START [ END ].";
+
+/* Remaining keys match the packaged catalog */
+"contextCompaction.summarizeHistory" = "Summarize the following prior conversation history for future continuation.";
+"contextCompaction.preserveFacts" = "Preserve durable facts, user preferences, decisions, unresolved tasks, tool results, and constraints.";
+"contextCompaction.additionalInstructionsFormat" = "Additional instructions:\n%@";
+"contextCompaction.historyLabel" = "History:";
+"contextCompaction.existingSummaryLabel" = "Existing older-history summary:";
+"contextCompaction.newerHistoryLabel" = "Newer history to fold into that summary:";
+"contextCompaction.summaryMarker" = "[Conversation summary]";
+"contextCompaction.enumOneOfPrefix" = "One of:";
+"contextCompaction.userRoleLabel" = "User";
+"contextCompaction.assistantRoleLabel" = "Assistant";
+"contextCompaction.toolCallFormat" = "[Tool call: %@]";
+"contextCompaction.toolResultFormat" = "[Tool result: %@]";
+"contextCompaction.toolErrorFormat" = "[Tool error: %@]";

@@ -1,0 +1,26 @@
+strict: true
+
+included:
+  - Sources
+  - Tests
+
+file_header:
+  severity: error
+  required_pattern: |
+    \/\/ SPDX-FileCopyrightText: 20\d{2} AgentKitten Authors
+    \/\/ SPDX-License-Identifier: Apache-2.0
+
+opt_in_rules:
+  - file_header
+  - trailing_comma
+  - no_extension_access_modifier
+
+file_length:
+  warning: 403
+  error: 1200
+
+trailing_comma:
+  mandatory_comma: true
+
+nesting:
+  type_level: 2

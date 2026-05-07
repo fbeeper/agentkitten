@@ -1,0 +1,9 @@
+# SPM
+.build/
+Packages/
+
+# macOS
+.DS_Store
+
+# Milestone prompts (local planning aids, not project artifacts)
+docs/milestone*

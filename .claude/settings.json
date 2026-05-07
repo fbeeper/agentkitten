@@ -1,0 +1,20 @@
+{
+  "enabledPlugins": {
+    "swift-concurrency@swift-concurrency-agent-skill": true,
+    "swift-testing-expert@swift-testing-agent-skill": true
+  },
+  "extraKnownMarketplaces": {
+    "swift-testing-agent-skill": {
+      "source": {
+        "source": "github",
+        "repo": "AvdLee/Swift-Testing-Agent-Skill"
+      }
+    },
+    "swift-concurrency-agent-skill": {
+      "source": {
+        "source": "github",
+        "repo": "AvdLee/Swift-Concurrency-Agent-Skill"
+      }
+    }
+  }
+}
