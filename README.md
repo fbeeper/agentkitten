@@ -1,3 +1,10 @@
+<p align="end">
+    <picture>
+        <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/fbeeper/agentkitten/main/Docs/Resources/kitten-light.svg">
+        <img src="https://raw.githubusercontent.com/fbeeper/agentkitten/main/Docs/Resources/kitten-dark.svg" alt="AgentKitten" width="100">
+    </picture>
+</p>
+
 # AgentKitten
 
 Swift package for building provider-agnostic AI agents on Apple platforms.
@@ -27,8 +34,8 @@ There already is a quite stable shared language of what an agent harness can do 
 
 Besides that, you may also want/need to avoid the cost of changing providers:
 
-- During the exploratory phase of a feature, because you may not yet know which model performs best for your agent.
-- For your production agents, new models come out often, pricing changes, business policies evolve, and relationships change, APIs evolve...
+- During the exploratory phase of features, because you may not yet know which model performs best for your agent.
+- For your production agents, because new models come out often, pricing changes, business policies evolve, and relationships change, APIs evolve...
 
 **AgentKitten aims to help by offering simple ways (and with progressive disclosure where possible) to implement those base agent features independently of the concrete provider you choose.**
 
@@ -58,7 +65,7 @@ And, of course, given the stochastic nature of LLMs, AgentKitten has also consid
 
 `Validator` / `JudgeValidator`: Define acceptance criteria for the assistant's response. If validation fails, AgentKitten retries automatically with feedback. Until it passes, or a judge model approves it.
 
-## Show Me The Code
+## Show Me Some Code
 
 Here's a minimal sample of a simple but powerful auto-compacting search agent for your app:
 
@@ -86,6 +93,7 @@ let session = agent.makeSession()
 ```
 
 And you can obtain text à la chat bot:
+
 ```swift
 let turn = try await session.send("Find me parks near downtown.")
 
@@ -97,6 +105,7 @@ for try await event in turn.events {
 ```
 
 Or structured output to power your app:
+
 ```swift
 let turn = try await session.generate<[PointOfInterest]>("Find me parks near downtown.")
 
@@ -149,6 +158,7 @@ Gimmicky samples aside, here are some things that are simple to reach for with A
 
 Before dreaming of adding more features, after its initial pre-release, the most important milestones reside on:
 
+- [ ] Bring up documentation.
 - [ ] Improve the testing suite and Playground.
 - [ ] Try pursue symmetry between base Agent/Tools behavior and turn overrides (API breaking).
 - [ ] Split inference providers in independent targets (API breaking).
@@ -175,10 +185,4 @@ Explore all its options with `swift run Playground --help`.
 
 ## AI Disclosure
 
-This framework has been painstakingly designed, reviewed, and hand tested by me. But very deliberately built using AI as the writing tool.
-
-This project isn't a series of single-shot code generations, nor was it an exercise of efficient use of tokens: I did not want a project that just does what it does. I very thoroughly steered AI coding harnesses in all things big and small to try deliver a solid and human-maintainable project.
-
-The areas that have seen a more streamlined vibe-coding approach now include the test suite, playground, and inference providers. All of which I'll be improving before any official release is cut.
-
-All a conscious exercise for the sake of a sane balance between quality and getting things done.
+This framework has been painstakingly designed, reviewed, and hand tested by me. But very deliberately built using AI as the writing tool. I very thoroughly steered AI coding harnesses in all things big and small to deliver a solid and human-maintainable project. A conscious exercise for the sake of a sane balance between quality and getting things done.
