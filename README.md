@@ -5,6 +5,13 @@
     </picture>
 </p>
 
+[![AgentKitten on Swift Package Manager](https://img.shields.io/badge/Swift%20Package%20Manager-Compatible-brightgreen.svg)](https://swiftpackageindex.com/fbeeper/agentkitten)
+[![Swift 6.0+](https://img.shields.io/badge/Swift-6.0+-orange.svg)](https://developer.apple.com/swift/)
+[![iOS, macOS, tvOS, watchOS](https://img.shields.io/badge/Platforms-iOS%20%7C%20macOS%20%7C%20tvOS%20%7C%20watchOS-blue.svg)](https://developer.apple.com/)
+[![Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-black.svg)](LICENSE)
+<!--[![](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2Ffbeeper%2Fagentkitten%2Fbadge%3Ftype%3Dswift-versions)](https://swiftpackageindex.com/fbeeper/agentkitten)-->
+<!--[![](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2Ffbeeper%2Fagentkitten%2Fbadge%3Ftype%3Dplatforms)](https://swiftpackageindex.com/fbeeper/agentkitten)-->
+
 # AgentKitten
 
 Swift package for building provider-agnostic AI agents on Apple platforms.
