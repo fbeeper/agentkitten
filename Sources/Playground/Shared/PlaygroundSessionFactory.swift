@@ -58,7 +58,7 @@ enum PlaygroundSessionFactory {
             )
         case .apple:
             #if canImport(FoundationModels)
-            if #available(macOS 26, *) {
+            if #available(macOS 26, iOS 26, visionOS 26, macCatalyst 26, *) {
                 return InferenceProvider.apple().makeSession(
                     systemPrompt: systemPrompt,
                     toolRuntime: runtime,

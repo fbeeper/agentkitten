@@ -1,10 +1,10 @@
-// swift-tools-version: 6.0
+// swift-tools-version: 6.2
 
 import PackageDescription
 import CompilerPluginSupport
 
 let swiftSettings: [SwiftSetting] = [
-    .unsafeFlags(["-warnings-as-errors"]),
+    .treatAllWarnings(as: .error),
 ]
 
 let package = Package(
@@ -12,11 +12,11 @@ let package = Package(
     defaultLocalization: "en",
     platforms: [
         .macOS(.v15),
-        .iOS(.v17),
-        .tvOS(.v17),
-        .watchOS(.v10),
-        .visionOS(.v1),
-        .macCatalyst(.v17),
+        .iOS(.v18),
+        .tvOS(.v18),
+        .watchOS(.v11),
+        .visionOS(.v2),
+        .macCatalyst(.v18),
     ],
     products: [
         .library(name: "AgentKitten", targets: [
@@ -33,6 +33,7 @@ let package = Package(
         .package(url: "https://github.com/SimplyDanny/SwiftLintPlugins", from: "0.62.2"),
         .package(url: "https://github.com/apple/swift-argument-parser", from: "1.3.0"),
         .package(url: "https://github.com/swiftlang/swift-syntax", from: "600.0.0"),
+        .package(url: "https://github.com/apple/swift-docc-plugin", from: "1.5.0"),
     ],
     targets: [
         .target(
@@ -134,5 +135,6 @@ let package = Package(
                 .plugin(name: "SwiftLintBuildToolPlugin", package: "SwiftLintPlugins"),
             ]
         ),
-    ]
+    ],
+    swiftLanguageModes: [.v6]
 )

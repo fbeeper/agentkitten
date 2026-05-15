@@ -2,6 +2,10 @@
 .build/
 Packages/
 
+# Xcode
+.dependencies/
+.derivedData/
+
 # macOS
 .DS_Store
 

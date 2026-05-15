@@ -29,7 +29,7 @@ enum PlaygroundProviderFactory {
             reference = .ofType(InferenceProvider<AnthropicInferenceProvider>.self)
         case .apple:
             #if canImport(FoundationModels)
-            if #available(macOS 26, *) {
+            if #available(macOS 26, iOS 26, visionOS 26, macCatalyst 26, *) {
                 let provider = InferenceProvider.apple()
                 updatedRegistry = registry.registering(provider)
                 reference = .ofType(InferenceProvider<AppleInferenceProvider>.self)
@@ -56,7 +56,7 @@ enum PlaygroundProviderFactory {
             return ProviderRegistry(default: InferenceProvider.anthropic())
         case .apple:
             #if canImport(FoundationModels)
-            if #available(macOS 26, *) {
+            if #available(macOS 26, iOS 26, visionOS 26, macCatalyst 26, *) {
                 return ProviderRegistry(default: InferenceProvider.apple())
             }
             throw PlaygroundError.appleIntelligenceRequiresMacOS26
@@ -80,7 +80,7 @@ enum PlaygroundProviderFactory {
             return ProviderRegistry(default: InferenceProvider.anthropic())
         case .apple:
             #if canImport(FoundationModels)
-            if #available(macOS 26, *) {
+            if #available(macOS 26, iOS 26, visionOS 26, macCatalyst 26, *) {
                 return ProviderRegistry(default: InferenceProvider.apple())
             }
             throw PlaygroundError.appleIntelligenceRequiresMacOS26
