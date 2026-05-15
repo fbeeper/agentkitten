@@ -1,0 +1,39 @@
+name: Coverage
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  coverage:
+    name: Coverage (macOS, Xcode ${{ matrix.xcode }})
+    runs-on: macos-26
+    strategy:
+      fail-fast: false
+      matrix:
+        xcode: ["26.4.1"]
+    steps:
+      - uses: actions/checkout@v6
+      - name: Select Xcode
+        run: sudo xcode-select -s /Applications/Xcode_${{ matrix.xcode }}.app
+      - name: Show versions
+        run: |
+          xcodebuild -version
+          swift --version
+      - name: Test with coverage
+        run: swift test --enable-code-coverage
+      - name: Export lcov
+        run: |
+          BIN_DIR=$(swift build --show-bin-path)
+          PROF="$BIN_DIR/codecov/default.profdata"
+          XCTEST=$(find "$BIN_DIR" -maxdepth 1 -name "*.xctest" | head -n 1)
+          BIN="$XCTEST/Contents/MacOS/$(basename "$XCTEST" .xctest)"
+          xcrun llvm-cov export "$BIN" \
+            -instr-profile="$PROF" \
+            -ignore-filename-regex='\.build|Tests/|Playground/' \
+            -format=lcov > coverage.lcov
+      - name: Upload to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          files: coverage.lcov
+          token: ${{ secrets.CODECOV_TOKEN }}
