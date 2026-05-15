@@ -1,5 +1,6 @@
 # This workflow will build a Swift project
 # For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-swift
+# Xcode version info: https://raw.githubusercontent.com/actions/runner-images/main/images/macos/macos-26-Readme.md
 
 name: Swift
 
@@ -10,14 +11,51 @@ on:
     branches: [ "main" ]
 
 jobs:
-  build:
+  test-macos:
+    name: Test (macOS, Xcode ${{ matrix.xcode }})
     runs-on: macos-26
     strategy:
+      fail-fast: false
       matrix:
-        xcode: ["26.5"]
+        xcode: ["26.4.1"]
     steps:
     - uses: actions/checkout@v6
+    - name: Select Xcode
+      run: sudo xcode-select -s /Applications/Xcode_${{ matrix.xcode }}.app
+    - name: Show versions
+      run: |
+        xcodebuild -version
+        swift --version
     - name: Build
       run: swift build -v
     - name: Test
       run: swift test -v
+
+  build-platforms:
+    name: Build (${{ matrix.platform.name }}, Xcode ${{ matrix.xcode }})
+    runs-on: macos-26
+    strategy:
+      fail-fast: false
+      matrix:
+        xcode: ["26.4.1"]
+        platform:
+          - { name: "iOS",         destination: "generic/platform=iOS" }
+          - { name: "tvOS",        destination: "generic/platform=tvOS" }
+          - { name: "watchOS",     destination: "generic/platform=watchOS" }
+          - { name: "visionOS",    destination: "generic/platform=visionOS" }
+          - { name: "macCatalyst", destination: "platform=macOS,variant=Mac Catalyst" }
+    steps:
+    - uses: actions/checkout@v6
+    - name: Select Xcode
+      run: sudo xcode-select -s /Applications/Xcode_${{ matrix.xcode }}.app
+    - name: Show versions
+      run: |
+        xcodebuild -version
+        swift --version
+    - name: Build ${{ matrix.platform.name }}
+      run: |
+        xcodebuild build \
+          -scheme AgentKitten \
+          -destination '${{ matrix.platform.destination }}' \
+          -skipPackagePluginValidation \
+          -skipMacroValidation
