@@ -1,10 +1,10 @@
-// swift-tools-version: 6.0
+// swift-tools-version: 6.2
 
 import PackageDescription
 import CompilerPluginSupport
 
 let swiftSettings: [SwiftSetting] = [
-    .unsafeFlags(["-warnings-as-errors"]),
+    .treatAllWarnings(as: .error),
 ]
 
 let package = Package(
@@ -134,5 +134,6 @@ let package = Package(
                 .plugin(name: "SwiftLintBuildToolPlugin", package: "SwiftLintPlugins"),
             ]
         ),
-    ]
+    ],
+    swiftLanguageModes: [.v6]
 )
