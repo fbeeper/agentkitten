@@ -2,7 +2,7 @@
 # For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-swift
 # Xcode version info: https://raw.githubusercontent.com/actions/runner-images/main/images/macos/macos-26-Readme.md
 
-name: Swift
+name: CI
 
 on:
   push:
