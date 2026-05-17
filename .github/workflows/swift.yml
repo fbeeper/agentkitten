@@ -31,13 +31,13 @@ jobs:
     - name: Test
       run: swift test -v
 
-  test-macos-swift6_0:
+  test-macos-swift6_1:
     name: Test (macOS, Xcode ${{ matrix.xcode }})
     runs-on: macos-15
     strategy:
       fail-fast: false
       matrix:
-        xcode: ["16.0"]
+        xcode: ["16.3"]
     steps:
     - uses: actions/checkout@v6
     - name: Select Xcode
