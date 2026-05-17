@@ -110,10 +110,19 @@ extension AppleInferenceSession {
                 "Apple context usage requires FoundationModels token counting on OS 26.4 or newer."
             )
         }
+        // FoundationModels.SystemLanguageModel.contextSize ships in the
+        // Xcode 26.4 SDK. Use Swift 6.3 as a proxy since Xcode 26.4 is
+        // the toolchain that vends it.
+        #if compiler(>=6.3)
         return ContextUsage(
             contextTokens: try await model.tokenCount(for: entries),
             contextSize: model.contextSize
         )
+        #else
+        throw InferenceError.unsupportedConfiguration(
+            "Apple context usage requires the Xcode 26.4 SDK (Swift 6.3) or newer."
+        )
+        #endif
     }
 }
 #endif
