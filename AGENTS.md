@@ -58,8 +58,11 @@ Source Organization:
 
 ## Commands
 
-- **Build**: `swift build`
-- **Test**: `swift test`
+- **Setup**: `make setup`
+- **Build**: `make build`
+- **Test**: `make test`
+- **Lint**: `make lint`
+- **All checks**: `make all`
 
 ## Playground
 
@@ -76,7 +79,7 @@ Source Organization:
 - Prefer value types (struct/enum) for data. Actors for mutable shared state.
 - Swift Testing framework (@Test, #expect), not XCTest.
 - Doc comments (///) required on every public type and method.
-- SwiftLint build plugin on every target.
+- SwiftLint enforced via `make lint` (not a build plugin).
   - For lint failures, get the exact diagnostics first. Try avoid inferring the rule from symptoms.
   - Trailing commas in collection literals (arrays, dictionaries). Apply manually if not enforced.
   - Try avoid duplicate initializers that only restate default parameter values. Prefer one initializer with defaults unless there is a tangible semantic/convenience difference for the API.

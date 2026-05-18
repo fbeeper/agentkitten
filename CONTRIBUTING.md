@@ -25,17 +25,38 @@ git clone https://github.com/fbeeper/agentkitten.git
 cd agentkitten
 ```
 
+### Prerequisites
+
+Install SwiftLint (requires Homebrew):
+
+```bash
+make setup
+```
+
+### Lint
+
+```bash
+make lint
+```
+
 ### Build
 
 ```bash
-swift build 
+make build
 ```
 
 ### Run tests
 
 ```bash
-swift test 
+make test
 ```
+
+To run all checks in sequence:
+
+```bash
+make all
+```
+
 ## Documentation
 
 Public APIs should include documentation comments.
@@ -71,8 +92,9 @@ When opening a PR:
 
 Before submitting:
 
-- [ ] Code builds
-- [ ] Tests pass
+- [ ] Lint passes (`make lint`)
+- [ ] Code builds (`make build`)
+- [ ] Tests pass (`make test`)
 - [ ] Documentation updated
 - [ ] API changes discussed
 

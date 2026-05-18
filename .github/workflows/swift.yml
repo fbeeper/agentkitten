@@ -26,10 +26,14 @@ jobs:
       run: |
         xcodebuild -version
         swift --version
+    - name: Setup
+      run: make setup
+    - name: Lint
+      run: make lint
     - name: Build
-      run: swift build -v
+      run: make build
     - name: Test
-      run: swift test -v
+      run: make test
 
   test-macos-swift6_2:
     name: Test (macOS, Xcode ${{ matrix.xcode }})
@@ -47,9 +51,9 @@ jobs:
         xcodebuild -version
         swift --version
     - name: Build
-      run: swift build -v
+      run: make build
     - name: Test
-      run: swift test -v
+      run: make test
 
   build-platforms:
     name: Build (${{ matrix.platform.name }}, Xcode ${{ matrix.xcode }})
@@ -73,9 +77,4 @@ jobs:
         xcodebuild -version
         swift --version
     - name: Build ${{ matrix.platform.name }}
-      run: |
-        xcodebuild build \
-          -scheme AgentKitten \
-          -destination '${{ matrix.platform.destination }}' \
-          -skipPackagePluginValidation \
-          -skipMacroValidation
+      run: make xcodebuild-for-platform PLATFORM=${{ matrix.platform.name }}
