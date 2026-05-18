@@ -18,7 +18,7 @@ enum ChickenWizardOutputFormatter {
 
     static func potionNotification(
         toolName: String,
-        outcome: ToolCallOutcome
+        outcome: ToolCallOutcome,
     ) -> String? {
         guard toolName == ChickenWizardPotionTool.name else {
             return nil
@@ -35,7 +35,7 @@ enum ChickenWizardOutputFormatter {
     }
 
     private static func decodePotionOutput(
-        from content: [ToolResultContent]
+        from content: [ToolResultContent],
     ) -> ChickenWizardPotionToolOutput? {
         guard case .text(let payload) = content.first,
               let data = payload.data(using: .utf8) else {
@@ -65,7 +65,7 @@ enum ChickenWizardTurnStreamer {
             case .toolCallCompleted(let name, _, let outcome):
                 if let notification = ChickenWizardOutputFormatter.potionNotification(
                     toolName: name,
-                    outcome: outcome
+                    outcome: outcome,
                 ) {
                     notifications.append(notification)
                 }

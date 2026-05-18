@@ -23,7 +23,7 @@ public struct ToolRegistry: Sendable {
         for agentTool in tools {
             precondition(
                 dict[agentTool.name] == nil,
-                "Duplicate tool name '\(agentTool.name)' — each tool must have a unique name."
+                "Duplicate tool name '\(agentTool.name)' — each tool must have a unique name.",
             )
             dict[agentTool.name] = agentTool
         }
@@ -61,7 +61,7 @@ public struct ToolRegistry: Sendable {
         for agentTool in tools {
             precondition(
                 self.tools[agentTool.name] == nil,
-                "Duplicate tool name '\(agentTool.name)' — each tool must have a unique name."
+                "Duplicate tool name '\(agentTool.name)' — each tool must have a unique name.",
             )
         }
         return ToolRegistry(all + tools)

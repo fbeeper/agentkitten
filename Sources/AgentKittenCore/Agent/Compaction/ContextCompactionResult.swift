@@ -28,7 +28,7 @@ public enum ContextCompactionResult: Sendable, Codable, Equatable, Hashable {
         /// Creates metadata for a successful context compaction.
         public init(
             usageBefore: ContextUsage,
-            usageAfter: ContextUsage
+            usageAfter: ContextUsage,
         ) {
             self.usageBefore = usageBefore
             self.usageAfter = usageAfter

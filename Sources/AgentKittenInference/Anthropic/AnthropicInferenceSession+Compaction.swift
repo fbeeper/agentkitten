@@ -12,7 +12,7 @@ extension AnthropicInferenceSession: ContextCompactableSession {
 
     public func applyCompaction(
         summary: String?,
-        preservedRecentTurnCount: Int
+        preservedRecentTurnCount: Int,
     ) async throws -> ContextCompactionResult {
         guard !history.isEmpty else {
             return .skipped(.failed("No Anthropic message history to compact."))
@@ -20,7 +20,7 @@ extension AnthropicInferenceSession: ContextCompactableSession {
         let usageBefore = try await uncheckedContextUsage()
         let plan = AnthropicMessageCompactionPlan(
             history: history,
-            preservedRecentTurnCount: preservedRecentTurnCount
+            preservedRecentTurnCount: preservedRecentTurnCount,
         )
         if let summary {
             history = Self.summaryMessages(summary) + plan.recentMessages
@@ -79,7 +79,7 @@ extension AnthropicInferenceSession {
         [
             AnthropicMessage(
                 role: .user,
-                content: [.text(AgentKittenInferenceLocalization.string("contextCompaction.summaryMarker"))]
+                content: [.text(AgentKittenInferenceLocalization.string("contextCompaction.summaryMarker"))],
             ),
             AnthropicMessage(role: .assistant, content: [.text(summary)]),
         ]

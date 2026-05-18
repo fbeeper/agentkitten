@@ -32,7 +32,7 @@ public struct ToolHookInvocationInfo: Sendable, Codable, Equatable, Hashable {
         toolName: String,
         hookName: String,
         phase: ToolHookPhaseSnapshot,
-        transformed: Bool
+        transformed: Bool,
     ) {
         self.callID = callID
         self.toolName = toolName

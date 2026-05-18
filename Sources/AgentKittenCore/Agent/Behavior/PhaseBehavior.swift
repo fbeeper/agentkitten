@@ -16,7 +16,7 @@ public struct PhaseBehavior: Sendable {
     ///   - inferenceConfiguration: Inference configuration for this phase.
     public init(
         provider: ProviderReference = .default,
-        inferenceConfiguration: InferenceConfiguration = .init()
+        inferenceConfiguration: InferenceConfiguration = .init(),
     ) {
         self.provider = provider
         self.inferenceConfiguration = inferenceConfiguration
@@ -31,7 +31,7 @@ public struct PhaseBehavior: Sendable {
             if let newValue {
                 customValues[Key.id] = ExecutionConfigurationCustomValue(
                     domains: Key.domains,
-                    value: newValue
+                    value: newValue,
                 )
             } else {
                 customValues.removeValue(forKey: Key.id)

@@ -27,12 +27,12 @@ actor AppleToolBridgeRuntime {
     func invoke(
         _ call: PendingToolCall,
         toolName: String,
-        eventRelay: ToolEventRelay
+        eventRelay: ToolEventRelay,
     ) async -> ToolCallOutcome {
         guard let activeTurn else {
             logger.error("Tool '\(toolName)' invoked without an active tool turn runtime.")
             return .failure(.execution(
-                message: "Tool execution failed because no active Apple inference turn is available."
+                message: "Tool execution failed because no active Apple inference turn is available.",
             ))
         }
         return await activeTurn.invoke(
@@ -42,7 +42,7 @@ actor AppleToolBridgeRuntime {
             },
             onHookFired: { info in
                 await eventRelay.emitHookFired(info)
-            }
+            },
         )
     }
 }
@@ -91,12 +91,12 @@ struct AppleBridgedTool: Tool {
         agentTool: AnyAgentTool,
         toolBridgeRuntime: AppleToolBridgeRuntime,
         eventRelay: ToolEventRelay,
-        rationaleDescription: String
+        rationaleDescription: String,
     ) {
         do {
             self.parameters = try agentTool.schema.toGenerationSchema(
                 toolName: agentTool.name,
-                rationaleDescription: rationaleDescription
+                rationaleDescription: rationaleDescription,
             )
         } catch {
             logger.error("Schema bridge failed for tool '\(agentTool.name)': \(error)")
@@ -114,17 +114,17 @@ struct AppleBridgedTool: Tool {
         let (rationale, argumentsJSON) = ToolRationale.extracting(from: arguments.jsonString)
         await eventRelay.emitRequested(id: callID, name: agentTool.name, argumentsJSON: argumentsJSON)
         let pendingCall = PendingToolCall(
-            id: callID, name: agentTool.name, argumentsJSON: argumentsJSON, modelRationale: rationale
+            id: callID, name: agentTool.name, argumentsJSON: argumentsJSON, modelRationale: rationale,
         )
         let outcome = await toolBridgeRuntime.invoke(
             pendingCall,
             toolName: agentTool.name,
-            eventRelay: eventRelay
+            eventRelay: eventRelay,
         )
         await eventRelay.emitCompleted(
             id: callID,
             name: agentTool.name,
-            outcome: outcome
+            outcome: outcome,
         )
         switch outcome {
         case .success(let content):
@@ -139,7 +139,7 @@ struct AppleBridgedTool: Tool {
                     """
                     AppleBridgedTool received provider-supported non-text output but can only \
                     bridge text to Foundation Models.
-                    """
+                    """,
                 )
                 return nil
             }.joined(separator: "\n")

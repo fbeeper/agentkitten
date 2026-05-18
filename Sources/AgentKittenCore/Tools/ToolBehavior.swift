@@ -69,7 +69,7 @@ public struct ToolBehavior: Sendable {
         defaultStepBudget: ToolStepBudget = .budget(20),
         defaultSelection: ToolSelection = .all,
         guidance: Guidance = .default,
-        rationaleGuidance: RationaleGuidance = .default
+        rationaleGuidance: RationaleGuidance = .default,
     ) {
         self.defaultStepBudget = defaultStepBudget
         self.defaultSelection = defaultSelection

@@ -15,7 +15,7 @@ public struct ProviderRegistry: Sendable {
 
     /// Creates a registry from the given default provider.
     public init<Provider: InferenceProviding>(
-        default provider: Provider
+        default provider: Provider,
     ) {
         self.defaultProvider = AnyInferenceProvider(provider)
         self.providers = [:]
@@ -26,13 +26,13 @@ public struct ProviderRegistry: Sendable {
     /// Provider registration is one-instance-per-type. Registering the same
     /// type again replaces the prior registration.
     public func registering<Provider: InferenceProviding>(
-        _ provider: Provider
+        _ provider: Provider,
     ) -> Self {
         var registry = self
         let erasedProvider = AnyInferenceProvider(provider)
         if registry.providers.updateValue(
             erasedProvider,
-            forKey: erasedProvider.providerObjectIdentifier
+            forKey: erasedProvider.providerObjectIdentifier,
         ) != nil {
             logger.info("Replacing existing provider registration for type key.")
         }

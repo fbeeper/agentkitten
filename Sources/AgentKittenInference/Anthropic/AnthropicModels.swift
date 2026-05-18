@@ -148,7 +148,7 @@ private enum AnthropicToolResultBlock: Encodable {
             try container.encode("image", forKey: .type)
             try container.encode(
                 ImageSource(mediaType: mediaType, data: data.base64EncodedString()),
-                forKey: .source
+                forKey: .source,
             )
         }
     }

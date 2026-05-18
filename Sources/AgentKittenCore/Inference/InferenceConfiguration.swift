@@ -34,7 +34,7 @@ public struct InferenceConfiguration: Sendable, Equatable, Hashable {
     /// Creates a configuration with the given parameters.
     public init(
         temperature: Double = 0.7,
-        maxTokens: Int = 4096
+        maxTokens: Int = 4096,
     ) {
         self.temperature = temperature
         self.maxTokens = maxTokens

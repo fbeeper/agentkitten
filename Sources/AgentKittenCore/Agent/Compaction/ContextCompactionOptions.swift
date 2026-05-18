@@ -34,7 +34,7 @@ public enum ContextCompactionOptions: Sendable, Equatable, Hashable {
         public init(
             preservedRecentTurnCount: Int = 2,
             prompt: Prompt = .standard,
-            allowsSplitting: Bool = true
+            allowsSplitting: Bool = true,
         ) {
             self.preservedRecentTurnCount = preservedRecentTurnCount
             self.prompt = prompt
@@ -80,7 +80,7 @@ public struct AnyContextCompactionStrategy: Sendable, Equatable, Hashable {
         body: @escaping @Sendable (
             any ContextCompactableSession,
             ContextCompactionSummaryGenerator
-        ) async throws -> ContextCompactionResult
+        ) async throws -> ContextCompactionResult,
     ) {
         self.id = id
         self.body = body
@@ -89,7 +89,7 @@ public struct AnyContextCompactionStrategy: Sendable, Equatable, Hashable {
     /// Runs the custom compaction behavior.
     public func compact(
         _ session: any ContextCompactableSession,
-        summaryGenerator: ContextCompactionSummaryGenerator
+        summaryGenerator: ContextCompactionSummaryGenerator,
     ) async throws -> ContextCompactionResult {
         try await body(session, summaryGenerator)
     }

@@ -67,7 +67,7 @@ public struct ToolResultMessage: Sendable, Codable, Equatable, Hashable {
         callID: ToolCallID,
         name: String,
         contentSummary: [ToolResultContentSummary],
-        isError: Bool = false
+        isError: Bool = false,
     ) {
         self.callID = callID
         self.name = name

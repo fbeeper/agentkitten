@@ -16,7 +16,7 @@ public struct ToolMacro: MemberMacro {
         of node: AttributeSyntax,
         providingMembersOf declaration: some DeclGroupSyntax,
         conformingTo protocols: [TypeSyntax],
-        in context: some MacroExpansionContext
+        in context: some MacroExpansionContext,
     ) throws -> [DeclSyntax] {
         // 1. Extract @Tool("name", description: "desc") arguments.
         guard let argList = node.arguments?.as(LabeledExprListSyntax.self) else {
@@ -68,7 +68,7 @@ private struct PropertyInfo {
 
 private func extractArgumentsProperties(
     from declaration: some DeclGroupSyntax,
-    in context: some MacroExpansionContext
+    in context: some MacroExpansionContext,
 ) -> [PropertyInfo] {
     // Find `struct Arguments` among the declaration's members.
     let argumentsStruct = declaration.memberBlock.members
@@ -122,7 +122,7 @@ private func unwrapTypeName(_ type: TypeSyntax) -> (name: String, isOptional: Bo
 
 /// Reads the first `@ParameterDescription("...")` attribute on a variable declaration.
 private func extractParameterDescription(
-    from attributes: AttributeListSyntax
+    from attributes: AttributeListSyntax,
 ) -> String? {
     for attr in attributes {
         guard let attrSyntax = attr.as(AttributeSyntax.self),
@@ -143,7 +143,7 @@ private func extractParameterDescription(
 /// or `nil` if no enum with `typeName` exists there.
 private func collectEnumCases(
     named typeName: String,
-    in declaration: some DeclGroupSyntax
+    in declaration: some DeclGroupSyntax,
 ) -> [String]? {
     for member in declaration.memberBlock.members {
         guard let enumDecl = member.decl.as(EnumDeclSyntax.self),
@@ -162,7 +162,7 @@ private func collectEnumCases(
 private func buildSchemaSource(
     from properties: [PropertyInfo],
     declaration: some DeclGroupSyntax,
-    in context: some MacroExpansionContext
+    in context: some MacroExpansionContext,
 ) -> String {
     if properties.isEmpty {
         return "ToolSchema(parameters: .object(properties: [:], required: []))"
@@ -204,7 +204,7 @@ private func jsonSchemaSource(
     description: String?,
     node: Syntax,
     declaration: some DeclGroupSyntax,
-    in context: some MacroExpansionContext
+    in context: some MacroExpansionContext,
 ) -> String {
     let descArg = description.map { "\"\($0)\"" } ?? "nil"
     switch typeName {
@@ -220,7 +220,7 @@ private func jsonSchemaSource(
         // on the Apple provider. Prefer Int (or Int64) for Apple compatibility.
         context.diagnose(Diagnostic(
             node: node,
-            message: ToolMacroDiagnostic.narrowOrUnsignedInteger(typeName)
+            message: ToolMacroDiagnostic.narrowOrUnsignedInteger(typeName),
         ))
         return ".integer(description: \(descArg))"
     case "Double", "Float", "Float16", "Float80":

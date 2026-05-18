@@ -13,7 +13,7 @@ enum PlaygroundChatOutputFormatter {
     static func sessionHeader(
         title: String,
         detailLines: [String],
-        instructions: String = instructions
+        instructions: String = instructions,
     ) -> String {
         ([separator, title] + detailLines + [instructions, separator]).joined(separator: "\n")
     }

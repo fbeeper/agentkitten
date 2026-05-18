@@ -128,14 +128,14 @@ public actor Turn<Result: Sendable> {
         text: String,
         sender: UserID,
         requestedTurnOverrides: TurnOverrides,
-        executionEnvironment: ExecutionEnvironment
+        executionEnvironment: ExecutionEnvironment,
     ) {
         self.runtime = TurnRuntime(
             id: id,
             text: text,
             sender: sender,
             requestedTurnOverrides: requestedTurnOverrides,
-            executionEnvironment: executionEnvironment
+            executionEnvironment: executionEnvironment,
         )
     }
 

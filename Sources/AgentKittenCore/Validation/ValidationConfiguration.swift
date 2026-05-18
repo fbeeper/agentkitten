@@ -22,7 +22,7 @@ public struct ValidationConfiguration<Result: Sendable>: Sendable {
         validators: [AnyValidator<Result>],
         maxRetries: Int,
         policy: Policy,
-        retryFeedbackMessageBuilder: @Sendable @escaping (String) -> UserMessage
+        retryFeedbackMessageBuilder: @Sendable @escaping (String) -> UserMessage,
     ) {
         self.validators = validators
         self.maxRetries = max(0, maxRetries)
@@ -39,13 +39,13 @@ public struct ValidationConfiguration<Result: Sendable>: Sendable {
     public init(
         validator: some Validator<Result>,
         maxRetries: Int = 0,
-        policy: Policy = .restrictive
+        policy: Policy = .restrictive,
     ) {
         self.init(
             validator: validator,
             maxRetries: maxRetries,
             policy: policy,
-            retryFeedbackMessage: Self.defaultRetryFeedbackMessage
+            retryFeedbackMessage: Self.defaultRetryFeedbackMessage,
         )
     }
 
@@ -61,13 +61,13 @@ public struct ValidationConfiguration<Result: Sendable>: Sendable {
         validator: some Validator<Result>,
         maxRetries: Int,
         policy: Policy,
-        retryFeedbackMessage: @Sendable @escaping (String) -> UserMessage = Self.defaultRetryFeedbackMessage
+        retryFeedbackMessage: @Sendable @escaping (String) -> UserMessage = Self.defaultRetryFeedbackMessage,
     ) {
         self.init(
             validators: [AnyValidator(validator)],
             maxRetries: maxRetries,
             policy: policy,
-            retryFeedbackMessageBuilder: retryFeedbackMessage
+            retryFeedbackMessageBuilder: retryFeedbackMessage,
         )
     }
 
@@ -77,19 +77,19 @@ public struct ValidationConfiguration<Result: Sendable>: Sendable {
             validators: [],
             maxRetries: 0,
             policy: .restrictive,
-            retryFeedbackMessageBuilder: Self.defaultRetryFeedbackMessage
+            retryFeedbackMessageBuilder: Self.defaultRetryFeedbackMessage,
         )
     }
 
     /// Returns a copy of the configuration with one more validator appended.
     public func adding(
-        _ validator: some Validator<Result>
+        _ validator: some Validator<Result>,
     ) -> ValidationConfiguration<Result> {
         ValidationConfiguration(
             validators: validators + [AnyValidator(validator)],
             maxRetries: maxRetries,
             policy: policy,
-            retryFeedbackMessageBuilder: retryFeedbackMessageBuilder
+            retryFeedbackMessageBuilder: retryFeedbackMessageBuilder,
         )
     }
 
@@ -102,7 +102,7 @@ public struct ValidationConfiguration<Result: Sendable>: Sendable {
     }
 
     public static func defaultRetryFeedbackMessage(
-        _ message: String
+        _ message: String,
     ) -> UserMessage {
         UserMessage(text: """
         Internal validation feedback for your previous response:

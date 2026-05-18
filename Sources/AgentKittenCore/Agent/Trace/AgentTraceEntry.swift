@@ -25,7 +25,7 @@ public struct AgentTraceEntry: Sendable, Codable, Equatable, Hashable {
         ///   duration between the anchor and this timestamp.
         public func date(anchoredAt anchor: AgentTrace.TimestampAnchor) -> Date {
             anchor.date.addingTimeInterval(
-                anchor.instant.duration(to: instant) / .seconds(1)
+                anchor.instant.duration(to: instant) / .seconds(1),
             )
         }
 
@@ -50,7 +50,7 @@ public struct AgentTraceEntry: Sendable, Codable, Equatable, Hashable {
     public init(
         kind: Kind,
         timestamp: Timestamp = Timestamp(),
-        invocationID: InvocationID
+        invocationID: InvocationID,
     ) {
         self.kind = kind
         self.timestamp = timestamp

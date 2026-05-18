@@ -28,7 +28,7 @@ public struct ToolDefinition: Sendable {
     public init(
         tools: [AnyAgentTool] = [],
         executionPolicy: some ToolExecutionPolicy = AutoApprovePolicy(),
-        hooks: [AnyToolHook] = []
+        hooks: [AnyToolHook] = [],
     ) {
         self.registry = ToolRegistry(tools)
         self.executionPolicy = AnyToolExecutionPolicy(executionPolicy)
@@ -36,7 +36,7 @@ public struct ToolDefinition: Sendable {
         for hook in hooks {
             precondition(
                 seen.insert(hook.name).inserted,
-                "Duplicate hook name '\(hook.name)' — each hook must have a unique name."
+                "Duplicate hook name '\(hook.name)' — each hook must have a unique name.",
             )
         }
         self.hooks = hooks

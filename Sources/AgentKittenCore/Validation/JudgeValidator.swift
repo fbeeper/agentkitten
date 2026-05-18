@@ -61,7 +61,7 @@ public struct JudgeValidator<Result: Codable & Sendable>: Validator {
         toolBehavior: ToolBehavior = .init(),
         toolDefinition: ToolDefinition = .noTools,
         sessionStateAccess: SessionStateAccess = .readOnlyTools,
-        name: String = "JudgeValidator"
+        name: String = "JudgeValidator",
     ) {
         self.prompt = prompt
         self.name = name
@@ -93,7 +93,7 @@ public struct JudgeValidator<Result: Codable & Sendable>: Validator {
         toolBehavior: ToolBehavior = .init(),
         toolDefinition: ToolDefinition = .noTools,
         sessionStateAccess: SessionStateAccess = .readOnlyTools,
-        name: String = "JudgeValidator"
+        name: String = "JudgeValidator",
     ) {
         self.init(
             prompt: prompt,
@@ -102,7 +102,7 @@ public struct JudgeValidator<Result: Codable & Sendable>: Validator {
             toolBehavior: toolBehavior,
             toolDefinition: toolDefinition,
             sessionStateAccess: sessionStateAccess,
-            name: name
+            name: name,
         )
     }
 
@@ -120,18 +120,18 @@ public struct JudgeValidator<Result: Codable & Sendable>: Validator {
     }
 
     private func makeJudgeSession(
-        validationContext: ValidationContext<Result>
+        validationContext: ValidationContext<Result>,
     ) async -> AgentSession {
         let trace = AgentTrace(retentionPolicy: .maxTurns(0))
         let stateConfiguration = await makeJudgeStateConfiguration(
             validationContext: validationContext,
-            trace: trace
+            trace: trace,
         )
 
         let approvalGate = ToolApprovalGate()
         let behavior = AgentBehavior(
             systemPrompt: stateConfiguration.systemPrompt,
-            phaseBehaviors: .init(base: .init(inferenceConfiguration: inferenceConfiguration))
+            phaseBehaviors: .init(base: .init(inferenceConfiguration: inferenceConfiguration)),
         )
         return AgentSession(
             sessionID: .generate(),
@@ -148,8 +148,8 @@ public struct JudgeValidator<Result: Codable & Sendable>: Validator {
                 baseSystemPrompt: behavior.systemPrompt,
                 toolDefinition: stateConfiguration.toolDefinition,
                 rationaleSchemaDescription: toolBehavior.rationaleGuidance.schemaDescription,
-                toolApprovalGate: approvalGate
-            )
+                toolApprovalGate: approvalGate,
+            ),
         )
     }
 }
@@ -163,7 +163,7 @@ extension JudgeValidator {
 
     private func makeJudgeStateConfiguration(
         validationContext: ValidationContext<Result>,
-        trace: AgentTrace
+        trace: AgentTrace,
     ) async -> JudgeStateConfiguration {
         switch sessionStateAccess {
         case .disabled:
@@ -176,12 +176,12 @@ extension JudgeValidator {
                 let copiedState = await outerState.contents()
                 let readOnlyState = SessionState.readOnly(
                     trace: trace,
-                    contents: copiedState
+                    contents: copiedState,
                 )
                 let toolDefinition = toolDefinition.replacing(
                     registry: toolDefinition.registry.adding(
-                        SessionStateBuiltins.makeReadOnlyTools(state: readOnlyState)
-                    )
+                        SessionStateBuiltins.makeReadOnlyTools(state: readOnlyState),
+                    ),
                 )
                 let systemPrompt = Self.makeJudgeSystemPrompt(prompt: prompt, hasTools: true)
                     + "\n\n"
@@ -191,7 +191,7 @@ extension JudgeValidator {
                 return JudgeStateConfiguration(
                     state: .readOnly(readOnlyState),
                     toolDefinition: toolDefinition,
-                    systemPrompt: systemPrompt
+                    systemPrompt: systemPrompt,
                 )
             }
         }
@@ -203,21 +203,21 @@ extension JudgeValidator {
             toolDefinition: toolDefinition,
             systemPrompt: Self.makeJudgeSystemPrompt(
                 prompt: prompt,
-                hasTools: !toolDefinition.registry.all.isEmpty
-            )
+                hasTools: !toolDefinition.registry.all.isEmpty,
+            ),
         )
     }
 
     private static func makeJudgeSystemPrompt(
         prompt: Prompt,
-        hasTools: Bool
+        hasTools: Bool,
     ) -> String {
         let base: String
         switch prompt {
         case .criteria(let criteriaString):
             base = AgentKittenLocalization.formattedString(
                 "validation.judgeSystemPromptFormat",
-                criteriaString.trimmingCharacters(in: .whitespacesAndNewlines)
+                criteriaString.trimmingCharacters(in: .whitespacesAndNewlines),
             )
         case .systemPrompt(let rawPrompt):
             base = rawPrompt
@@ -230,13 +230,13 @@ extension JudgeValidator {
     }
 
     private static func makeJudgePrompt(
-        from context: ValidationContext<Result>
+        from context: ValidationContext<Result>,
     ) -> String {
         let resultDescription = encodeResult(context.result)
         return AgentKittenLocalization.formattedString(
             "validation.judgeUserPromptFormat",
             context.userMessage.text,
-            resultDescription
+            resultDescription,
         )
     }
 
@@ -261,7 +261,7 @@ extension JudgeValidator {
     }
 
     private static func firstResult<T: Sendable>(
-        from turn: Turn<T>
+        from turn: Turn<T>,
     ) async throws -> T {
         for try await event in turn.events {
             if case .result(let result) = event.kind {
@@ -295,13 +295,13 @@ private struct JudgeDecision: Codable, Sendable, JSONSchemaProviding {
             properties: [
                 "verdict": .enumeration(
                     values: ["pass", "fail", "feedback"],
-                    description: AgentKittenLocalization.string("validation.verdictDescription")
+                    description: AgentKittenLocalization.string("validation.verdictDescription"),
                 ),
                 "message": .string(
-                    description: AgentKittenLocalization.string("validation.messageDescription")
+                    description: AgentKittenLocalization.string("validation.messageDescription"),
                 ),
             ],
-            required: ["verdict"]
+            required: ["verdict"],
         )
     }
 
@@ -311,11 +311,11 @@ private struct JudgeDecision: Codable, Sendable, JSONSchemaProviding {
             return .pass
         case .fail:
             return .fail(reason: resolvedMessage(
-                fallback: AgentKittenLocalization.string("validation.rejectedFallback")
+                fallback: AgentKittenLocalization.string("validation.rejectedFallback"),
             ))
         case .feedback:
             return .feedback(message: resolvedMessage(
-                fallback: AgentKittenLocalization.string("validation.revisedFallback")
+                fallback: AgentKittenLocalization.string("validation.revisedFallback"),
             ))
         }
     }

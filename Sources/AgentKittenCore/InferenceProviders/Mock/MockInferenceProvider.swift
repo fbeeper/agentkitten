@@ -29,7 +29,7 @@ public actor MockInferenceProvider: InferenceProviding {
     public init(
         responses: [String] = ["This is a mock response."],
         structuredResponses: [String] = [],
-        structuredMockResponses: [MockResponse] = []
+        structuredMockResponses: [MockResponse] = [],
     ) {
         self.responses = responses.map { .success($0) }
         self.structuredResponses = structuredResponses
@@ -49,7 +49,7 @@ public actor MockInferenceProvider: InferenceProviding {
     public init(
         mockResponses: [MockResponse],
         structuredResponses: [String] = [],
-        structuredMockResponses: [MockResponse] = []
+        structuredMockResponses: [MockResponse] = [],
     ) {
         if mockResponses.isEmpty {
             logger.error("MockInferenceProvider initialized with empty responses; using fallback.")
@@ -66,13 +66,13 @@ public actor MockInferenceProvider: InferenceProviding {
         systemPrompt: String?,
         toolRuntime: ToolRuntime,
         toolSelection: ToolSelection,
-        inferenceContext: InferenceContext = .empty
+        inferenceContext: InferenceContext = .empty,
     ) -> MockInferenceSession {
         MockInferenceSession(
             responses: responses,
             structuredResponses: structuredResponses,
             structuredMockResponses: structuredMockResponses,
-            toolRuntime: toolRuntime
+            toolRuntime: toolRuntime,
         )
     }
 }

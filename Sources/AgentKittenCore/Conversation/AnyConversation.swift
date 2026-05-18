@@ -32,13 +32,13 @@ struct AnyConversation: Sendable {
     private let structuredConversation: any StructuredConversation
 
     init<Provider: InferenceProviding>(
-        conversation: Conversation<Provider>
+        conversation: Conversation<Provider>,
     ) {
         self.sendClosure = { userMessage, executionConfiguration, toolExecutionContext in
             try await conversation.send(
                 userMessage: userMessage,
                 executionConfiguration: executionConfiguration,
-                toolExecutionContext: toolExecutionContext
+                toolExecutionContext: toolExecutionContext,
             )
         }
         self.identityClosure = {
@@ -50,14 +50,14 @@ struct AnyConversation: Sendable {
         self.compactContextClosure = { options, summaryGenerator in
             try await conversation.compactContext(
                 options: options,
-                summaryGenerator: summaryGenerator
+                summaryGenerator: summaryGenerator,
             )
         }
         self.rebuildSessionClosure = { toolRuntime, toolSelection, inferenceContext in
             try await conversation.rebuildSession(
                 toolRuntime: toolRuntime,
                 toolSelection: toolSelection,
-                inferenceContext: inferenceContext
+                inferenceContext: inferenceContext,
             )
         }
         self.rebuildCompactedSessionClosure = { opts, summaryGenerator, runtime, selection, context in
@@ -66,7 +66,7 @@ struct AnyConversation: Sendable {
                 summaryGenerator: summaryGenerator,
                 toolRuntime: runtime,
                 toolSelection: selection,
-                inferenceContext: context
+                inferenceContext: context,
             )
         }
         self.structuredConversation = conversation
@@ -82,7 +82,7 @@ struct AnyConversation: Sendable {
 
     package func compactContext(
         options: ContextCompactionOptions,
-        summaryGenerator: ContextCompactionSummaryGenerator
+        summaryGenerator: ContextCompactionSummaryGenerator,
     ) async throws -> ContextCompactionResult {
         try await compactContextClosure(options, summaryGenerator)
     }
@@ -91,7 +91,7 @@ struct AnyConversation: Sendable {
     func rebuildSession(
         toolRuntime: ToolRuntime,
         toolSelection: ToolSelection,
-        inferenceContext: InferenceContext
+        inferenceContext: InferenceContext,
     ) async throws {
         try await rebuildSessionClosure(toolRuntime, toolSelection, inferenceContext)
     }
@@ -102,14 +102,14 @@ struct AnyConversation: Sendable {
         summaryGenerator: ContextCompactionSummaryGenerator,
         toolRuntime: ToolRuntime,
         toolSelection: ToolSelection,
-        inferenceContext: InferenceContext
+        inferenceContext: InferenceContext,
     ) async throws -> ContextCompactionResult {
         try await rebuildCompactedSessionClosure(
             options,
             summaryGenerator,
             toolRuntime,
             toolSelection,
-            inferenceContext
+            inferenceContext,
         )
     }
 
@@ -120,7 +120,7 @@ struct AnyConversation: Sendable {
     func send(
         userMessage: UserMessage,
         executionConfiguration: EffectiveExecutionConfiguration,
-        toolExecutionContext: ToolExecutionContext
+        toolExecutionContext: ToolExecutionContext,
     ) async throws -> AsyncThrowingStream<ConversationEvent<AssistantMessage>, Error> {
         try await sendClosure(userMessage, executionConfiguration, toolExecutionContext)
     }
@@ -129,12 +129,12 @@ struct AnyConversation: Sendable {
     func generate<T: Codable & Sendable & JSONSchemaProviding>(
         userMessage: UserMessage,
         executionConfiguration: EffectiveExecutionConfiguration,
-        toolExecutionContext: ToolExecutionContext
+        toolExecutionContext: ToolExecutionContext,
     ) async throws -> AsyncThrowingStream<ConversationEvent<T>, Error> {
         try await structuredConversation.generate(
             userMessage: userMessage,
             executionConfiguration: executionConfiguration,
-            toolExecutionContext: toolExecutionContext
+            toolExecutionContext: toolExecutionContext,
         )
     }
 }
@@ -143,6 +143,6 @@ protocol StructuredConversation: Sendable {
     func generate<T: Codable & Sendable & JSONSchemaProviding>(
         userMessage: UserMessage,
         executionConfiguration: EffectiveExecutionConfiguration,
-        toolExecutionContext: ToolExecutionContext
+        toolExecutionContext: ToolExecutionContext,
     ) async throws -> AsyncThrowingStream<ConversationEvent<T>, Error>
 }

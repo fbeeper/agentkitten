@@ -30,7 +30,7 @@ public struct AnyAgentTool: Sendable {
     public init<T: AgentTool>(_ agentTool: T) {
         precondition(
             !agentTool.schema.usesReservedKey,
-            "Tool '\(T.name)' defines a parameter named '\(ToolRationale.schemaKey)', which is reserved by AgentKitten."
+            "Tool '\(T.name)' defines a parameter named '\(ToolRationale.schemaKey)', which is reserved by AgentKitten.",
         )
         self.name = T.name
         self.description = T.description
@@ -49,7 +49,7 @@ public struct AnyAgentTool: Sendable {
     public init<T: RichAgentTool>(_ agentTool: T) {
         precondition(
             !agentTool.schema.usesReservedKey,
-            "Tool '\(T.name)' defines a parameter named '\(ToolRationale.schemaKey)', which is reserved by AgentKitten."
+            "Tool '\(T.name)' defines a parameter named '\(ToolRationale.schemaKey)', which is reserved by AgentKitten.",
         )
         self.name = T.name
         self.description = T.description

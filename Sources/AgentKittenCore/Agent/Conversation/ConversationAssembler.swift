@@ -17,7 +17,7 @@ struct ConversationAssembler: Sendable {
         baseSystemPrompt: String,
         toolDefinition: ToolDefinition,
         rationaleSchemaDescription: String,
-        toolApprovalGate: ToolApprovalGate
+        toolApprovalGate: ToolApprovalGate,
     ) {
         self.phaseBehaviors = phaseBehaviors
         self.providerRegistry = providerRegistry
@@ -29,19 +29,19 @@ struct ConversationAssembler: Sendable {
 
     func makeConversation(
         owner: UserID,
-        executionConfiguration: EffectiveExecutionConfiguration
+        executionConfiguration: EffectiveExecutionConfiguration,
     ) throws -> AnyConversation {
         let provider = resolveProvider(executionConfiguration: executionConfiguration)
         let toolRuntime = ToolRuntime(
             configuration: toolDefinition,
             rationaleSchemaDescription: rationaleSchemaDescription,
-            approvalGate: toolApprovalGate
+            approvalGate: toolApprovalGate,
         )
         return try provider.makeConversation(
             owner: owner,
             systemPrompt: baseSystemPrompt,
             executionConfiguration: executionConfiguration,
-            toolRuntime: toolRuntime
+            toolRuntime: toolRuntime,
         )
     }
 
@@ -51,22 +51,22 @@ struct ConversationAssembler: Sendable {
     /// ``AnyConversation/rebuildSession(toolRuntime:toolSelection:)``.
     func updateConversationSession(
         _ conversation: AnyConversation,
-        for executionConfiguration: EffectiveExecutionConfiguration
+        for executionConfiguration: EffectiveExecutionConfiguration,
     ) async throws {
         let toolRuntime = ToolRuntime(
             configuration: toolDefinition,
             rationaleSchemaDescription: rationaleSchemaDescription,
-            approvalGate: toolApprovalGate
+            approvalGate: toolApprovalGate,
         )
         try resolveProvider(executionConfiguration: executionConfiguration)
             .preflight(
                 toolRegistry: toolRuntime.toolRegistry,
-                toolSelection: executionConfiguration.toolSelection
+                toolSelection: executionConfiguration.toolSelection,
             )
         try await conversation.rebuildSession(
             toolRuntime: toolRuntime,
             toolSelection: executionConfiguration.toolSelection,
-            inferenceContext: executionConfiguration.inferenceContext
+            inferenceContext: executionConfiguration.inferenceContext,
         )
     }
 
@@ -75,11 +75,11 @@ struct ConversationAssembler: Sendable {
     func updateConversationSession(
         _ conversation: AnyConversation,
         for executionConfiguration: EffectiveExecutionConfiguration,
-        automaticCompactionPolicy: AutomaticCompactionPolicy
+        automaticCompactionPolicy: AutomaticCompactionPolicy,
     ) async throws -> ContextCompactionResult {
         let decision = try await AutomaticCompactionOperation.decision(
             conversation,
-            policy: automaticCompactionPolicy
+            policy: automaticCompactionPolicy,
         )
 
         switch decision {
@@ -90,29 +90,29 @@ struct ConversationAssembler: Sendable {
             return try await updateConversationSession(
                 conversation,
                 for: executionConfiguration,
-                compacting: options
+                compacting: options,
             )
         }
     }
 
     func resolvedProviderObjectIdentifier(
-        for executionConfiguration: EffectiveExecutionConfiguration
+        for executionConfiguration: EffectiveExecutionConfiguration,
     ) -> ObjectIdentifier {
         resolveProvider(executionConfiguration: executionConfiguration).providerObjectIdentifier
     }
 
     func sessionCompatibility(
         from current: EffectiveExecutionConfiguration,
-        to next: EffectiveExecutionConfiguration
+        to next: EffectiveExecutionConfiguration,
     ) -> SessionCompatibility {
         resolveProvider(executionConfiguration: current).sessionCompatibility(
             from: current,
-            to: next
+            to: next,
         )
     }
 
     private func resolveProvider(
-        executionConfiguration: EffectiveExecutionConfiguration
+        executionConfiguration: EffectiveExecutionConfiguration,
     ) -> AnyInferenceProvider {
         providerRegistry.resolve(executionConfiguration.provider)
     }
@@ -126,14 +126,14 @@ struct ConversationAssembler: Sendable {
             try await provider.generateIsolated(
                 prompt: prompt,
                 configuration: configuration,
-                inferenceContext: inferenceContext
+                inferenceContext: inferenceContext,
             ).trimmingCharacters(in: .whitespacesAndNewlines)
         }
     }
 
     func compactionTraceInfo(
         mode: AgentTraceEntry.Kind.ContextCompactionInfo.Mode,
-        result: ContextCompactionResult
+        result: ContextCompactionResult,
     ) -> AgentTraceEntry.Kind.ContextCompactionInfo {
         let phaseBehavior = phaseBehaviors.behavior(for: .compaction)
         return AgentTraceEntry.Kind.ContextCompactionInfo(
@@ -141,31 +141,31 @@ struct ConversationAssembler: Sendable {
             provider: phaseBehavior.provider.traceSnapshot,
             inferenceConfiguration: phaseBehavior.inferenceConfiguration.traceSnapshot,
             inferenceContext: phaseBehavior.inferenceContext.traceSnapshot,
-            result: result
+            result: result,
         )
     }
 
     private func updateConversationSession(
         _ conversation: AnyConversation,
         for executionConfiguration: EffectiveExecutionConfiguration,
-        compacting options: ContextCompactionOptions
+        compacting options: ContextCompactionOptions,
     ) async throws -> ContextCompactionResult {
         let toolRuntime = ToolRuntime(
             configuration: toolDefinition,
             rationaleSchemaDescription: rationaleSchemaDescription,
-            approvalGate: toolApprovalGate
+            approvalGate: toolApprovalGate,
         )
         try resolveProvider(executionConfiguration: executionConfiguration)
             .preflight(
                 toolRegistry: toolRuntime.toolRegistry,
-                toolSelection: executionConfiguration.toolSelection
+                toolSelection: executionConfiguration.toolSelection,
             )
         return try await conversation.rebuildSession(
             compacting: options,
             summaryGenerator: makeSummaryGenerator(),
             toolRuntime: toolRuntime,
             toolSelection: executionConfiguration.toolSelection,
-            inferenceContext: executionConfiguration.inferenceContext
+            inferenceContext: executionConfiguration.inferenceContext,
         )
     }
 }

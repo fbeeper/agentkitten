@@ -36,7 +36,7 @@ struct AnyInferenceProvider: Sendable {
         self.makeConversationClosure = { owner, systemPrompt, executionConfiguration, toolRuntime in
             try provider.preflight(
                 toolRegistry: toolRuntime.toolRegistry,
-                toolSelection: executionConfiguration.toolSelection
+                toolSelection: executionConfiguration.toolSelection,
             )
             return AnyConversation(
                 conversation: Conversation(
@@ -44,8 +44,8 @@ struct AnyInferenceProvider: Sendable {
                     provider: provider,
                     systemPrompt: systemPrompt ?? "",
                     executionConfiguration: executionConfiguration,
-                    toolRuntime: toolRuntime
-                )
+                    toolRuntime: toolRuntime,
+                ),
             )
         }
         self.generateIsolatedClosure = { prompt, configuration, context in
@@ -53,11 +53,11 @@ struct AnyInferenceProvider: Sendable {
                 systemPrompt: nil,
                 toolRuntime: ToolRuntime(configuration: .noTools),
                 toolSelection: .disabled,
-                inferenceContext: context
+                inferenceContext: context,
             )
             let parameters = InferenceRequestParameters(
                 configuration: configuration,
-                toolSelection: .disabled
+                toolSelection: .disabled,
             )
             let stream = try await session.run(UserMessage(text: prompt), parameters: parameters)
             for try await event in stream {
@@ -73,26 +73,26 @@ struct AnyInferenceProvider: Sendable {
         owner: UserID,
         systemPrompt: String?,
         executionConfiguration: EffectiveExecutionConfiguration,
-        toolRuntime: ToolRuntime
+        toolRuntime: ToolRuntime,
     ) throws -> AnyConversation {
         try makeConversationClosure(
             owner,
             systemPrompt,
             executionConfiguration,
-            toolRuntime
+            toolRuntime,
         )
     }
 
     func preflight(
         toolRegistry: ToolRegistry,
-        toolSelection: ToolSelection
+        toolSelection: ToolSelection,
     ) throws {
         try preflightClosure(toolRegistry, toolSelection)
     }
 
     func sessionCompatibility(
         from current: EffectiveExecutionConfiguration,
-        to next: EffectiveExecutionConfiguration
+        to next: EffectiveExecutionConfiguration,
     ) -> SessionCompatibility {
         sessionCompatibilityClosure(current, next)
     }
@@ -100,7 +100,7 @@ struct AnyInferenceProvider: Sendable {
     func generateIsolated(
         prompt: String,
         configuration: InferenceConfiguration,
-        inferenceContext: InferenceContext
+        inferenceContext: InferenceContext,
     ) async throws -> String {
         try await generateIsolatedClosure(prompt, configuration, inferenceContext)
     }

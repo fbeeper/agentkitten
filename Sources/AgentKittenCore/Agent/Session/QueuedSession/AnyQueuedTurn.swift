@@ -15,7 +15,7 @@ struct AnyQueuedTurn: Sendable {
         id: InvocationID,
         isCancelled: @Sendable @escaping () async -> Bool,
         markRunning: @Sendable @escaping (Task<Void, Never>) async -> Bool,
-        performWork: @Sendable @escaping () async -> Void
+        performWork: @Sendable @escaping () async -> Void,
     ) {
         self.id = id
         self._isCancelled = isCancelled

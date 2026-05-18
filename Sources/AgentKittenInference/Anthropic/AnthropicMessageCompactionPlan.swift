@@ -10,7 +10,7 @@ struct AnthropicMessageCompactionPlan {
     init(history: [AnthropicMessage], preservedRecentTurnCount: Int) {
         let recentStart = Self.recentStartIndex(
             in: history,
-            preservedRecentTurnCount: max(0, preservedRecentTurnCount)
+            preservedRecentTurnCount: max(0, preservedRecentTurnCount),
         )
         olderMessages = Array(history[..<recentStart])
         recentMessages = Array(history[recentStart...])
@@ -18,7 +18,7 @@ struct AnthropicMessageCompactionPlan {
 
     private static func recentStartIndex(
         in history: [AnthropicMessage],
-        preservedRecentTurnCount: Int
+        preservedRecentTurnCount: Int,
     ) -> Int {
         guard preservedRecentTurnCount > 0 else {
             return history.endIndex

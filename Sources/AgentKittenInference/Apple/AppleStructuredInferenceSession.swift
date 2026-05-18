@@ -10,14 +10,14 @@ import FoundationModels
 extension AppleInferenceSession: StructuredInferenceSession {
     public func generateStream<T: Codable & Sendable & JSONSchemaProviding>(
         prompt: String,
-        parameters: InferenceRequestParameters
+        parameters: InferenceRequestParameters,
     ) async throws
         -> StructuredInferenceStream<T> {
         let lease = try operationGate.begin(.generate)
         let toolTurnRuntime = toolRuntime.makeTurnRuntime(
             toolStepBudget: parameters.toolStepBudget,
             context: parameters.toolExecutionContext,
-            toolSelection: parameters.toolSelection
+            toolSelection: parameters.toolSelection,
         )
         await toolBridgeRuntime.beginTurn(toolTurnRuntime)
         do {
@@ -53,7 +53,7 @@ extension AppleInferenceSession: StructuredInferenceSession {
     }
 
     private func makeStructuredSchema<T: JSONSchemaProviding>(
-        _ type: T.Type
+        _ type: T.Type,
     ) throws -> GenerationSchema {
         if let error = Self.availabilityError() {
             throw error
@@ -68,19 +68,19 @@ extension AppleInferenceSession: StructuredInferenceSession {
 
     private func respondStructured(
         prompt: String,
-        schema: GenerationSchema
+        schema: GenerationSchema,
     ) async throws -> String {
         let response = try await languageSession.respond(
             to: Prompt(prompt),
             schema: schema,
-            includeSchemaInPrompt: true
+            includeSchemaInPrompt: true,
         )
         return response.content.jsonString
     }
 
     private func decodeStructuredValue<T: Decodable>(
         _ type: T.Type,
-        from json: String
+        from json: String,
     ) throws(StructuredGenerationError) -> T {
         do {
             return try JSONDecoder().decode(T.self, from: Data(json.utf8))

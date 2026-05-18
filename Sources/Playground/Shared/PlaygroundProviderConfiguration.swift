@@ -12,7 +12,7 @@ enum PlaygroundProviderFactory {
     /// reference is `nil` and the default provider handles compaction too.
     static func makeRegistry(
         default defaultOption: ProviderOption,
-        compaction compactionOption: ProviderOption?
+        compaction compactionOption: ProviderOption?,
     ) throws -> (registry: ProviderRegistry, compactionProvider: ProviderReference?) {
         let registry = try makeRegistry(for: defaultOption)
         guard let compactionOption, compactionOption != defaultOption else {
@@ -74,7 +74,7 @@ enum PlaygroundProviderFactory {
         switch option {
         case .mock:
             return ProviderRegistry(default: MockInferenceProvider(
-                structuredResponses: [#"{"verdict":"pass"}"#]
+                structuredResponses: [#"{"verdict":"pass"}"#],
             ))
         case .anthropic:
             return ProviderRegistry(default: InferenceProvider.anthropic())

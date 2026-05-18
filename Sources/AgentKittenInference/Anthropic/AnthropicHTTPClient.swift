@@ -106,7 +106,7 @@ struct AnthropicHTTPClient: AnthropicHTTPStreaming {
             return .invalidResponse(fallbackMessage)
         }
         return .contextWindowExceeded(
-            ContextWindowExceededInfo(provider: Self.providerName, message: message)
+            ContextWindowExceededInfo(provider: Self.providerName, message: message),
         )
     }
 

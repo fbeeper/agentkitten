@@ -14,7 +14,7 @@ extension ConversationEvent {
             eventID: EventID,
             conversationID: ConversationID,
             timestamp: Date,
-            parentEventID: EventID? = nil
+            parentEventID: EventID? = nil,
         ) {
             self.eventID = eventID
             self.conversationID = conversationID

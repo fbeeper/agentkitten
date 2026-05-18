@@ -38,7 +38,7 @@ public struct TurnOverrides: Sendable {
         toolStepBudget: ToolStepBudget? = nil,
         inferenceConfiguration: InferenceConfiguration? = nil,
         provider: ProviderReference? = nil,
-        turnNote: String? = nil
+        turnNote: String? = nil,
     ) {
         self.toolSelection = toolSelection
         self.toolStepBudget = toolStepBudget
@@ -57,7 +57,7 @@ public struct TurnOverrides: Sendable {
             if let newValue {
                 customValues[Key.id] = ExecutionConfigurationCustomValue(
                     domains: Key.domains,
-                    value: newValue
+                    value: newValue,
                 )
             } else {
                 customValues.removeValue(forKey: Key.id)

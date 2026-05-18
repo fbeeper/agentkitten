@@ -25,16 +25,16 @@ private struct ClassificationResult: Codable, Sendable, JSONSchemaProviding {
                 "currentTime": .object(
                     properties: [
                         "iso8601": .string(
-                            description: "The current time as returned by the current_time tool in ISO 8601 format."
+                            description: "The current time as returned by the current_time tool in ISO 8601 format.",
                         ),
                         "readable": .string(
-                            description: "The current time as returned by the current_time tool in readable format."
+                            description: "The current time as returned by the current_time tool in readable format.",
                         ),
                     ],
-                    required: ["iso8601", "readable"]
+                    required: ["iso8601", "readable"],
                 ),
             ],
-            required: ["category", "confidence", "reasoning", "currentTime"]
+            required: ["category", "confidence", "reasoning", "currentTime"],
         )
     }
 }
@@ -48,7 +48,7 @@ extension Playground {
     /// JSON mode, streaming accumulation, and `Decodable` decode.
     struct Classify: AsyncParsableCommand {
         static let configuration = CommandConfiguration(
-            abstract: "Classify a prompt via structured output and print the decoded result."
+            abstract: "Classify a prompt via structured output and print the decoded result.",
         )
 
         @Option(name: .long, help: "The text to classify.")
@@ -70,12 +70,12 @@ extension Playground {
             }
             let runtime = PlaygroundSessionFactory.makeToolRuntime(
                 tools: [AnyAgentTool(CurrentTimeTool())],
-                policy: policy
+                policy: policy,
             )
             let session = try PlaygroundSessionFactory.makeSession(
                 for: provider,
                 systemPrompt: systemPrompt(),
-                runtime: runtime
+                runtime: runtime,
             )
             try await classify(session: session, gate: runtime.approvalGate)
         }
@@ -90,7 +90,7 @@ extension Playground {
         private func classifyMock(policy: AnyToolExecutionPolicy) async throws {
             let runtime = PlaygroundSessionFactory.makeToolRuntime(
                 tools: [AnyAgentTool(MockCurrentTimeTool())],
-                policy: policy
+                policy: policy,
             )
             let session = InferenceProvider(
                 MockInferenceProvider(
@@ -98,22 +98,22 @@ extension Playground {
                         .toolCall(
                             name: MockCurrentTimeTool.name,
                             argumentsJSON: "{}",
-                            thenRespond: mockClassificationResponse
+                            thenRespond: mockClassificationResponse,
                         ),
-                    ]
-                )
+                    ],
+                ),
             ).makeSession(
                 systemPrompt: systemPrompt(),
                 toolRuntime: runtime,
                 toolSelection: .all,
-                inferenceContext: .empty
+                inferenceContext: .empty,
             )
             try await classify(session: session, gate: runtime.approvalGate)
         }
 
         private func classify(
             session: any StructuredInferenceSession,
-            gate: ToolApprovalGate
+            gate: ToolApprovalGate,
         ) async throws {
             let memory = PlaygroundToolApprovalMemory()
             do {
@@ -130,7 +130,7 @@ extension Playground {
                         _ = try await PlaygroundToolApprovalPrompt.resolve(
                             call: call,
                             gate: gate,
-                            memory: memory
+                            memory: memory,
                         )
                     case .toolCallCompleted(_, _, let outcome):
                         logToolOutcome(outcome)
@@ -183,7 +183,7 @@ private struct MockCurrentTimeTool: AgentTool {
     func execute(arguments: Arguments) async throws -> Output {
         Output(
             iso8601: "2026-03-27T12:34:56Z",
-            readable: "March 27, 2026 at 12:34:56 PM UTC"
+            readable: "March 27, 2026 at 12:34:56 PM UTC",
         )
     }
 }

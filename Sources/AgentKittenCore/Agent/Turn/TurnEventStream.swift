@@ -36,7 +36,7 @@ public struct TurnEventStream<Result: Sendable>: AsyncSequence {
 
         fileprivate init(
             turn: Turn<Result>,
-            base: AsyncThrowingStream<AgentEvent<Result>, Error>.AsyncIterator
+            base: AsyncThrowingStream<AgentEvent<Result>, Error>.AsyncIterator,
         ) {
             self.turn = turn
             self.base = base

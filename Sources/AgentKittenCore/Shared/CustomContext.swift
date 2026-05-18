@@ -20,7 +20,7 @@ struct CustomContext: Sendable, Equatable, Hashable {
             if let newValue {
                 customValues[Key.id] = ExecutionConfigurationCustomValue(
                     domains: Key.domains,
-                    value: newValue
+                    value: newValue,
                 )
             } else {
                 customValues.removeValue(forKey: Key.id)
@@ -33,7 +33,7 @@ struct CustomContext: Sendable, Equatable, Hashable {
             .map { key, value in
                 CustomContextSnapshot.Entry(
                     key: key,
-                    valueSummary: String(describing: value.value)
+                    valueSummary: String(describing: value.value),
                 )
             }
             .sorted { $0.key < $1.key }

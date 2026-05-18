@@ -38,7 +38,7 @@ actor Conversation<Provider: InferenceProviding> {
         provider: Provider,
         systemPrompt: String,
         executionConfiguration: EffectiveExecutionConfiguration,
-        toolRuntime: ToolRuntime
+        toolRuntime: ToolRuntime,
     ) {
         self.conversationID = .generate()
         self.owner = owner
@@ -49,7 +49,7 @@ actor Conversation<Provider: InferenceProviding> {
             systemPrompt: systemPrompt,
             toolRuntime: toolRuntime,
             toolSelection: executionConfiguration.toolSelection,
-            inferenceContext: inferenceContext
+            inferenceContext: inferenceContext,
         )
         self.sessionSlot = SessionSlot(id: .generate(), session: session)
         self.digester = InferenceDigester()
@@ -64,7 +64,7 @@ actor Conversation<Provider: InferenceProviding> {
     func rebuildSession(
         toolRuntime: ToolRuntime,
         toolSelection: ToolSelection,
-        inferenceContext: InferenceContext
+        inferenceContext: InferenceContext,
     ) async throws {
         let lease = try operationGate.begin(.rebuildSession)
         defer {
@@ -75,7 +75,7 @@ actor Conversation<Provider: InferenceProviding> {
             systemPrompt: systemPrompt,
             toolRuntime: toolRuntime,
             toolSelection: toolSelection,
-            inferenceContext: inferenceContext
+            inferenceContext: inferenceContext,
         )
         sessionSlot = SessionSlot(id: .generate(), session: session)
     }
@@ -83,7 +83,7 @@ actor Conversation<Provider: InferenceProviding> {
     func identity() -> ConversationIdentity {
         ConversationIdentity(
             conversationID: conversationID,
-            inferenceSessionID: sessionSlot.id
+            inferenceSessionID: sessionSlot.id,
         )
     }
 
@@ -107,7 +107,7 @@ actor Conversation<Provider: InferenceProviding> {
     func send(
         userMessage: UserMessage,
         executionConfiguration: EffectiveExecutionConfiguration,
-        toolExecutionContext: ToolExecutionContext
+        toolExecutionContext: ToolExecutionContext,
     ) throws -> AsyncThrowingStream<ConversationEvent<AssistantMessage>, Error> {
         let lease = try operationGate.begin(.run)
         let (stream, continuation) = AsyncThrowingStream<ConversationEvent<AssistantMessage>, Error>.makeStream()
@@ -121,7 +121,7 @@ actor Conversation<Provider: InferenceProviding> {
                 userMessage: userMessage,
                 executionConfiguration: executionConfiguration,
                 toolExecutionContext: toolExecutionContext,
-                lease: lease
+                lease: lease,
             )
         }
         continuation.onTermination = { _ in task.cancel() }
@@ -132,7 +132,7 @@ actor Conversation<Provider: InferenceProviding> {
     func generate<T: Codable & Sendable & JSONSchemaProviding>(
         userMessage: UserMessage,
         executionConfiguration: EffectiveExecutionConfiguration,
-        toolExecutionContext: ToolExecutionContext
+        toolExecutionContext: ToolExecutionContext,
     ) async throws -> AsyncThrowingStream<ConversationEvent<T>, Error> {
         let lease = try operationGate.begin(.generate)
         do {
@@ -141,7 +141,7 @@ actor Conversation<Provider: InferenceProviding> {
                 toolStepBudget: executionConfiguration.toolStepBudget,
                 toolSelection: executionConfiguration.toolSelection,
                 toolExecutionContext: toolExecutionContext,
-                inferenceContext: executionConfiguration.inferenceContext
+                inferenceContext: executionConfiguration.inferenceContext,
             )
             let inferenceStream: StructuredInferenceStream<T> =
                 try await sessionSlot.session.generateStream(prompt: userMessage.text, parameters: parameters)
@@ -150,7 +150,7 @@ actor Conversation<Provider: InferenceProviding> {
                 await self.runStructuredTurn(
                     stream: inferenceStream,
                     continuation: continuation,
-                    lease: lease
+                    lease: lease,
                 )
             }
             continuation.onTermination = { _ in task.cancel() }
@@ -167,7 +167,7 @@ actor Conversation<Provider: InferenceProviding> {
         userMessage: UserMessage,
         executionConfiguration: EffectiveExecutionConfiguration,
         toolExecutionContext: ToolExecutionContext,
-        lease: SingleFlightOperationGate<InferenceSessionOperationKind>.Lease
+        lease: SingleFlightOperationGate<InferenceSessionOperationKind>.Lease,
     ) async {
         defer {
             lease.end()
@@ -178,13 +178,13 @@ actor Conversation<Provider: InferenceProviding> {
                 toolStepBudget: executionConfiguration.toolStepBudget,
                 toolSelection: executionConfiguration.toolSelection,
                 toolExecutionContext: toolExecutionContext,
-                inferenceContext: executionConfiguration.inferenceContext
+                inferenceContext: executionConfiguration.inferenceContext,
             )
             let stream = try await sessionSlot.session.run(userMessage, parameters: parameters)
             try await digester.digest(
                 stream: stream,
                 continuation: continuation,
-                conversationID: conversationID
+                conversationID: conversationID,
             )
             continuation.finish()
         } catch is CancellationError {
@@ -197,7 +197,7 @@ actor Conversation<Provider: InferenceProviding> {
     private func runStructuredTurn<T: Codable & Sendable & JSONSchemaProviding>(
         stream: StructuredInferenceStream<T>,
         continuation: AsyncThrowingStream<ConversationEvent<T>, Error>.Continuation,
-        lease: SingleFlightOperationGate<InferenceSessionOperationKind>.Lease
+        lease: SingleFlightOperationGate<InferenceSessionOperationKind>.Lease,
     ) async {
         defer {
             lease.end()
@@ -206,7 +206,7 @@ actor Conversation<Provider: InferenceProviding> {
             try await digester.digestStructured(
                 stream: stream,
                 continuation: continuation,
-                conversationID: conversationID
+                conversationID: conversationID,
             )
             continuation.finish()
         } catch is CancellationError {
@@ -234,7 +234,7 @@ extension Conversation {
         summaryGenerator: ContextCompactionSummaryGenerator,
         toolRuntime: ToolRuntime,
         toolSelection: ToolSelection,
-        inferenceContext: InferenceContext
+        inferenceContext: InferenceContext,
     ) async throws -> ContextCompactionResult {
         let lease = try operationGate.begin(.rebuildSession)
         defer {
@@ -242,20 +242,20 @@ extension Conversation {
         }
         guard let compactable = sessionSlot.session as? any ContextCompactableSession else {
             throw InferenceError.unsupportedConfiguration(
-                "The active provider session does not support context compaction."
+                "The active provider session does not support context compaction.",
             )
         }
         let result = await ContextCompactor().compact(
             compactable,
             options: options,
-            summaryGenerator: summaryGenerator
+            summaryGenerator: summaryGenerator,
         )
         let session = try await provider.makeSession(
             continuing: sessionSlot.session,
             systemPrompt: systemPrompt,
             toolRuntime: toolRuntime,
             toolSelection: toolSelection,
-            inferenceContext: inferenceContext
+            inferenceContext: inferenceContext,
         )
         sessionSlot = SessionSlot(id: .generate(), session: session)
         return result
@@ -263,7 +263,7 @@ extension Conversation {
 
     package func compactContext(
         options: ContextCompactionOptions,
-        summaryGenerator: ContextCompactionSummaryGenerator
+        summaryGenerator: ContextCompactionSummaryGenerator,
     ) async throws -> ContextCompactionResult {
         let lease = try operationGate.begin(.compactContext)
         defer {
@@ -271,13 +271,13 @@ extension Conversation {
         }
         guard let compactable = sessionSlot.session as? any ContextCompactableSession else {
             throw InferenceError.unsupportedConfiguration(
-                "The active provider session does not support context compaction."
+                "The active provider session does not support context compaction.",
             )
         }
         return await ContextCompactor().compact(
             compactable,
             options: options,
-            summaryGenerator: summaryGenerator
+            summaryGenerator: summaryGenerator,
         )
     }
 }

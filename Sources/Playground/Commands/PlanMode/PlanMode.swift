@@ -15,7 +15,7 @@ extension Playground {
     /// Modes can also be switched manually with `/plan` or `/code`.
     struct PlanMode: AsyncParsableCommand {
         static let configuration = CommandConfiguration(
-            abstract: "Plan/code mode demo: read-only tools in plan, write tools in code."
+            abstract: "Plan/code mode demo: read-only tools in plan, write tools in code.",
         )
 
         @Option(name: .long, help: "Inference provider: apple or anthropic.")
@@ -40,8 +40,8 @@ extension Playground {
                         AnyAgentTool(WriteScratchpadTool(store: scratchpad)),
                         AnyAgentTool(ProposePlanTool(state: modeState)),
                     ],
-                    executionPolicy: PlanModeExecutionPolicy(state: modeState)
-                )
+                    executionPolicy: PlanModeExecutionPolicy(state: modeState),
+                ),
             )
             print(
                 PlaygroundChatOutputFormatter.sessionHeader(
@@ -53,8 +53,8 @@ extension Playground {
                         "Starting in PLAN mode — the model can read but not write.",
                         "Use /plan or /code to switch modes manually.",
                     ],
-                    instructions: "Type a message and press Enter. Use /show, /plan, /code. Ctrl-D to exit."
-                )
+                    instructions: "Type a message and press Enter. Use /show, /plan, /code. Ctrl-D to exit.",
+                ),
             )
             try await chat(agent: agent, scratchpad: scratchpad, state: modeState)
             print()
@@ -72,7 +72,7 @@ extension Playground {
                     fflush(stdout)
                     let turn = try await session.send(
                         Self.planApprovedPrompt(plan: plan),
-                        turnOverrides: Self.codeOverrides
+                        turnOverrides: Self.codeOverrides,
                     )
                     do {
                         try await streamTurn(turn, suppressText: true)
@@ -131,7 +131,7 @@ extension Playground {
 
         private func streamTurn(
             _ turn: Turn<AssistantMessage>,
-            suppressText: Bool = false
+            suppressText: Bool = false,
         ) async throws {
             var streamedText = false
             for try await event in turn.events {
@@ -181,18 +181,18 @@ extension Playground {
             case .plan:
                 TurnOverrides(
                     toolSelection: .including(["read_scratchpad", "propose_plan"]),
-                    turnNote: Self.planModeNote
+                    turnNote: Self.planModeNote,
                 )
             case .code:
                 TurnOverrides(
                     toolSelection: .including(["read_scratchpad", "write_scratchpad"]),
-                    turnNote: Self.codeModeNote
+                    turnNote: Self.codeModeNote,
                 )
             }
         }
 
         private static let codeOverrides = TurnOverrides(
-            toolSelection: .including(["read_scratchpad", "write_scratchpad"])
+            toolSelection: .including(["read_scratchpad", "write_scratchpad"]),
         )
 
         private static func planApprovedPrompt(plan: String) -> String {

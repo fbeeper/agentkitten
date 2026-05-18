@@ -6,10 +6,10 @@ extension AgentSession {
     func conversation(
         executionEnvironment: ExecutionEnvironment,
         turnOverrides: TurnOverrides,
-        invocationID: InvocationID
+        invocationID: InvocationID,
     ) async throws -> AnyConversation {
         let effectiveConfiguration = EffectiveExecutionConfiguration(
-            environment: executionEnvironment
+            environment: executionEnvironment,
         )
         // `ConversationProvider` is a value-type actor property, and
         // `resolveConversation` is `mutating async`. Swift will not allow a
@@ -19,7 +19,7 @@ extension AgentSession {
         var providerCopy = self.conversationProvider
         let resolvedConversation = try await providerCopy.resolveConversation(
             for: effectiveConfiguration,
-            automaticCompactionPolicy: automaticCompactionPolicy
+            automaticCompactionPolicy: automaticCompactionPolicy,
         )
         self.conversationProvider = providerCopy
         let conversation = resolvedConversation.conversation
@@ -32,27 +32,27 @@ extension AgentSession {
                 toolStepBudget: effectiveConfiguration.toolStepBudget.traceSnapshot,
                 inferenceConfiguration: effectiveConfiguration.inferenceConfiguration.traceSnapshot,
                 inferenceContext: effectiveConfiguration.inferenceContext.traceSnapshot,
-                turnOverrides: turnOverrides.traceSnapshot
+                turnOverrides: turnOverrides.traceSnapshot,
             )),
-            invocationID: invocationID
+            invocationID: invocationID,
         )
         record(
             kind: .conversationResolved(AgentTraceEntry.Kind.ConversationResolvedInfo(
                 identity: identity.traceSnapshot,
-                resolutionKind: resolvedConversation.resolutionKind.traceSnapshot
+                resolutionKind: resolvedConversation.resolutionKind.traceSnapshot,
             )),
-            invocationID: invocationID
+            invocationID: invocationID,
         )
         await recordAutomaticContextCompaction(
             resolvedConversation.automaticCompactionResult,
-            invocationID: invocationID
+            invocationID: invocationID,
         )
         return conversation
     }
 
     private func recordAutomaticContextCompaction(
         _ result: ContextCompactionResult,
-        invocationID: InvocationID
+        invocationID: InvocationID,
     ) async {
         if case .skipped(.disabled) = result {
             return
@@ -61,19 +61,19 @@ extension AgentSession {
         if shouldRecordAutomaticCompactionConfiguration(for: result) {
             info = conversationProvider.compactionTraceInfo(
                 mode: .automatic,
-                result: result
+                result: result,
             )
         } else {
             info = .init(mode: .automatic, result: result)
         }
         record(
             kind: .contextCompaction(info),
-            invocationID: invocationID
+            invocationID: invocationID,
         )
     }
 
     private func shouldRecordAutomaticCompactionConfiguration(
-        for result: ContextCompactionResult
+        for result: ContextCompactionResult,
     ) -> Bool {
         switch result {
         case .compacted:

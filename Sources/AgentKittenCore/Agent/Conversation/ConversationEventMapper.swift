@@ -13,7 +13,7 @@ struct ConversationEventMapper<Result: Sendable> {
     init(
         agentID: AgentID,
         sessionID: AgentSessionID,
-        invocationID: InvocationID
+        invocationID: InvocationID,
     ) {
         self.agentID = agentID
         self.sessionID = sessionID
@@ -67,7 +67,7 @@ struct ConversationEventMapper<Result: Sendable> {
                 author: eventAuthor,
                 timestamp: event.metadata.timestamp,
                 parentEventID: parentEventID,
-            )
+            ),
         )
     }
 
@@ -80,13 +80,13 @@ struct ConversationEventMapper<Result: Sendable> {
                 invocationID: invocationID,
                 author: .agent(agentID),
                 timestamp: timestamp,
-            )
+            ),
         )
     }
 
     private func author(
         forToolCallNamed name: String,
-        outcome: ToolCallOutcome
+        outcome: ToolCallOutcome,
     ) -> EventAuthor {
         switch outcome {
         case .success, .failure(.execution):

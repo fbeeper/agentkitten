@@ -27,7 +27,7 @@ struct ProposePlanTool: AgentTool {
         ToolSchema(parameters: .object(
             properties: [
                 "plan": .string(
-                    description: "A concrete, step-by-step description of the changes to make."
+                    description: "A concrete, step-by-step description of the changes to make.",
                 ),
             ],
             required: ["plan"],
@@ -49,14 +49,14 @@ struct ProposePlanTool: AgentTool {
             await state.recordApprovedPlan(arguments.plan)
             return Output(
                 approved: true,
-                message: "Plan approved. Do not make any further tool calls. End your response now."
+                message: "Plan approved. Do not make any further tool calls. End your response now.",
             )
         } else {
             await state.recordRejectedPlan()
             return Output(
                 approved: false,
                 message: "Plan rejected. Do not propose another plan. " +
-                    "End your response and wait for the user's next message."
+                    "End your response and wait for the user's next message.",
             )
         }
     }

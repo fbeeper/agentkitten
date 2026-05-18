@@ -12,7 +12,7 @@ public struct ParameterDescriptionMacro: PeerMacro {
     public static func expansion(
         of node: AttributeSyntax,
         providingPeersOf declaration: some DeclSyntaxProtocol,
-        in context: some MacroExpansionContext
+        in context: some MacroExpansionContext,
     ) throws -> [DeclSyntax] {
         // No additional declarations generated; presence of the attribute is the signal.
         []

@@ -32,6 +32,6 @@ public protocol ContextCompactableSession: Actor {
     /// History is guaranteed stable when this is called — see the type-level note.
     func applyCompaction(
         summary: String?,
-        preservedRecentTurnCount: Int
+        preservedRecentTurnCount: Int,
     ) async throws -> ContextCompactionResult
 }

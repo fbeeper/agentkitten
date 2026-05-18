@@ -17,7 +17,7 @@ extension Playground {
     /// scripted demo flow without requiring Apple Intelligence.
     struct Tools: AsyncParsableCommand {
         static let configuration = CommandConfiguration(
-            abstract: "Tool-calling demo with CurrentTime and ConvertTemperature tools."
+            abstract: "Tool-calling demo with CurrentTime and ConvertTemperature tools.",
         )
 
         @Option(name: .long, help: "The prompt to send. Defaults to a prompt that exercises both tools.")
@@ -46,7 +46,7 @@ extension Playground {
 
         @Flag(
             name: .long,
-            help: "Register the bundled rich image demo tool (`fixture_image`)."
+            help: "Register the bundled rich image demo tool (`fixture_image`).",
         )
         var imageDemo = false
 
@@ -63,7 +63,7 @@ extension Playground {
             }
             let toolDefinition = ToolDefinition(
                 tools: tools,
-                executionPolicy: PlaygroundToolApprovalPrompt.configuredPolicy(for: toolPolicy)
+                executionPolicy: PlaygroundToolApprovalPrompt.configuredPolicy(for: toolPolicy),
             )
             switch provider {
             case .mock:
@@ -72,7 +72,7 @@ extension Playground {
                 let agent = try PlaygroundSessionFactory.makeAgent(
                     for: provider,
                     behavior: .init(systemPrompt: system),
-                    toolDefinition: toolDefinition
+                    toolDefinition: toolDefinition,
                 )
                 try await runConversation(agent: agent, prompt: effectivePrompt)
             }
@@ -89,12 +89,12 @@ extension Playground {
                 session: session,
                 toolPolicy: toolPolicy,
                 memory: memory,
-                verboseTools: verboseTools
+                verboseTools: verboseTools,
             )
             if trace {
                 await PlaygroundTracePrinter.printTurnTrace(
                     trace: session.trace,
-                    invocationID: turn.id
+                    invocationID: turn.id,
                 )
             }
         }
@@ -109,23 +109,23 @@ extension Playground {
                 .toolCall(
                     name: CurrentTimeTool.name,
                     argumentsJSON: "{}",
-                    thenRespond: "(mock) The tool returned the current time."
+                    thenRespond: "(mock) The tool returned the current time.",
                 ),
                 .toolCall(
                     name: ConvertTemperatureTool.name,
                     argumentsJSON: #"{"value":100,"from":"fahrenheit","toUnit":"celsius"}"#,
-                    thenRespond: "(mock) The tool converted 100°F to Celsius."
+                    thenRespond: "(mock) The tool converted 100°F to Celsius.",
                 ),
             ])
             let behavior = AgentBehavior(
                 systemPrompt: """
                 You are a helpful assistant. Use the provided tools when relevant.
-                """
+                """,
             )
             let agent = Agent(
                 providerRegistry: ProviderRegistry(default: provider),
                 behavior: behavior,
-                toolDefinition: toolDefinition
+                toolDefinition: toolDefinition,
             )
             let session = agent.makeQueuedSession()
             let memory = PlaygroundToolApprovalMemory()
@@ -139,12 +139,12 @@ extension Playground {
                     session: session,
                     toolPolicy: toolPolicy,
                     memory: memory,
-                    verboseTools: verboseTools
+                    verboseTools: verboseTools,
                 )
                 if trace {
                     await PlaygroundTracePrinter.printTurnTrace(
                         trace: session.trace,
-                        invocationID: turn.id
+                        invocationID: turn.id,
                     )
                 }
             }

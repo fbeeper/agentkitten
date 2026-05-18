@@ -7,7 +7,7 @@ import Foundation
 enum PlaygroundTracePrinter {
     static func printTurnTrace(
         trace: AgentTrace,
-        invocationID: InvocationID
+        invocationID: InvocationID,
     ) async {
         let entries = await trace.snapshot().filter { $0.invocationID == invocationID }
         guard !entries.isEmpty else {
@@ -35,7 +35,7 @@ enum PlaygroundTracePrinter {
     // swiftlint:disable:next cyclomatic_complexity
     private static func format(
         _ entry: AgentTraceEntry,
-        number: Int
+        number: Int,
     ) -> String {
         let prefix = String(format: "%02d", number)
         switch entry.kind {
@@ -79,7 +79,7 @@ enum PlaygroundTracePrinter {
     }
 
     private static func describePreparation(
-        _ info: AgentTraceEntry.Kind.ExecutionPreparationInfo
+        _ info: AgentTraceEntry.Kind.ExecutionPreparationInfo,
     ) -> String {
         var parts: [String] = [
             "provider=\(describeProvider(info.provider))",
@@ -106,7 +106,7 @@ enum PlaygroundTracePrinter {
     }
 
     private static func describeSelection(
-        _ selection: ToolSelectionSnapshot
+        _ selection: ToolSelectionSnapshot,
     ) -> String {
         switch selection {
         case .all:
@@ -121,7 +121,7 @@ enum PlaygroundTracePrinter {
     }
 
     private static func describeBudget(
-        _ budget: ToolStepBudgetSnapshot
+        _ budget: ToolStepBudgetSnapshot,
     ) -> String {
         switch budget {
         case .disabled:
@@ -134,7 +134,7 @@ enum PlaygroundTracePrinter {
     }
 
     private static func describeOverrides(
-        _ overrides: TurnOverridesSnapshot
+        _ overrides: TurnOverridesSnapshot,
     ) -> String {
         var parts: [String] = []
         if let sel = overrides.toolSelection {
@@ -219,7 +219,7 @@ enum PlaygroundTracePrinter {
     }
 
     private static func describeCompaction(
-        _ info: AgentTraceEntry.Kind.ContextCompactionInfo
+        _ info: AgentTraceEntry.Kind.ContextCompactionInfo,
     ) -> String {
         var parts: [String] = []
         if let provider = info.provider {
@@ -242,7 +242,7 @@ enum PlaygroundTracePrinter {
     }
 
     private static func describeApproval(
-        _ info: AgentTraceEntry.Kind.ToolApprovalRequiredInfo
+        _ info: AgentTraceEntry.Kind.ToolApprovalRequiredInfo,
     ) -> String {
         var parts = ["tool \(info.call.name) (\(info.call.id))"]
         if let context = info.context {

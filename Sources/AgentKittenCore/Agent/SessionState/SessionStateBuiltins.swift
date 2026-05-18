@@ -98,7 +98,7 @@ private struct SetStateTool: AgentTool {
             properties: [
                 "key": .string(description: AgentKittenLocalization.string("sessionState.setStateKeyDescription")),
                 "value": .string(
-                    description: AgentKittenLocalization.string("sessionState.setStateValueDescription")
+                    description: AgentKittenLocalization.string("sessionState.setStateValueDescription"),
                 ),
             ],
             required: [

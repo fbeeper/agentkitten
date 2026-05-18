@@ -27,11 +27,11 @@ public struct ProviderReference: Sendable, Equatable, Hashable {
     /// Haiku vs. Anthropic Sonnet can still use wrapper types, while
     /// conversation-level inference settings belong on configuration types.
     public static func ofType<Provider: InferenceProviding>(
-        _ type: Provider.Type
+        _ type: Provider.Type,
     ) -> Self {
         Self(storage: .providerType(
             ObjectIdentifier(type),
-            String(describing: type)
+            String(describing: type),
         ))
     }
 

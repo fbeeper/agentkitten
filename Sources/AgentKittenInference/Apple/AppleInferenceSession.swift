@@ -53,7 +53,7 @@ public actor AppleInferenceSession: InferenceSession {
         systemPrompt: String?,
         model: SystemLanguageModel,
         toolRuntime: ToolRuntime,
-        toolSelection: ToolSelection
+        toolSelection: ToolSelection,
     ) {
         let eventRelay = ToolEventRelay()
         self.eventRelay = eventRelay
@@ -64,14 +64,14 @@ public actor AppleInferenceSession: InferenceSession {
             toolRuntime: toolRuntime,
             toolSelection: toolSelection,
             toolBridgeRuntime: toolBridgeRuntime,
-            eventRelay: eventRelay
+            eventRelay: eventRelay,
         )
         self.bridgedTools = bridged
         self.model = model
         languageSession = Self.makeLanguageSession(
             systemPrompt: systemPrompt,
             model: model,
-            bridgedTools: bridged
+            bridgedTools: bridged,
         )
     }
 
@@ -85,7 +85,7 @@ public actor AppleInferenceSession: InferenceSession {
         transcript: FoundationModels.Transcript,
         model: SystemLanguageModel,
         toolRuntime: ToolRuntime,
-        toolSelection: ToolSelection
+        toolSelection: ToolSelection,
     ) {
         let eventRelay = ToolEventRelay()
         self.eventRelay = eventRelay
@@ -96,7 +96,7 @@ public actor AppleInferenceSession: InferenceSession {
             toolRuntime: toolRuntime,
             toolSelection: toolSelection,
             toolBridgeRuntime: toolBridgeRuntime,
-            eventRelay: eventRelay
+            eventRelay: eventRelay,
         )
         self.bridgedTools = bridged
         self.model = model
@@ -112,7 +112,7 @@ public actor AppleInferenceSession: InferenceSession {
         languageSession = LanguageModelSession(
             model: model,
             tools: bridgedTools,
-            transcript: transcript
+            transcript: transcript,
         )
     }
 
@@ -120,13 +120,13 @@ public actor AppleInferenceSession: InferenceSession {
         toolRuntime: ToolRuntime,
         toolSelection: ToolSelection,
         toolBridgeRuntime: AppleToolBridgeRuntime,
-        eventRelay: ToolEventRelay
+        eventRelay: ToolEventRelay,
     ) -> [any Tool] {
         let selectedTools = toolRuntime.tools(matching: toolSelection)
         let bridged: [any Tool] = selectedTools
             .filter {
                 $0.capabilities.producesOnly(
-                    AppleToolResultSupport.supportedKinds
+                    AppleToolResultSupport.supportedKinds,
                 )
             }
             .compactMap {
@@ -134,19 +134,19 @@ public actor AppleInferenceSession: InferenceSession {
                     agentTool: $0,
                     toolBridgeRuntime: toolBridgeRuntime,
                     eventRelay: eventRelay,
-                    rationaleDescription: toolRuntime.rationaleSchemaDescription
+                    rationaleDescription: toolRuntime.rationaleSchemaDescription,
                 )
             }
         if bridged.count < selectedTools.count {
             assert(
                 false,
-                "AppleInferenceSession initialized without provider preflight; unsupported tools were dropped."
+                "AppleInferenceSession initialized without provider preflight; unsupported tools were dropped.",
             )
             logger.error(
                 """
                 AppleInferenceSession initialized without provider preflight; unsupported \
                 tools were dropped from the bridged Foundation Models session.
-                """
+                """,
             )
         }
         return bridged
@@ -155,7 +155,7 @@ public actor AppleInferenceSession: InferenceSession {
     private static func makeLanguageSession(
         systemPrompt: String?,
         model: SystemLanguageModel,
-        bridgedTools: [any Tool]
+        bridgedTools: [any Tool],
     ) -> LanguageModelSession {
         if bridgedTools.isEmpty {
             if let prompt = systemPrompt {
@@ -183,14 +183,14 @@ public actor AppleInferenceSession: InferenceSession {
 
         let options = GenerationOptions(
             temperature: parameters.configuration.temperature,
-            maximumResponseTokens: parameters.configuration.maxTokens
+            maximumResponseTokens: parameters.configuration.maxTokens,
         )
 
         let (stream, continuation) = InferenceStream.makeStream()
         let toolTurnRuntime = toolRuntime.makeTurnRuntime(
             toolStepBudget: parameters.toolStepBudget,
             context: parameters.toolExecutionContext,
-            toolSelection: parameters.toolSelection
+            toolSelection: parameters.toolSelection,
         )
         await toolBridgeRuntime.beginTurn(toolTurnRuntime)
         let eventRelay = self.eventRelay
@@ -222,7 +222,7 @@ public actor AppleInferenceSession: InferenceSession {
     private func runGeneration(
         prompt: String,
         options: GenerationOptions,
-        continuation: InferenceStream.Continuation
+        continuation: InferenceStream.Continuation,
     ) async {
         let response = languageSession.streamResponse(to: Prompt(prompt), options: options)
         // FoundationModels streams cumulative text snapshots, not deltas.
@@ -260,15 +260,15 @@ public actor AppleInferenceSession: InferenceSession {
                     provider: Self.providerName,
                     message: "Context window exceeded",
                     contextTokens: contextTokens,
-                    contextSize: model.contextSize
-                )
+                    contextSize: model.contextSize,
+                ),
             ))
             #else
             continuation.finish(throwing: InferenceError.contextWindowExceeded(
                 ContextWindowExceededInfo(
                     provider: Self.providerName,
-                    message: "Context window exceeded"
-                )
+                    message: "Context window exceeded",
+                ),
             ))
             #endif
         } catch {
@@ -296,7 +296,7 @@ extension AppleInferenceSession {
         }
         return try await Self.contextUsage(
             for: Array(languageSession.transcript),
-            model: model
+            model: model,
         )
     }
 }

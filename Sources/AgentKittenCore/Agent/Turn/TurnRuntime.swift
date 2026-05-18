@@ -16,7 +16,7 @@ final class TurnRuntime<Result: Sendable>: Sendable {
         text: String,
         sender: UserID,
         requestedTurnOverrides: TurnOverrides,
-        executionEnvironment: ExecutionEnvironment
+        executionEnvironment: ExecutionEnvironment,
     ) {
         self.id = id
         self.text = text

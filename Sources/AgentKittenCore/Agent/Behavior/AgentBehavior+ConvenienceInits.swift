@@ -15,12 +15,12 @@ extension AgentBehavior {
     public init(
         systemPrompt: String,
         inferenceConfiguration: InferenceConfiguration,
-        defaultAutomaticCompactionPolicy: AutomaticCompactionPolicy = .disabled
+        defaultAutomaticCompactionPolicy: AutomaticCompactionPolicy = .disabled,
     ) {
         self.init(
             systemPrompt: systemPrompt,
             phaseBehaviors: PhaseBehaviorSet(base: PhaseBehavior(inferenceConfiguration: inferenceConfiguration)),
-            defaultAutomaticCompactionPolicy: defaultAutomaticCompactionPolicy
+            defaultAutomaticCompactionPolicy: defaultAutomaticCompactionPolicy,
         )
     }
 

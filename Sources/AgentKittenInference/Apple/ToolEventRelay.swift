@@ -32,7 +32,7 @@ actor ToolEventRelay {
             },
             emitHookFired: { info in
                 continuation.yield(.toolHookFired(info))
-            }
+            },
         )
         activeTurn = turn
         return turn
@@ -40,7 +40,7 @@ actor ToolEventRelay {
 
     /// Starts forwarding events to a structured inference stream.
     func beginTurn<T: Sendable>(
-        _ continuation: StructuredInferenceStream<T>.Continuation
+        _ continuation: StructuredInferenceStream<T>.Continuation,
     ) -> ToolEventRelayTurn {
         let turn = ToolEventRelayTurn(
             destination: .structured,
@@ -55,7 +55,7 @@ actor ToolEventRelay {
             },
             emitHookFired: { info in
                 continuation.yield(.toolHookFired(info))
-            }
+            },
         )
         activeTurn = turn
         return turn
@@ -112,7 +112,7 @@ final class ToolEventRelayTurn: Sendable {
         emitRequested: @escaping @Sendable (ToolCallID, String, String) -> Void,
         emitApprovalRequired: @escaping @Sendable (PendingToolCall) -> Void,
         emitCompleted: @escaping @Sendable (ToolCallID, String, ToolCallOutcome) -> Void,
-        emitHookFired: @escaping @Sendable (ToolHookInvocationInfo) -> Void
+        emitHookFired: @escaping @Sendable (ToolHookInvocationInfo) -> Void,
     ) {
         self.destination = destination
         self.emitRequested = emitRequested

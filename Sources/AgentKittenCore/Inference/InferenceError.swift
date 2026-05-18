@@ -17,7 +17,7 @@ public struct ContextWindowExceededInfo: Sendable, Equatable, Hashable, Codable 
         provider: String? = nil,
         message: String,
         contextTokens: Int? = nil,
-        contextSize: Int? = nil
+        contextSize: Int? = nil,
     ) {
         self.provider = provider
         self.message = message

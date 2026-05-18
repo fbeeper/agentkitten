@@ -45,7 +45,7 @@ public actor MockInferenceSession: InferenceSession {
     public init(
         responses: [MockResponse],
         structuredResponses: [String] = [],
-        structuredMockResponses: [MockResponse] = []
+        structuredMockResponses: [MockResponse] = [],
     ) {
         if responses.isEmpty {
             logger.error("MockInferenceSession initialized with empty responses; using fallback.")
@@ -56,7 +56,7 @@ public actor MockInferenceSession: InferenceSession {
         self.structuredResponses = structuredResponses
         self.structuredMockResponses = structuredMockResponses
         self.toolRuntime = ToolRuntime(
-            configuration: .noTools
+            configuration: .noTools,
         )
     }
 
@@ -65,7 +65,7 @@ public actor MockInferenceSession: InferenceSession {
         responses: [MockResponse],
         structuredResponses: [String] = [],
         structuredMockResponses: [MockResponse] = [],
-        toolRuntime: ToolRuntime
+        toolRuntime: ToolRuntime,
     ) {
         if responses.isEmpty {
             logger.error("MockInferenceSession initialized with empty responses; using fallback.")
@@ -85,7 +85,7 @@ public actor MockInferenceSession: InferenceSession {
         let toolTurnRuntime = toolRuntime.makeTurnRuntime(
             toolStepBudget: parameters.toolStepBudget,
             context: parameters.toolExecutionContext,
-            toolSelection: parameters.toolSelection
+            toolSelection: parameters.toolSelection,
         )
         let response = responses[callIndex % responses.count]
         callIndex += 1
@@ -95,7 +95,7 @@ public actor MockInferenceSession: InferenceSession {
     private static func stream(
         for response: MockResponse,
         toolTurnRuntime: ToolTurnRuntime,
-        lease: SingleFlightOperationGate<InferenceSessionOperationKind>.Lease
+        lease: SingleFlightOperationGate<InferenceSessionOperationKind>.Lease,
     ) -> InferenceStream {
         AsyncThrowingStream { continuation in
             let task = Task {
@@ -111,13 +111,13 @@ public actor MockInferenceSession: InferenceSession {
                         let call = PendingToolCall(
                             id: UUID().uuidString,
                             name: name,
-                            argumentsJSON: argumentsJSON
+                            argumentsJSON: argumentsJSON,
                         )
                         try await streamToolCall(
                             call: call,
                             thenRespond: thenRespond,
                             toolTurnRuntime: toolTurnRuntime,
-                            continuation: continuation
+                            continuation: continuation,
                         )
                     }
                 } catch is CancellationError {
@@ -138,7 +138,7 @@ public actor MockInferenceSession: InferenceSession {
         call: PendingToolCall,
         thenRespond: String,
         toolTurnRuntime: ToolTurnRuntime,
-        continuation: InferenceStream.Continuation
+        continuation: InferenceStream.Continuation,
     ) async throws {
         try Task.checkCancellation()
         continuation.yield(.toolCallRequested(id: call.id, name: call.name, argumentsJSON: call.argumentsJSON))
@@ -148,19 +148,19 @@ public actor MockInferenceSession: InferenceSession {
             toolTurnRuntime: toolTurnRuntime,
             onApprovalRequired: { pendingCall in
                 continuation.yield(.toolApprovalRequired(call: pendingCall))
-            }
+            },
         )
         continuation.yield(.toolCallCompleted(
             id: call.id,
             name: call.name,
-            outcome: outcome
+            outcome: outcome,
         ))
         try await streamWords(thenRespond, into: continuation)
     }
 
     private static func streamWords(
         _ text: String,
-        into continuation: InferenceStream.Continuation
+        into continuation: InferenceStream.Continuation,
     ) async throws {
         let words = text.split(separator: " ")
         for (index, word) in words.enumerated() {
@@ -177,7 +177,7 @@ public actor MockInferenceSession: InferenceSession {
 extension MockInferenceSession: StructuredInferenceSession {
     public func generateStream<T: Codable & Sendable & JSONSchemaProviding>(
         prompt: String,
-        parameters: InferenceRequestParameters
+        parameters: InferenceRequestParameters,
     ) async throws
         -> StructuredInferenceStream<T> {
         let lease = try operationGate.begin(.generate)
@@ -186,7 +186,7 @@ extension MockInferenceSession: StructuredInferenceSession {
             let toolTurnRuntime = toolRuntime.makeTurnRuntime(
                 toolStepBudget: parameters.toolStepBudget,
                 context: parameters.toolExecutionContext,
-                toolSelection: parameters.toolSelection
+                toolSelection: parameters.toolSelection,
             )
             let response = try structuredResponse()
             return AsyncThrowingStream { continuation in
@@ -195,7 +195,7 @@ extension MockInferenceSession: StructuredInferenceSession {
                         let json = try await Self.structuredJSON(
                             for: response,
                             toolTurnRuntime: toolTurnRuntime,
-                            continuation: continuation
+                            continuation: continuation,
                         )
                         let value = try Self.decodeStructuredValue(T.self, from: json)
                         continuation.yield(.result(value, .endTurn))
@@ -224,7 +224,7 @@ extension MockInferenceSession {
         }
         return ContextUsage(
             contextTokens: estimatedContextTokens,
-            contextSize: 100
+            contextSize: 100,
         )
     }
 
@@ -240,7 +240,7 @@ extension MockInferenceSession: ContextCompactableSession {
 
     public func applyCompaction(
         summary: String?,
-        preservedRecentTurnCount: Int
+        preservedRecentTurnCount: Int,
     ) async throws -> ContextCompactionResult {
         let before = ContextUsage(contextTokens: estimatedContextTokens, contextSize: 100)
         estimatedContextTokens = min(estimatedContextTokens, max(0, preservedRecentTurnCount * 10))
@@ -262,13 +262,13 @@ extension MockInferenceSession {
             return .success(response)
         }
         throw StructuredGenerationError.generationFailed(
-            MockStructuredGenerationError.noResponsesConfigured
+            MockStructuredGenerationError.noResponsesConfigured,
         )
     }
 
     private static func decodeStructuredValue<T: Decodable>(
         _ type: T.Type,
-        from json: String
+        from json: String,
     ) throws(StructuredGenerationError) -> T {
         do {
             return try JSONDecoder().decode(T.self, from: Data(json.utf8))
@@ -280,7 +280,7 @@ extension MockInferenceSession {
     private static func structuredJSON<T: Sendable>(
         for response: MockResponse,
         toolTurnRuntime: ToolTurnRuntime,
-        continuation: StructuredInferenceStream<T>.Continuation
+        continuation: StructuredInferenceStream<T>.Continuation,
     ) async throws(StructuredGenerationError) -> String {
         switch response {
         case .success(let text):
@@ -291,13 +291,13 @@ extension MockInferenceSession {
             let pending = PendingToolCall(
                 id: UUID().uuidString,
                 name: name,
-                argumentsJSON: argumentsJSON
+                argumentsJSON: argumentsJSON,
             )
             return try await structuredToolResponse(
                 pending,
                 thenRespond: thenRespond,
                 toolTurnRuntime: toolTurnRuntime,
-                continuation: continuation
+                continuation: continuation,
             )
         }
     }
@@ -306,28 +306,28 @@ extension MockInferenceSession {
         _ pending: PendingToolCall,
         thenRespond: String,
         toolTurnRuntime: ToolTurnRuntime,
-        continuation: StructuredInferenceStream<T>.Continuation
+        continuation: StructuredInferenceStream<T>.Continuation,
     ) async throws(StructuredGenerationError) -> String {
         continuation.yield(
             .toolCallRequested(
                 id: pending.id,
                 name: pending.name,
-                argumentsJSON: pending.argumentsJSON
-            )
+                argumentsJSON: pending.argumentsJSON,
+            ),
         )
         let outcome = await toolOutcome(
             for: pending,
             toolTurnRuntime: toolTurnRuntime,
             onApprovalRequired: { pendingCall in
                 continuation.yield(.toolApprovalRequired(call: pendingCall))
-            }
+            },
         )
         continuation.yield(
             .toolCallCompleted(
                 id: pending.id,
                 name: pending.name,
-                outcome: outcome
-            )
+                outcome: outcome,
+            ),
         )
         switch outcome {
         case .success:
@@ -338,7 +338,7 @@ extension MockInferenceSession {
             throw StructuredGenerationError.generationFailed(MockStructuredGenerationError.stepLimitExceeded)
         case .failure(.execution(let message)):
             throw StructuredGenerationError.generationFailed(
-                InferenceError.invalidResponse(message)
+                InferenceError.invalidResponse(message),
             )
         }
     }
@@ -346,11 +346,11 @@ extension MockInferenceSession {
     private static func toolOutcome(
         for pending: PendingToolCall,
         toolTurnRuntime: ToolTurnRuntime,
-        onApprovalRequired: @escaping @Sendable (PendingToolCall) async -> Void
+        onApprovalRequired: @escaping @Sendable (PendingToolCall) async -> Void,
     ) async -> ToolCallOutcome {
         await toolTurnRuntime.invoke(
             pending,
-            onApprovalRequired: onApprovalRequired
+            onApprovalRequired: onApprovalRequired,
         )
     }
 

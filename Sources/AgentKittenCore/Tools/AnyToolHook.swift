@@ -31,7 +31,7 @@ public struct AnyToolHook: Sendable {
     func afterExecute(
         _ call: PendingToolCall,
         outcome: ToolCallOutcome,
-        context: ToolExecutionContext
+        context: ToolExecutionContext,
     ) async -> ToolCallOutcome {
         await afterHandler(call, outcome, context)
     }

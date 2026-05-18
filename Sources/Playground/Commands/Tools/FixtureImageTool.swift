@@ -36,7 +36,7 @@ struct FixtureImageTool: RichAgentTool {
     private func fixtureURL() throws -> URL {
         guard let url = Bundle.module.url(forResource: "rich-tool-demo", withExtension: "png") else {
             throw FixtureImageToolError.missingFixture(
-                "Missing bundled fixture rich-tool-demo.png in Sources/Playground/Fixtures."
+                "Missing bundled fixture rich-tool-demo.png in Sources/Playground/Fixtures.",
             )
         }
         return url

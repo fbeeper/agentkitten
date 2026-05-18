@@ -69,10 +69,10 @@ public actor AppleInferenceProvider: InferenceProviding {
 
     public nonisolated func preflight(
         toolRegistry: ToolRegistry,
-        toolSelection: ToolSelection
+        toolSelection: ToolSelection,
     ) throws {
         if let error = AppleToolResultSupport.unsupportedToolError(
-            for: toolRegistry.filtered(by: toolSelection)
+            for: toolRegistry.filtered(by: toolSelection),
         ) {
             throw error
         }
@@ -86,7 +86,7 @@ public actor AppleInferenceProvider: InferenceProviding {
     /// history via `LanguageModelSession.transcript`.
     public nonisolated func sessionCompatibility(
         from current: EffectiveExecutionConfiguration,
-        to next: EffectiveExecutionConfiguration
+        to next: EffectiveExecutionConfiguration,
     ) -> SessionCompatibility {
         if current.provider != next.provider {
             return .replace
@@ -108,14 +108,14 @@ public actor AppleInferenceProvider: InferenceProviding {
         systemPrompt: String?,
         toolRuntime: ToolRuntime,
         toolSelection: ToolSelection,
-        inferenceContext: InferenceContext
+        inferenceContext: InferenceContext,
     ) -> AppleInferenceSession {
         let model = (inferenceContext[AppleLanguageModelKey.self] ?? defaultModel).systemLanguageModel
         return AppleInferenceSession(
             systemPrompt: systemPrompt,
             model: model,
             toolRuntime: toolRuntime,
-            toolSelection: toolSelection
+            toolSelection: toolSelection,
         )
     }
 
@@ -130,7 +130,7 @@ public actor AppleInferenceProvider: InferenceProviding {
         systemPrompt: String?,
         toolRuntime: ToolRuntime,
         toolSelection: ToolSelection,
-        inferenceContext: InferenceContext
+        inferenceContext: InferenceContext,
     ) async throws -> AppleInferenceSession {
         let transcript: FoundationModels.Transcript = await session.captureTranscript()
         let model = (inferenceContext[AppleLanguageModelKey.self] ?? defaultModel).systemLanguageModel
@@ -138,7 +138,7 @@ public actor AppleInferenceProvider: InferenceProviding {
             transcript: transcript,
             model: model,
             toolRuntime: toolRuntime,
-            toolSelection: toolSelection
+            toolSelection: toolSelection,
         )
     }
 

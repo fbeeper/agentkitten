@@ -16,13 +16,13 @@ struct TurnEventSink<Result: Sendable> {
         continuation: AsyncThrowingStream<AgentEvent<Result>, Error>.Continuation,
         agentID: AgentID,
         sessionID: AgentSessionID,
-        invocationID: InvocationID
+        invocationID: InvocationID,
     ) {
         self.continuation = continuation
         self.mapper = ConversationEventMapper<Result>(
             agentID: agentID,
             sessionID: sessionID,
-            invocationID: invocationID
+            invocationID: invocationID,
         )
     }
 

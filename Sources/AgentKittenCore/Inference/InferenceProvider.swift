@@ -25,13 +25,13 @@ public protocol InferenceProviding: Sendable {
     /// tools and current tool selection, such as supported tool-result content kinds.
     nonisolated func preflight(
         toolRegistry: ToolRegistry,
-        toolSelection: ToolSelection
+        toolSelection: ToolSelection,
     ) throws
 
     /// Returns whether a conversation can be reused across a turn-configuration transition.
     nonisolated func sessionCompatibility(
         from current: EffectiveExecutionConfiguration,
-        to next: EffectiveExecutionConfiguration
+        to next: EffectiveExecutionConfiguration,
     ) -> SessionCompatibility
 
     /// Creates a new session for a single conversation thread.
@@ -52,7 +52,7 @@ public protocol InferenceProviding: Sendable {
         systemPrompt: String?,
         toolRuntime: ToolRuntime,
         toolSelection: ToolSelection,
-        inferenceContext: InferenceContext
+        inferenceContext: InferenceContext,
     ) -> Session
 
     /// Creates a new session that continues from an existing one, rebinding to a new tool set.
@@ -80,7 +80,7 @@ public protocol InferenceProviding: Sendable {
         systemPrompt: String?,
         toolRuntime: ToolRuntime,
         toolSelection: ToolSelection,
-        inferenceContext: InferenceContext
+        inferenceContext: InferenceContext,
     ) async throws -> Session
 
 }
@@ -88,12 +88,12 @@ public protocol InferenceProviding: Sendable {
 extension InferenceProviding {
     public nonisolated func preflight(
         toolRegistry: ToolRegistry,
-        toolSelection: ToolSelection
+        toolSelection: ToolSelection,
     ) throws {}
 
     public nonisolated func sessionCompatibility(
         from current: EffectiveExecutionConfiguration,
-        to next: EffectiveExecutionConfiguration
+        to next: EffectiveExecutionConfiguration,
     ) -> SessionCompatibility {
         if current.provider != next.provider || current.toolSelection != next.toolSelection {
             return .replace
@@ -106,13 +106,13 @@ extension InferenceProviding {
         systemPrompt: String?,
         toolRuntime: ToolRuntime,
         toolSelection: ToolSelection,
-        inferenceContext: InferenceContext
+        inferenceContext: InferenceContext,
     ) async throws -> Session {
         makeSession(
             systemPrompt: systemPrompt,
             toolRuntime: toolRuntime,
             toolSelection: toolSelection,
-            inferenceContext: inferenceContext
+            inferenceContext: inferenceContext,
         )
     }
 
@@ -160,31 +160,31 @@ public struct InferenceProvider<Provider: InferenceProviding>: InferenceProvidin
         systemPrompt: String?,
         toolRuntime: ToolRuntime,
         toolSelection: ToolSelection,
-        inferenceContext: InferenceContext = .empty
+        inferenceContext: InferenceContext = .empty,
     ) -> Provider.Session {
         provider.makeSession(
             systemPrompt: systemPrompt,
             toolRuntime: toolRuntime,
             toolSelection: toolSelection,
-            inferenceContext: inferenceContext
+            inferenceContext: inferenceContext,
         )
     }
 
     /// Performs provider-specific compatibility checks before session construction.
     public func preflight(
         toolRegistry: ToolRegistry,
-        toolSelection: ToolSelection
+        toolSelection: ToolSelection,
     ) throws {
         try provider.preflight(
             toolRegistry: toolRegistry,
-            toolSelection: toolSelection
+            toolSelection: toolSelection,
         )
     }
 
     /// Returns whether a conversation can be reused across a turn-configuration transition.
     public func sessionCompatibility(
         from current: EffectiveExecutionConfiguration,
-        to next: EffectiveExecutionConfiguration
+        to next: EffectiveExecutionConfiguration,
     ) -> SessionCompatibility {
         provider.sessionCompatibility(from: current, to: next)
     }
@@ -195,14 +195,14 @@ public struct InferenceProvider<Provider: InferenceProviding>: InferenceProvidin
         systemPrompt: String?,
         toolRuntime: ToolRuntime,
         toolSelection: ToolSelection,
-        inferenceContext: InferenceContext
+        inferenceContext: InferenceContext,
     ) async throws -> Provider.Session {
         try await provider.makeSession(
             continuing: session,
             systemPrompt: systemPrompt,
             toolRuntime: toolRuntime,
             toolSelection: toolSelection,
-            inferenceContext: inferenceContext
+            inferenceContext: inferenceContext,
         )
     }
 

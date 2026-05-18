@@ -61,7 +61,7 @@ enum PlaygroundToolApprovalPrompt {
         call: PendingToolCall,
         session: any ToolApproving,
         turn: Turn<AssistantMessage>,
-        memory: PlaygroundToolApprovalMemory
+        memory: PlaygroundToolApprovalMemory,
     ) async throws -> Resolution {
         try await resolve(
             call: call,
@@ -74,14 +74,14 @@ enum PlaygroundToolApprovalPrompt {
             },
             onEOF: {
                 await turn.cancel()
-            }
+            },
         )
     }
 
     static func resolve(
         call: PendingToolCall,
         gate: ToolApprovalGate,
-        memory: PlaygroundToolApprovalMemory
+        memory: PlaygroundToolApprovalMemory,
     ) async throws -> Resolution {
         try await resolve(
             call: call,
@@ -94,7 +94,7 @@ enum PlaygroundToolApprovalPrompt {
             },
             onEOF: {
                 try? await gate.deny(callID: call.id, reason: denialReason)
-            }
+            },
         )
     }
 
@@ -103,7 +103,7 @@ enum PlaygroundToolApprovalPrompt {
         memory: PlaygroundToolApprovalMemory,
         approve: @escaping @Sendable () async throws -> Void,
         deny: @escaping @Sendable (String) async throws -> Void,
-        onEOF: @escaping @Sendable () async -> Void
+        onEOF: @escaping @Sendable () async -> Void,
     ) async throws -> Resolution {
         if await memory.remembersAlwaysApproval(for: call.name) {
             try await approve()

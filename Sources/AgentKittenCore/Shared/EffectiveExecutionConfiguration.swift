@@ -23,7 +23,7 @@ public struct EffectiveExecutionConfiguration: Sendable, Equatable, Hashable {
         toolStepBudget: ToolStepBudget = .budget(20),
         inferenceConfiguration: InferenceConfiguration = .init(),
         provider: ProviderReference = .default,
-        inferenceContext: InferenceContext = .empty
+        inferenceContext: InferenceContext = .empty,
     ) {
         self.toolSelection = toolSelection
         self.toolStepBudget = toolStepBudget
@@ -38,19 +38,19 @@ public struct EffectiveExecutionConfiguration: Sendable, Equatable, Hashable {
             toolStepBudget: environment.toolStepBudget,
             inferenceConfiguration: environment.inferenceConfiguration,
             provider: environment.provider,
-            inferenceContext: InferenceContext(customValues: environment.customValues(for: .inference))
+            inferenceContext: InferenceContext(customValues: environment.customValues(for: .inference)),
         )
     }
 
     func inferenceRequestParameters(
-        toolExecutionContext: ToolExecutionContext = .empty
+        toolExecutionContext: ToolExecutionContext = .empty,
     ) -> InferenceRequestParameters {
         InferenceRequestParameters(
             configuration: inferenceConfiguration,
             toolStepBudget: toolStepBudget,
             toolSelection: toolSelection,
             toolExecutionContext: toolExecutionContext,
-            inferenceContext: inferenceContext
+            inferenceContext: inferenceContext,
         )
     }
 }

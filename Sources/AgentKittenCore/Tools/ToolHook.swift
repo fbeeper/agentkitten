@@ -26,17 +26,17 @@ public protocol ToolHook: Sendable {
     func afterExecute(
         _ call: PendingToolCall,
         outcome: ToolCallOutcome,
-        context: ToolExecutionContext
+        context: ToolExecutionContext,
     ) async -> ToolCallOutcome
 }
 
 extension ToolHook {
     public func beforeExecute(
         _ call: PendingToolCall,
-        context: ToolExecutionContext
+        context: ToolExecutionContext,
     ) async throws -> PendingToolCall {
         assertionFailure(
-            "\(type(of: self)) declares .before in phases but does not implement beforeExecute(_:context:)"
+            "\(type(of: self)) declares .before in phases but does not implement beforeExecute(_:context:)",
         )
         return call
     }
@@ -44,10 +44,10 @@ extension ToolHook {
     public func afterExecute(
         _ call: PendingToolCall,
         outcome: ToolCallOutcome,
-        context: ToolExecutionContext
+        context: ToolExecutionContext,
     ) async -> ToolCallOutcome {
         assertionFailure(
-            "\(type(of: self)) declares .after in phases but does not implement afterExecute(_:outcome:context:)"
+            "\(type(of: self)) declares .after in phases but does not implement afterExecute(_:outcome:context:)",
         )
         return outcome
     }

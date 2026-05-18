@@ -11,6 +11,6 @@ package protocol ContextCompactionStrategy: Sendable {
     /// failures into ``ContextCompactionResult/skipped(_:)``.
     func compact(
         _ session: any ContextCompactableSession,
-        summaryGenerator: ContextCompactionSummaryGenerator
+        summaryGenerator: ContextCompactionSummaryGenerator,
     ) async throws -> ContextCompactionResult
 }

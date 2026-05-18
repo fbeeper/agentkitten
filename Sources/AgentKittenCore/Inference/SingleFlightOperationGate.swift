@@ -61,7 +61,7 @@ extension SingleFlightOperationGate {
         fileprivate init(
             gate: SingleFlightOperationGate<Kind>,
             operationID: UUID,
-            operationKind: Kind
+            operationKind: Kind,
         ) {
             self.gate = gate
             self.operationID = operationID
@@ -86,7 +86,7 @@ extension SingleFlightOperationGate {
                 Leaked SingleFlightOperationGate lease for operation kind \(String(describing: operationKind)). \
                 Leases must be ended explicitly from the operation lifecycle \
                 (for example via defer or stream termination).
-                """
+                """,
             )
         }
     }

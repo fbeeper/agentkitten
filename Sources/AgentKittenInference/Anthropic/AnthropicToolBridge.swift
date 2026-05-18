@@ -12,8 +12,8 @@ enum AnthropicToolBridge {
             description: tool.description,
             inputSchema: injectingRationale(
                 into: anthropicJSONValue(from: tool.schema.parameters),
-                description: rationaleDescription
-            )
+                description: rationaleDescription,
+            ),
         )
     }
 
@@ -68,7 +68,7 @@ enum AnthropicToolBridge {
 
     private static func injectingRationale(
         into schema: AnthropicJSONValue,
-        description: String
+        description: String,
     ) -> AnthropicJSONValue {
         guard case .object(var dict) = schema,
               case .object(var props) = dict["properties"]

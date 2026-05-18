@@ -58,7 +58,7 @@ extension JSONSchema {
                     name: key,
                     description: schema.propertyDescription,
                     schema: schema.toDynamicSchema(name: key),
-                    isOptional: !required.contains(key)
+                    isOptional: !required.contains(key),
                 )
             }
             return DynamicGenerationSchema(name: name, description: nil, properties: props)

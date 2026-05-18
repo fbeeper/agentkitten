@@ -25,7 +25,7 @@ public struct AgentBehavior: Sendable {
     public init(
         systemPrompt: String,
         phaseBehaviors: PhaseBehaviorSet = .init(),
-        defaultAutomaticCompactionPolicy: AutomaticCompactionPolicy = .disabled
+        defaultAutomaticCompactionPolicy: AutomaticCompactionPolicy = .disabled,
     ) {
         self.systemPrompt = systemPrompt
         self.phaseBehaviors = phaseBehaviors

@@ -25,7 +25,7 @@ struct ConversationProvider {
 
     init(
         owner: UserID,
-        factory: ConversationAssembler
+        factory: ConversationAssembler,
     ) {
         self.owner = owner
         self.assembler = factory
@@ -36,54 +36,54 @@ struct ConversationProvider {
     }
 
     func compactActiveConversation(
-        options: ContextCompactionOptions
+        options: ContextCompactionOptions,
     ) async throws -> ContextCompactionResult? {
         guard let activeConversation else {
             return nil
         }
         return try await activeConversation.conversation.compactContext(
             options: options,
-            summaryGenerator: assembler.makeSummaryGenerator()
+            summaryGenerator: assembler.makeSummaryGenerator(),
         )
     }
 
     func compactionTraceInfo(
         mode: AgentTraceEntry.Kind.ContextCompactionInfo.Mode,
-        result: ContextCompactionResult
+        result: ContextCompactionResult,
     ) -> AgentTraceEntry.Kind.ContextCompactionInfo {
         assembler.compactionTraceInfo(mode: mode, result: result)
     }
 
     mutating func resolveConversation(
         for executionConfiguration: EffectiveExecutionConfiguration,
-        automaticCompactionPolicy: AutomaticCompactionPolicy
+        automaticCompactionPolicy: AutomaticCompactionPolicy,
     ) async throws -> ConversationResolutionResult {
         switch preliminaryResolutionKind(for: executionConfiguration) {
         case .reuse:
             return try await resolveExistingConversation(
                 for: executionConfiguration,
                 plannedKind: .reuse,
-                automaticCompactionPolicy: automaticCompactionPolicy
+                automaticCompactionPolicy: automaticCompactionPolicy,
             )
         case .rebuildSession:
             return try await resolveExistingConversation(
                 for: executionConfiguration,
                 plannedKind: .rebuildSession,
-                automaticCompactionPolicy: automaticCompactionPolicy
+                automaticCompactionPolicy: automaticCompactionPolicy,
             )
         case .replace:
             let conversation = try assembler.makeConversation(
                 owner: owner,
-                executionConfiguration: executionConfiguration
+                executionConfiguration: executionConfiguration,
             )
             activeConversation = ActiveConversation(
                 executionConfiguration: executionConfiguration,
-                conversation: conversation
+                conversation: conversation,
             )
             return ConversationResolutionResult(
                 conversation: conversation,
                 resolutionKind: .replace,
-                automaticCompactionResult: .skipped(.conversationReplaced)
+                automaticCompactionResult: .skipped(.conversationReplaced),
             )
         }
     }
@@ -93,7 +93,7 @@ struct ConversationProvider {
     /// ``ConversationResolutionResult/resolutionKind`` is determined after
     /// compaction by inspecting the conversation identity.
     private func preliminaryResolutionKind(
-        for executionConfiguration: EffectiveExecutionConfiguration
+        for executionConfiguration: EffectiveExecutionConfiguration,
     ) -> ConversationResolutionResult.Kind {
         guard let activeConversation else {
             return .replace
@@ -103,10 +103,10 @@ struct ConversationProvider {
         }
 
         let currentProvider = assembler.resolvedProviderObjectIdentifier(
-            for: activeConversation.executionConfiguration
+            for: activeConversation.executionConfiguration,
         )
         let nextProvider = assembler.resolvedProviderObjectIdentifier(
-            for: executionConfiguration
+            for: executionConfiguration,
         )
         guard currentProvider == nextProvider else {
             return .replace
@@ -114,7 +114,7 @@ struct ConversationProvider {
 
         switch assembler.sessionCompatibility(
             from: activeConversation.executionConfiguration,
-            to: executionConfiguration
+            to: executionConfiguration,
         ) {
         case .reuse:
             return .reuse
@@ -128,7 +128,7 @@ struct ConversationProvider {
     private mutating func resolveExistingConversation(
         for executionConfiguration: EffectiveExecutionConfiguration,
         plannedKind: ConversationResolutionResult.Kind,
-        automaticCompactionPolicy: AutomaticCompactionPolicy
+        automaticCompactionPolicy: AutomaticCompactionPolicy,
     ) async throws -> ConversationResolutionResult {
         let conversation = resolvedActiveConversation
         let identityBeforeResolution = await conversation.identity()
@@ -136,21 +136,21 @@ struct ConversationProvider {
             conversation,
             plannedKind: plannedKind,
             executionConfiguration: executionConfiguration,
-            automaticCompactionPolicy: automaticCompactionPolicy
+            automaticCompactionPolicy: automaticCompactionPolicy,
         )
         let resolvedKind = await resolvedKind(
             plannedKind: plannedKind,
             existingIdentity: identityBeforeResolution,
-            conversation: conversation
+            conversation: conversation,
         )
         activeConversation = ActiveConversation(
             executionConfiguration: executionConfiguration,
-            conversation: conversation
+            conversation: conversation,
         )
         return ConversationResolutionResult(
             conversation: conversation,
             resolutionKind: resolvedKind,
-            automaticCompactionResult: compaction
+            automaticCompactionResult: compaction,
         )
     }
 
@@ -158,20 +158,20 @@ struct ConversationProvider {
         _ conversation: AnyConversation,
         plannedKind: ConversationResolutionResult.Kind,
         executionConfiguration: EffectiveExecutionConfiguration,
-        automaticCompactionPolicy: AutomaticCompactionPolicy
+        automaticCompactionPolicy: AutomaticCompactionPolicy,
     ) async throws -> ContextCompactionResult {
         switch plannedKind {
         case .reuse:
             return try await AutomaticCompactionOperation.compactIfNeeded(
                 conversation,
                 policy: automaticCompactionPolicy,
-                summaryGenerator: assembler.makeSummaryGenerator()
+                summaryGenerator: assembler.makeSummaryGenerator(),
             )
         case .rebuildSession:
             return try await assembler.updateConversationSession(
                 conversation,
                 for: executionConfiguration,
-                automaticCompactionPolicy: automaticCompactionPolicy
+                automaticCompactionPolicy: automaticCompactionPolicy,
             )
         case .replace:
             preconditionFailure("Replacement conversations are not resolved from an existing conversation")
@@ -181,7 +181,7 @@ struct ConversationProvider {
     private func resolvedKind(
         plannedKind: ConversationResolutionResult.Kind,
         existingIdentity: ConversationIdentity,
-        conversation: AnyConversation
+        conversation: AnyConversation,
     ) async -> ConversationResolutionResult.Kind {
         let resolvedIdentity = await conversation.identity()
         if resolvedIdentity.conversationID != existingIdentity.conversationID {

@@ -11,7 +11,7 @@ public struct ContextUsage: Sendable, Codable, Equatable, Hashable {
     /// Creates a context usage estimate.
     public init(
         contextTokens: Int,
-        contextSize: Int? = nil
+        contextSize: Int? = nil,
     ) {
         self.contextTokens = contextTokens
         self.contextSize = contextSize

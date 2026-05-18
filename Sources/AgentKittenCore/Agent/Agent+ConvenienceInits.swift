@@ -31,7 +31,7 @@ extension Agent {
         toolBehavior: ToolBehavior = .init(),
         owner: UserID = .local,
         sessionState: SessionStateMode = .disabled,
-        traceRetentionPolicy: TraceRetentionPolicy = .maxTurns(150)
+        traceRetentionPolicy: TraceRetentionPolicy = .maxTurns(150),
     ) {
         self.init(
             agentId: agentId,
@@ -39,13 +39,13 @@ extension Agent {
             behavior: AgentBehavior(
                 systemPrompt: systemPrompt,
                 inferenceConfiguration: inferenceConfiguration,
-                defaultAutomaticCompactionPolicy: defaultAutomaticCompactionPolicy
+                defaultAutomaticCompactionPolicy: defaultAutomaticCompactionPolicy,
             ),
             toolDefinition: toolDefinition,
             toolBehavior: toolBehavior,
             owner: owner,
             sessionState: sessionState,
-            traceRetentionPolicy: traceRetentionPolicy
+            traceRetentionPolicy: traceRetentionPolicy,
         )
     }
 

@@ -29,7 +29,7 @@ extension AgentEvent {
             invocationID: InvocationID,
             author: EventAuthor,
             timestamp: Date,
-            parentEventID: EventID? = nil
+            parentEventID: EventID? = nil,
         ) {
             self.eventID = eventID
             self.sessionID = sessionID

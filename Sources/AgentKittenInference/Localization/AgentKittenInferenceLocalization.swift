@@ -39,7 +39,7 @@ public enum AgentKittenInferenceLocalization {
             key,
             overrideBundle: overrideBundle,
             packagedBundle: packagedBundle,
-            arguments: arguments
+            arguments: arguments,
         )
     }
 }
