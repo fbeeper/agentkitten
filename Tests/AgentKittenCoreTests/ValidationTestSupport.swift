@@ -5,7 +5,9 @@ import Foundation
 import Testing
 @testable import AgentKittenCore
 
-struct MinimumLengthValidator: Validator<AssistantMessage> {
+struct MinimumLengthValidator: Validator {
+    typealias Result = AssistantMessage
+
     let minimumLength: Int
 
     var traceName: String {
@@ -20,7 +22,9 @@ struct MinimumLengthValidator: Validator<AssistantMessage> {
     }
 }
 
-struct TerminalFailureValidator: Validator<AssistantMessage> {
+struct TerminalFailureValidator: Validator {
+    typealias Result = AssistantMessage
+
     let reason: String
 
     func validate(_ context: ValidationContext<AssistantMessage>) async throws -> ValidationResult {
@@ -28,7 +32,9 @@ struct TerminalFailureValidator: Validator<AssistantMessage> {
     }
 }
 
-struct ThrowingValidator: Validator<AssistantMessage> {
+struct ThrowingValidator: Validator {
+    typealias Result = AssistantMessage
+
     let message: String
 
     func validate(_ context: ValidationContext<AssistantMessage>) async throws -> ValidationResult {
@@ -42,7 +48,9 @@ struct ValidationTestError: Error, CustomStringConvertible {
     var description: String { message }
 }
 
-struct OrderedValidator: Validator<AssistantMessage> {
+struct OrderedValidator: Validator {
+    typealias Result = AssistantMessage
+
     let result: ValidationResult
     let recorder: ValidationRecorder
     let label: String
@@ -86,7 +94,9 @@ actor FlakyValidationRecorder {
     }
 }
 
-struct FlakyValidator: Validator<AssistantMessage> {
+struct FlakyValidator: Validator {
+    typealias Result = AssistantMessage
+
     let recorder: FlakyValidationRecorder
     let errorMessage: String
 
