@@ -1,8 +1,8 @@
 // SPDX-FileCopyrightText: 2026 AgentKitten Authors
 // SPDX-License-Identifier: Apache-2.0
 
-import Testing
 @testable import AgentKittenCore
+import Testing
 
 @Suite("Validation Error Handling")
 struct ValidationErrorHandlingTests {
@@ -13,16 +13,16 @@ struct ValidationErrorHandlingTests {
         )
         let agent = Agent(
             providerRegistry: ProviderRegistry(default: provider),
-            behavior: .test()
+            behavior: .test(),
         )
         let session = agent.makeSession()
 
         let turn = try await session.send("Hello", validation: ValidationConfiguration(
             validator: FlakyValidator(
                 recorder: recorder,
-                errorMessage: "validator unavailable"
+                errorMessage: "validator unavailable",
             ),
-            maxRetries: 1
+            maxRetries: 1,
         ))
         let events = try await collectEvents(from: turn)
 
@@ -35,7 +35,7 @@ struct ValidationErrorHandlingTests {
             .validation(.init(
                 result: .pass,
                 message: AgentKittenLocalization.string("validation.validationPassed"),
-                validator: "FlakyValidator"
+                validator: "FlakyValidator",
             )),
             .turnCompleted(.completed),
         ])

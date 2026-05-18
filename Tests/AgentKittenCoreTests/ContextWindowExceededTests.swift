@@ -1,15 +1,15 @@
 // SPDX-FileCopyrightText: 2026 AgentKitten Authors
 // SPDX-License-Identifier: Apache-2.0
 
-import Testing
 @testable import AgentKittenCore
+import Testing
 
 @Test func contextWindowExceededFailsTurnWithTypedErrorAndQueueContinues() async throws {
     let overflow = InferenceError.contextWindowExceeded(.init(
         provider: "TestProvider",
         message: "context window exceeded",
         contextTokens: 101,
-        contextSize: 100
+        contextSize: 100,
     ))
     let agent = Agent(
         providerRegistry: ProviderRegistry(default: ScriptedInferenceProvider(
@@ -18,7 +18,7 @@ import Testing
                 .success("Second response"),
             ],
         )),
-        behavior: .test()
+        behavior: .test(),
     )
     let session = agent.makeQueuedSession()
 

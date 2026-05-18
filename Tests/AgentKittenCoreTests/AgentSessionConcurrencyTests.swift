@@ -1,9 +1,9 @@
 // SPDX-FileCopyrightText: 2026 AgentKitten Authors
 // SPDX-License-Identifier: Apache-2.0
 
+@testable import AgentKittenCore
 import Foundation
 import Testing
-@testable import AgentKittenCore
 
 private struct BusyStructuredLabel: Codable, Sendable, JSONSchemaProviding, Equatable {
     let value: String
@@ -13,7 +13,7 @@ private struct BusyStructuredLabel: Codable, Sendable, JSONSchemaProviding, Equa
             properties: [
                 "value": .string(description: "Busy-test value"),
             ],
-            required: ["value"]
+            required: ["value"],
         )
     }
 }
@@ -29,7 +29,7 @@ private enum TurnDropTestError: Error {
 private func startAndDropAssistantTurn(
     _ text: String,
     in session: AgentSession,
-    provider: GateInferenceProvider
+    provider: GateInferenceProvider,
 ) async throws -> TurnDropWitness<AssistantMessage> {
     let witness = TurnDropWitness<AssistantMessage>()
 
@@ -45,7 +45,7 @@ private func startAndDropAssistantTurn(
 private func startAndDropStructuredTurn(
     _ prompt: String,
     in session: AgentSession,
-    provider: GateStructuredDropProvider
+    provider: GateStructuredDropProvider,
 ) async throws -> TurnDropWitness<BusyStructuredLabel> {
     let witness = TurnDropWitness<BusyStructuredLabel>()
 
@@ -60,9 +60,9 @@ private func startAndDropStructuredTurn(
 
 private func sendWhenIdle(
     _ text: String,
-    in session: AgentSession
+    in session: AgentSession,
 ) async throws -> Turn<AssistantMessage> {
-    for _ in 0..<100 {
+    for _ in 0 ..< 100 {
         do {
             return try await session.send(text)
         } catch AgentSessionError.concurrentOperationInProgress {
@@ -75,9 +75,9 @@ private func sendWhenIdle(
 
 private func generateWhenIdle<Result: Codable & Sendable & JSONSchemaProviding>(
     _ prompt: String,
-    in session: AgentSession
+    in session: AgentSession,
 ) async throws -> Turn<Result> {
-    for _ in 0..<100 {
+    for _ in 0 ..< 100 {
         do {
             return try await session.generate(prompt)
         } catch AgentSessionError.concurrentOperationInProgress {
@@ -146,10 +146,10 @@ struct AgentSessionConcurrencyTests {
         let turnWitness = try await startAndDropAssistantTurn(
             "drop-me",
             in: session,
-            provider: provider
+            provider: provider,
         )
 
-        for _ in 0..<20 where turnWitness.turn != nil {
+        for _ in 0 ..< 20 where turnWitness.turn != nil {
             await Task.yield()
         }
 
@@ -169,7 +169,7 @@ struct AgentSessionConcurrencyTests {
 
     @Test func droppingStructuredTurnWithoutConsumingCancelsGeneration() async throws {
         let provider = GateStructuredDropProvider(
-            structuredJSON: #"{"value":"done"}"#
+            structuredJSON: #"{"value":"done"}"#,
         )
         let agent = Agent(
             provider: provider,
@@ -180,10 +180,10 @@ struct AgentSessionConcurrencyTests {
         let turnWitness = try await startAndDropStructuredTurn(
             "drop-structured",
             in: session,
-            provider: provider
+            provider: provider,
         )
 
-        for _ in 0..<20 where turnWitness.turn != nil {
+        for _ in 0 ..< 20 where turnWitness.turn != nil {
             await Task.yield()
         }
 
@@ -198,7 +198,7 @@ struct AgentSessionConcurrencyTests {
 
         let secondTurn: Turn<BusyStructuredLabel> = try await generateWhenIdle(
             "after-structured-drop",
-            in: session
+            in: session,
         )
         await provider.release("after-structured-drop")
         _ = try await firstStructuredResult(from: secondTurn)
@@ -235,11 +235,11 @@ private struct GateStructuredDropProvider: InferenceProviding {
         systemPrompt: String?,
         toolRuntime: ToolRuntime,
         toolSelection: ToolSelection,
-        inferenceContext: InferenceContext
+        inferenceContext: InferenceContext,
     ) -> GateStructuredDropSession {
         GateStructuredDropSession(
             state: state,
-            structuredJSON: structuredJSON
+            structuredJSON: structuredJSON,
         )
     }
 
@@ -262,7 +262,7 @@ private actor GateStructuredDropSession: InferenceSession, StructuredInferenceSe
 
     init(
         state: GateInferenceState,
-        structuredJSON: String
+        structuredJSON: String,
     ) {
         self.state = state
         self.structuredJSON = structuredJSON
@@ -274,7 +274,7 @@ private actor GateStructuredDropSession: InferenceSession, StructuredInferenceSe
 
     func generateStream<Result: Codable & Sendable & JSONSchemaProviding>(
         prompt: String,
-        parameters: InferenceRequestParameters
+        parameters: InferenceRequestParameters,
     ) async throws(StructuredGenerationError) -> StructuredInferenceStream<Result> {
         AsyncThrowingStream { continuation in
             let task = Task {
@@ -303,7 +303,7 @@ private actor GateStructuredDropSession: InferenceSession, StructuredInferenceSe
 }
 
 private func firstStructuredResult<Result>(
-    from turn: Turn<Result>
+    from turn: Turn<Result>,
 ) async throws -> Result {
     var result: Result?
     for try await event in turn.events {

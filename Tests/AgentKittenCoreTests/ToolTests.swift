@@ -1,9 +1,9 @@
 // SPDX-FileCopyrightText: 2026 AgentKitten Authors
 // SPDX-License-Identifier: Apache-2.0
 
-import Testing
-import Foundation
 @testable import AgentKittenCore
+import Foundation
+import Testing
 
 // MARK: - Test fixture: a concrete AgentTool
 
@@ -11,6 +11,7 @@ private struct EchoTool: AgentTool {
     struct Arguments: Codable, Sendable {
         let message: String
     }
+
     struct Output: Codable, Sendable {
         let echo: String
     }
@@ -21,7 +22,7 @@ private struct EchoTool: AgentTool {
     var schema: ToolSchema {
         ToolSchema(parameters: .object(
             properties: ["message": .string(description: "The message to echo.")],
-            required: ["message"]
+            required: ["message"],
         ))
     }
 
@@ -41,7 +42,7 @@ private struct RichEchoTool: RichAgentTool {
     var schema: ToolSchema {
         ToolSchema(parameters: .object(
             properties: ["message": .string(description: "The message to echo.")],
-            required: ["message"]
+            required: ["message"],
         ))
     }
 
@@ -59,13 +60,13 @@ private struct RichEchoTool: RichAgentTool {
 
 // MARK: - AnyAgentTool wrapping
 
-@Test func testAnyAgentToolWrapping() throws {
+@Test func anyAgentToolWrapping() {
     let wrapped = AnyAgentTool(EchoTool())
     #expect(wrapped.name == "echo")
     #expect(wrapped.description == "Echoes the provided message back.")
 }
 
-@Test func testAnyAgentToolExecution() async throws {
+@Test func anyAgentToolExecution() async throws {
     let wrapped = AnyAgentTool(EchoTool())
     let argsData = try JSONEncoder().encode(EchoTool.Arguments(message: "hello"))
     let resultContent = try await wrapped.execute(argumentsJSON: argsData)
@@ -74,7 +75,7 @@ private struct RichEchoTool: RichAgentTool {
     #expect(output.echo == "hello")
 }
 
-@Test func testRichAnyAgentToolExecution() async throws {
+@Test func richAnyAgentToolExecution() async throws {
     let wrapped = AnyAgentTool(RichEchoTool())
     let argsData = try JSONEncoder().encode(RichEchoTool.Arguments(message: "hello"))
     let resultContent = try await wrapped.execute(argumentsJSON: argsData)
@@ -87,29 +88,29 @@ private struct RichEchoTool: RichAgentTool {
 
 // MARK: - Mock tool call simulation
 
-@Test func testConversationRunIncludesToolArgumentsInEvents() async throws {
+@Test func conversationRunIncludesToolArgumentsInEvents() async throws {
     let conversation = Conversation(
         owner: .local,
         provider: MockInferenceProvider(mockResponses: [
             .toolCall(
                 name: "echo",
                 argumentsJSON: #"{"message":"hi"}"#,
-                thenRespond: "The tool returned hi."
+                thenRespond: "The tool returned hi.",
             ),
         ]),
         systemPrompt: "Test",
         executionConfiguration: EffectiveExecutionConfiguration(
-            inferenceConfiguration: InferenceConfiguration()
+            inferenceConfiguration: InferenceConfiguration(),
         ),
         toolRuntime: testToolRuntime(
-            registry: ToolRegistry([AnyAgentTool(EchoTool())])
-        )
+            registry: ToolRegistry([AnyAgentTool(EchoTool())]),
+        ),
     )
 
     let stream = try await conversation.send(
         userMessage: UserMessage(text: "Call echo"),
         executionConfiguration: EffectiveExecutionConfiguration(),
-        toolExecutionContext: .empty
+        toolExecutionContext: .empty,
     )
     for try await event in stream {
         guard case .toolCallStarted(let name, _, let argumentsJSON) = event.kind else {
@@ -123,30 +124,30 @@ private struct RichEchoTool: RichAgentTool {
     Issue.record("Expected a toolCallStarted conversation event")
 }
 
-@Test func testConversationRunEmitsConversationEvents() async throws {
+@Test func conversationRunEmitsConversationEvents() async throws {
     let conversation = Conversation(
         owner: .local,
         provider: MockInferenceProvider(mockResponses: [
             .toolCall(
                 name: "echo",
                 argumentsJSON: #"{"message":"test"}"#,
-                thenRespond: "Done."
+                thenRespond: "Done.",
             ),
         ]),
         systemPrompt: "Test",
         executionConfiguration: EffectiveExecutionConfiguration(
-            inferenceConfiguration: InferenceConfiguration()
+            inferenceConfiguration: InferenceConfiguration(),
         ),
         toolRuntime: testToolRuntime(
-            registry: ToolRegistry([AnyAgentTool(EchoTool())])
-        )
+            registry: ToolRegistry([AnyAgentTool(EchoTool())]),
+        ),
     )
 
     var events: [ConversationEvent<AssistantMessage>] = []
     for try await event in try await conversation.send(
         userMessage: UserMessage(text: "Call echo"),
         executionConfiguration: EffectiveExecutionConfiguration(),
-        toolExecutionContext: .empty
+        toolExecutionContext: .empty,
     ) {
         events.append(event)
     }
@@ -170,12 +171,12 @@ private struct RichEchoTool: RichAgentTool {
     #expect(argumentsJSON == #"{"message":"test"}"#)
 }
 
-@Test func testToolCallAgentEvents() async throws {
+@Test func toolCallAgentEvents() async throws {
     let provider = ScriptedInferenceProvider(responses: [
         .toolCall(
             name: "echo",
             argumentsJSON: #"{"message":"test"}"#,
-            thenRespond: "Done."
+            thenRespond: "Done.",
         ),
     ])
     let agent = Agent(
@@ -209,7 +210,7 @@ private struct RichEchoTool: RichAgentTool {
     #expect(assistantMsg.text == "Done.")
 }
 
-@Test func testResultCarriesAssistantMessage() async throws {
+@Test func resultCarriesAssistantMessage() async throws {
     let agent = Agent(
         providerRegistry: ProviderRegistry(default: ScriptedInferenceProvider(responses: [.success("Hello world")])),
         behavior: .test(),
@@ -230,7 +231,7 @@ private struct RichEchoTool: RichAgentTool {
 }
 
 private func firstToolCallStarted(
-    in events: [ConversationEvent<AssistantMessage>]
+    in events: [ConversationEvent<AssistantMessage>],
 ) -> ConversationEvent<AssistantMessage>? {
     events.first {
         if case .toolCallStarted = $0.kind {
@@ -241,7 +242,7 @@ private func firstToolCallStarted(
 }
 
 private func firstToolCallCompleted(
-    in events: [ConversationEvent<AssistantMessage>]
+    in events: [ConversationEvent<AssistantMessage>],
 ) -> ConversationEvent<AssistantMessage>? {
     events.first {
         if case .toolCallCompleted = $0.kind {
@@ -252,7 +253,7 @@ private func firstToolCallCompleted(
 }
 
 private func lastAssistantMessage(
-    in events: [ConversationEvent<AssistantMessage>]
+    in events: [ConversationEvent<AssistantMessage>],
 ) -> AssistantMessage? {
     guard let last = events.last,
           case .result(let assistant) = last.kind else {

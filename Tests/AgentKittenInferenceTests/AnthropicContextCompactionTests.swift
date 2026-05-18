@@ -2,9 +2,9 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import AgentKittenCore
+@testable import AgentKittenInference
 import Synchronization
 import Testing
-@testable import AgentKittenInference
 
 private final class ModelInfoHTTPClient: AnthropicHTTPStreaming, @unchecked Sendable {
     private let maxInputTokensValue: Int?
@@ -77,12 +77,12 @@ private final class CountingModelInfoHTTPClient: AnthropicHTTPStreaming, @unchec
         defaultModel: "test-model",
         systemPrompt: nil,
         toolRuntime: testToolRuntime(),
-        clientFactory: { _ in mock }
+        clientFactory: { _ in mock },
     )
 
     for try await _ in try await session.run(
         UserMessage(text: "Hi"),
-        parameters: InferenceRequestParameters()
+        parameters: InferenceRequestParameters(),
     ) {}
 
     let usage = try await session.contextUsage()
@@ -110,7 +110,7 @@ private final class CountingModelInfoHTTPClient: AnthropicHTTPStreaming, @unchec
     ]
     let provider = AnthropicInferenceProvider(
         credentials: MockAPIKeyProvider("test-key"),
-        model: "test-model"
+        model: "test-model",
     )
     let session = AnthropicInferenceSession(
         credentials: MockAPIKeyProvider("test-key"),
@@ -118,26 +118,27 @@ private final class CountingModelInfoHTTPClient: AnthropicHTTPStreaming, @unchec
         systemPrompt: nil,
         toolRuntime: testToolRuntime(),
         initialHistory: history,
-        clientFactory: { _ in FailingCountHTTPClient() }
+        clientFactory: { _ in FailingCountHTTPClient() },
     )
 
     let result = await ContextCompactor().compact(session,
-        options: .truncate(.init(preservedRecentTurnCount: 1)),
-        summaryGenerator: makeSummaryGenerator(client: MinimalCapturingHTTPClient())
-    )
+                                                  options: .truncate(.init(preservedRecentTurnCount: 1)),
+                                                  summaryGenerator: makeSummaryGenerator(
+                                                      client: MinimalCapturingHTTPClient(),
+                                                  ))
     let rebuilt = try await provider.makeSession(
         continuing: session,
         systemPrompt: nil,
         toolRuntime: testToolRuntime(),
         toolSelection: .all,
-        inferenceContext: InferenceContext()
+        inferenceContext: InferenceContext(),
     )
 
     #expect(result.isFailedSkip)
     let rebuiltHistory = await rebuilt.captureHistory()
     #expect(rebuiltHistory.map(\.role.rawValue) == ["user", "assistant"])
     let rebuiltText = rebuiltHistory.flatMap(\.content).compactMap {
-        if case .text(let text) = $0 { return text } else { return nil }
+        if case .text(let text) = $0 { text } else { nil }
     }.joined(separator: " ")
     #expect(rebuiltText.contains("Original request."))
     #expect(rebuiltText.contains("Original answer."))
@@ -149,7 +150,7 @@ private final class CountingModelInfoHTTPClient: AnthropicHTTPStreaming, @unchec
         defaultModel: "claude-sonnet-4-20250514",
         systemPrompt: nil,
         toolRuntime: testToolRuntime(),
-        clientFactory: { _ in ModelInfoHTTPClient(maxInputTokensValue: 1_048_576) }
+        clientFactory: { _ in ModelInfoHTTPClient(maxInputTokensValue: 1_048_576) },
     )
 
     let usage = try await session.contextUsage()
@@ -162,7 +163,7 @@ private final class CountingModelInfoHTTPClient: AnthropicHTTPStreaming, @unchec
         defaultModel: "claude-sonnet-4-20250514",
         systemPrompt: nil,
         toolRuntime: testToolRuntime(),
-        clientFactory: { _ in FailingModelInfoHTTPClient() }
+        clientFactory: { _ in FailingModelInfoHTTPClient() },
     )
 
     let usage = try await session.contextUsage()
@@ -176,7 +177,7 @@ private final class CountingModelInfoHTTPClient: AnthropicHTTPStreaming, @unchec
         defaultModel: "claude-sonnet-4-20250514",
         systemPrompt: nil,
         toolRuntime: testToolRuntime(),
-        clientFactory: { _ in client }
+        clientFactory: { _ in client },
     )
 
     let firstUsage = try await session.contextUsage()
@@ -197,18 +198,18 @@ private final class CountingModelInfoHTTPClient: AnthropicHTTPStreaming, @unchec
         defaultModel: "claude-sonnet-4-20250514",
         systemPrompt: nil,
         toolRuntime: testToolRuntime(),
-        clientFactory: { _ in ModelInfoHTTPClient(maxInputTokensValue: 1_048_576) }
+        clientFactory: { _ in ModelInfoHTTPClient(maxInputTokensValue: 1_048_576) },
     )
     let parameters = InferenceRequestParameters(
         inferenceContext: {
             var context = InferenceContext()
             context[AnthropicModelKey.self] = "claude-opus-4-1"
             return context
-        }()
+        }(),
     )
     _ = await session.buildRequest(
         from: [AnthropicMessage(role: .user, content: [.text("Hi")])],
-        parameters: parameters
+        parameters: parameters,
     )
 
     let rebuilt = try await provider.makeSession(
@@ -216,7 +217,7 @@ private final class CountingModelInfoHTTPClient: AnthropicHTTPStreaming, @unchec
         systemPrompt: nil,
         toolRuntime: testToolRuntime(),
         toolSelection: .all,
-        inferenceContext: InferenceContext()
+        inferenceContext: InferenceContext(),
     )
 
     let usage = try await rebuilt.contextUsage()
@@ -238,20 +239,19 @@ private final class CountingModelInfoHTTPClient: AnthropicHTTPStreaming, @unchec
             .init(role: .user, content: [.text("Recent request two.")]),
             .init(role: .assistant, content: [.text("Recent answer two.")]),
         ],
-        clientFactory: { _ in client }
+        clientFactory: { _ in client },
     )
 
     let result = await ContextCompactor().compact(session,
-        options: .summarize(.init(preservedRecentTurnCount: 2)),
-        summaryGenerator: makeSummaryGenerator(client: client)
-    )
+                                                  options: .summarize(.init(preservedRecentTurnCount: 2)),
+                                                  summaryGenerator: makeSummaryGenerator(client: client))
     #expect(result.didCompact)
 
     let request = try #require(client.capturedRequest)
     let capturedPrompt = try #require(
         request.messages.compactMap { msg -> String? in
-            msg.content.compactMap { if case .text(let txt) = $0 { return txt } else { return nil } }.first
-        }.first
+            msg.content.compactMap { if case .text(let txt) = $0 { txt } else { nil } }.first
+        }.first,
     )
     #expect(capturedPrompt.contains("Old request one."))
     #expect(capturedPrompt.contains("Old answer one."))
@@ -260,7 +260,7 @@ private final class CountingModelInfoHTTPClient: AnthropicHTTPStreaming, @unchec
     let history = await session.captureHistory()
     #expect(history.count == 6)
     let allText = history.flatMap(\.content).compactMap {
-        if case .text(let text) = $0 { return text } else { return nil }
+        if case .text(let text) = $0 { text } else { nil }
     }.joined(separator: " ")
     #expect(allText.contains("[Conversation summary]"))
     #expect(allText.contains("Summary of old Anthropic history."))
@@ -269,7 +269,7 @@ private final class CountingModelInfoHTTPClient: AnthropicHTTPStreaming, @unchec
     #expect(!allText.contains("Old answer one."))
 }
 
-@Test func anthropicCompactedHistory_truncatesOldMessages() async throws {
+@Test func anthropicCompactedHistory_truncatesOldMessages() async {
     let session = AnthropicInferenceSession(
         credentials: MockAPIKeyProvider("test-key"),
         defaultModel: "test-model",
@@ -281,18 +281,19 @@ private final class CountingModelInfoHTTPClient: AnthropicHTTPStreaming, @unchec
             .init(role: .user, content: [.text("Recent request.")]),
             .init(role: .assistant, content: [.text("Recent answer.")]),
         ],
-        clientFactory: { _ in MinimalCapturingHTTPClient() }
+        clientFactory: { _ in MinimalCapturingHTTPClient() },
     )
 
     let result = await ContextCompactor().compact(session,
-        options: .truncate(.init(preservedRecentTurnCount: 1)),
-        summaryGenerator: makeSummaryGenerator(client: MinimalCapturingHTTPClient())
-    )
+                                                  options: .truncate(.init(preservedRecentTurnCount: 1)),
+                                                  summaryGenerator: makeSummaryGenerator(
+                                                      client: MinimalCapturingHTTPClient(),
+                                                  ))
     #expect(result.didCompact)
 
     let history = await session.captureHistory()
     let allText = history.flatMap(\.content).compactMap {
-        if case .text(let text) = $0 { return text } else { return nil }
+        if case .text(let text) = $0 { text } else { nil }
     }.joined(separator: " ")
 
     #expect(history.count == 2)
@@ -316,19 +317,21 @@ private final class CountingModelInfoHTTPClient: AnthropicHTTPStreaming, @unchec
             .init(role: .user, content: [.text("Recent request.")]),
             .init(role: .assistant, content: [.text("Recent answer.")]),
         ],
-        clientFactory: { _ in client }
+        clientFactory: { _ in client },
     )
 
     _ = await ContextCompactor().compact(session,
-        options: .summarize(.init(preservedRecentTurnCount: 1, prompt: .custom(customPrompt))),
-        summaryGenerator: makeSummaryGenerator(client: client)
-    )
+                                         options: .summarize(.init(
+                                             preservedRecentTurnCount: 1,
+                                             prompt: .custom(customPrompt),
+                                         )),
+                                         summaryGenerator: makeSummaryGenerator(client: client))
 
     let request = try #require(client.capturedRequest)
     let captured = try #require(
         request.messages.compactMap { msg -> String? in
-            msg.content.compactMap { if case .text(let txt) = $0 { return txt } else { return nil } }.first
-        }.first
+            msg.content.compactMap { if case .text(let txt) = $0 { txt } else { nil } }.first
+        }.first,
     )
     #expect(captured.hasPrefix(customPrompt))
     #expect(!captured.contains("Summarize the following"))
@@ -349,19 +352,21 @@ private final class CountingModelInfoHTTPClient: AnthropicHTTPStreaming, @unchec
             .init(role: .user, content: [.text("Recent request.")]),
             .init(role: .assistant, content: [.text("Recent answer.")]),
         ],
-        clientFactory: { _ in client }
+        clientFactory: { _ in client },
     )
 
     _ = await ContextCompactor().compact(session,
-        options: .summarize(.init(preservedRecentTurnCount: 1, prompt: .appending(extra))),
-        summaryGenerator: makeSummaryGenerator(client: client)
-    )
+                                         options: .summarize(.init(
+                                             preservedRecentTurnCount: 1,
+                                             prompt: .appending(extra),
+                                         )),
+                                         summaryGenerator: makeSummaryGenerator(client: client))
 
     let request = try #require(client.capturedRequest)
     let captured = try #require(
         request.messages.compactMap { msg -> String? in
-            msg.content.compactMap { if case .text(let txt) = $0 { return txt } else { return nil } }.first
-        }.first
+            msg.content.compactMap { if case .text(let txt) = $0 { txt } else { nil } }.first
+        }.first,
     )
     #expect(captured.contains("Summarize the following"))
     #expect(captured.contains("Preserve durable facts"))
@@ -375,9 +380,9 @@ extension ContextCompactionResult {
     fileprivate var isFailedSkip: Bool {
         switch self {
         case .skipped(.failed), .skipped(.inferenceError):
-            return true
+            true
         default:
-            return false
+            false
         }
     }
 }

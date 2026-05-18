@@ -10,7 +10,7 @@ struct RebuildingMockProvider: InferenceProviding {
 
     nonisolated func sessionCompatibility(
         from current: EffectiveExecutionConfiguration,
-        to next: EffectiveExecutionConfiguration
+        to next: EffectiveExecutionConfiguration,
     ) -> SessionCompatibility {
         if current.provider != next.provider { return .replace }
         if current.toolSelection != next.toolSelection { return .rebuildSession }
@@ -21,11 +21,11 @@ struct RebuildingMockProvider: InferenceProviding {
         systemPrompt: String?,
         toolRuntime: ToolRuntime,
         toolSelection: ToolSelection,
-        inferenceContext: InferenceContext
+        inferenceContext: InferenceContext,
     ) -> MockInferenceSession {
         MockInferenceSession(
             responses: responses.map { .success($0) },
-            toolRuntime: toolRuntime
+            toolRuntime: toolRuntime,
         )
     }
 
@@ -34,7 +34,7 @@ struct RebuildingMockProvider: InferenceProviding {
         systemPrompt: String?,
         toolRuntime: ToolRuntime,
         toolSelection: ToolSelection,
-        inferenceContext: InferenceContext
+        inferenceContext: InferenceContext,
     ) async throws -> MockInferenceSession {
         session
     }
@@ -49,11 +49,11 @@ struct ReplacementMockProvider: InferenceProviding {
         systemPrompt: String?,
         toolRuntime: ToolRuntime,
         toolSelection: ToolSelection,
-        inferenceContext: InferenceContext
+        inferenceContext: InferenceContext,
     ) -> MockInferenceSession {
         MockInferenceSession(
             responses: responses.map { .success($0) },
-            toolRuntime: toolRuntime
+            toolRuntime: toolRuntime,
         )
     }
 }

@@ -1,9 +1,9 @@
 // SPDX-FileCopyrightText: 2026 AgentKitten Authors
 // SPDX-License-Identifier: Apache-2.0
 
+@testable import AgentKittenCore
 import Foundation
 import Testing
-@testable import AgentKittenCore
 
 private struct CodableTraceValue: Codable, Equatable {
     let answer: String
@@ -25,21 +25,21 @@ struct TraceCodableTests {
         let kindSet: Set<AgentTraceEntry.Kind> = [
             .structuredResult(
                 type: structuredResultTypeLabel(for: CodableTraceValue.self),
-                json: try structuredResultJSON(for: CodableTraceValue(answer: "Goal"))
+                json: try structuredResultJSON(for: CodableTraceValue(answer: "Goal")),
             ),
             executionPreparationKind(),
             .conversationResolved(AgentTraceEntry.Kind.ConversationResolvedInfo(
                 identity: ConversationIdentitySnapshot(
                     conversationID: "conversation-2",
-                    inferenceSessionID: "inference-2"
+                    inferenceSessionID: "inference-2",
                 ),
-                resolutionKind: .replace
+                resolutionKind: .replace,
             )),
             contextCompactionKind(mode: .manual),
             .validation(.init(
                 result: .feedback,
                 message: "Try again",
-                validator: "HashableValidator"
+                validator: "HashableValidator",
             )),
             .toolApprovalRequired(approvalRequiredInfo()),
             .turnCompleted(.completed),
@@ -50,15 +50,15 @@ struct TraceCodableTests {
             AgentTraceEntry(
                 kind: .structuredResult(
                     type: structuredResultTypeLabel(for: CodableTraceValue.self),
-                    json: try structuredResultJSON(for: CodableTraceValue(answer: "ok"))
+                    json: try structuredResultJSON(for: CodableTraceValue(answer: "ok")),
                 ),
                 timestamp: AgentTraceEntry.Timestamp(),
-                invocationID: .generate()
+                invocationID: .generate(),
             ),
             AgentTraceEntry(
                 kind: .turnCompleted(.completed),
                 timestamp: AgentTraceEntry.Timestamp(),
-                invocationID: .generate()
+                invocationID: .generate(),
             ),
         ]
         #expect(entrySet.count == 2)
@@ -75,7 +75,7 @@ struct TraceCodableTests {
         let asError: any Error = decoded
         #expect(
             String(describing: asError)
-                == "ErrorInfo(description: \"invalidResponse(\\\"boom\\\")\")"
+                == "ErrorInfo(description: \"invalidResponse(\\\"boom\\\")\")",
         )
     }
 
@@ -102,7 +102,7 @@ private func executionPreparationKind() -> AgentTraceEntry.Kind {
         toolStepBudget: .budget(20),
         inferenceConfiguration: InferenceConfigurationSnapshot(
             temperature: 0.7,
-            maxTokens: 4096
+            maxTokens: 4096,
         ),
         inferenceContext: CustomContextSnapshot(entries: [
             .init(key: "AnthropicModelKey", valueSummary: "claude-opus-4-5"),
@@ -111,8 +111,8 @@ private func executionPreparationKind() -> AgentTraceEntry.Kind {
             toolSelection: .disabled,
             toolStepBudget: nil,
             inferenceConfiguration: nil,
-            provider: nil
-        )
+            provider: nil,
+        ),
     ))
 }
 
@@ -136,27 +136,27 @@ private func allTraceKinds() throws -> [AgentTraceEntry.Kind] {
         .message(toolResultMessage),
         .structuredResult(
             type: structuredResultTypeLabel(for: CodableTraceValue.self),
-            json: try structuredResultJSON(for: CodableTraceValue(answer: "ok"))
+            json: try structuredResultJSON(for: CodableTraceValue(answer: "ok")),
         ),
         executionPreparationKind(),
         .conversationResolved(AgentTraceEntry.Kind.ConversationResolvedInfo(
             identity: ConversationIdentitySnapshot(
                 conversationID: "conversation-1",
-                inferenceSessionID: "inference-1"
+                inferenceSessionID: "inference-1",
             ),
-            resolutionKind: .rebuildSession
+            resolutionKind: .rebuildSession,
         )),
         contextCompactionKind(mode: .automatic),
         .stateMutation(.init(
             operation: .set,
             key: "topic",
-            valueType: "string"
+            valueType: "string",
         )),
         approvalRequiredKind(),
         .validation(.init(
             result: .feedback,
             message: "Try again",
-            validator: "CodableValidator"
+            validator: "CodableValidator",
         )),
         .error(AgentTraceEntry.Kind.ErrorInfo(description: "boom")),
         .turnCompleted(.completed),
@@ -176,7 +176,7 @@ private func approvalRequiredInfo() -> AgentTraceEntry.Kind.ToolApprovalRequired
         call: approvalPendingToolCall(),
         context: CustomContextSnapshot(entries: [
             .init(key: "toolApprovalReason", valueSummary: "blocked by policy"),
-        ])
+        ]),
     )
 }
 
@@ -185,14 +185,14 @@ private func approvalRequiredKind() -> AgentTraceEntry.Kind {
 }
 
 private func contextCompactionKind(
-    mode: AgentTraceEntry.Kind.ContextCompactionInfo.Mode
+    mode: AgentTraceEntry.Kind.ContextCompactionInfo.Mode,
 ) -> AgentTraceEntry.Kind {
     .contextCompaction(.init(
         mode: mode,
         provider: .named("CompactionProvider"),
         inferenceConfiguration: InferenceConfigurationSnapshot(
             temperature: 0.2,
-            maxTokens: 256
+            maxTokens: 256,
         ),
         inferenceContext: CustomContextSnapshot(entries: [
             .init(key: "AnthropicModelKey", valueSummary: "claude-opus-4-5"),
@@ -200,7 +200,7 @@ private func contextCompactionKind(
         ]),
         result: .compacted(.init(
             usageBefore: .init(contextTokens: 80, contextSize: 100),
-            usageAfter: .init(contextTokens: 20, contextSize: 100)
-        ))
+            usageAfter: .init(contextTokens: 20, contextSize: 100),
+        )),
     ))
 }

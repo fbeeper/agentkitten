@@ -1,10 +1,10 @@
 // SPDX-FileCopyrightText: 2026 AgentKitten Authors
 // SPDX-License-Identifier: Apache-2.0
 
-import Foundation
 import AgentKittenCore
-import Testing
+import Foundation
 @testable import Playground
+import Testing
 
 @Suite("Playground Chat Output Formatter")
 struct PlaygroundChatOutputFormatterTests {
@@ -14,7 +14,7 @@ struct PlaygroundChatOutputFormatterTests {
             detailLines: [
                 "AgentKitten Playground v1.0.0",
                 "System: You are helpful.",
-            ]
+            ],
         )
 
         #expect(header == """
@@ -53,7 +53,7 @@ struct PlaygroundChatOutputFormatterTests {
 
     @Test func chickenUsesSharedAssistantLabel() {
         let header = PlaygroundChatOutputFormatter.assistantHeader(
-            assistantLabel: ChickenWizardOutputFormatter.assistantLabel
+            assistantLabel: ChickenWizardOutputFormatter.assistantLabel,
         )
 
         #expect(header.contains(PlaygroundChatOutputFormatter.separator))
@@ -62,7 +62,7 @@ struct PlaygroundChatOutputFormatterTests {
 
     @Test func turnError_usesLocalizedDescriptionWhenAvailable() {
         let message = PlaygroundChatOutputFormatter.turnError(
-            PlaygroundFormatterTestError.localized("Validation failed.")
+            PlaygroundFormatterTestError.localized("Validation failed."),
         )
 
         #expect(message == "[error: Validation failed.]")
@@ -70,7 +70,7 @@ struct PlaygroundChatOutputFormatterTests {
 
     @Test func turnError_fallsBackToDebugDescription() {
         let message = PlaygroundChatOutputFormatter.turnError(
-            PlaygroundFormatterTestError.plain
+            PlaygroundFormatterTestError.plain,
         )
 
         #expect(message.contains("[error:"))
@@ -79,7 +79,7 @@ struct PlaygroundChatOutputFormatterTests {
 
     @Test func contextUsage_formatsKnownContextWindow() {
         let message = PlaygroundChatOutputFormatter.contextUsage(
-            ContextUsage(contextTokens: 25, contextSize: 100)
+            ContextUsage(contextTokens: 25, contextSize: 100),
         )
 
         #expect(message == "[usage: 25/100 tokens, 25%]")
@@ -87,7 +87,7 @@ struct PlaygroundChatOutputFormatterTests {
 
     @Test func contextUsage_formatsUnknownContextWindow() {
         let message = PlaygroundChatOutputFormatter.contextUsage(
-            ContextUsage(contextTokens: 25)
+            ContextUsage(contextTokens: 25),
         )
 
         #expect(message == "[usage: 25 tokens]")
@@ -105,9 +105,9 @@ private enum PlaygroundFormatterTestError: Error, LocalizedError {
     var errorDescription: String? {
         switch self {
         case .plain:
-            return nil
+            nil
         case .localized(let message):
-            return message
+            message
         }
     }
 }

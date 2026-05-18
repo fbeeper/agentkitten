@@ -1,8 +1,8 @@
 // SPDX-FileCopyrightText: 2026 AgentKitten Authors
 // SPDX-License-Identifier: Apache-2.0
 
-import Testing
 @testable import AgentKittenCore
+import Testing
 
 @Suite("Validation Behavior")
 struct ValidationBehaviorTests {
@@ -12,7 +12,7 @@ struct ValidationBehaviorTests {
         )
         let agent = Agent(
             providerRegistry: ProviderRegistry(default: provider),
-            behavior: .test()
+            behavior: .test(),
         )
         let session = agent.makeSession()
 
@@ -35,7 +35,7 @@ struct ValidationBehaviorTests {
         )
         let agent = Agent(
             providerRegistry: ProviderRegistry(default: provider),
-            behavior: .test()
+            behavior: .test(),
         )
         let session = agent.makeSession()
 
@@ -53,7 +53,7 @@ struct ValidationBehaviorTests {
             .validation(.init(
                 result: .pass,
                 message: AgentKittenLocalization.string("validation.validationPassed"),
-                validator: "MinimumLengthValidator(8)"
+                validator: "MinimumLengthValidator(8)",
             )),
             .turnCompleted(.completed),
         ])
@@ -68,13 +68,13 @@ struct ValidationBehaviorTests {
         )
         let agent = Agent(
             providerRegistry: ProviderRegistry(default: provider),
-            behavior: .test()
+            behavior: .test(),
         )
         let session = agent.makeSession()
 
         let turn = try await session.send("Hello", validation: ValidationConfiguration(
             validator: MinimumLengthValidator(minimumLength: 8),
-            maxRetries: 1
+            maxRetries: 1,
         ))
         let events = try await collectEvents(from: turn)
 
@@ -86,13 +86,13 @@ struct ValidationBehaviorTests {
             .validation(.init(
                 result: .feedback,
                 message: "Response must be at least 8 characters.",
-                validator: "MinimumLengthValidator(8)"
+                validator: "MinimumLengthValidator(8)",
             )),
             .message(.assistant(AssistantMessage(text: "Accepted revision"))),
             .validation(.init(
                 result: .pass,
                 message: AgentKittenLocalization.string("validation.validationPassed"),
-                validator: "MinimumLengthValidator(8)"
+                validator: "MinimumLengthValidator(8)",
             )),
             .turnCompleted(.completed),
         ])
@@ -105,7 +105,7 @@ struct ValidationBehaviorTests {
         )
         let agent = Agent(
             providerRegistry: ProviderRegistry(default: provider),
-            behavior: .test()
+            behavior: .test(),
         )
         let session = agent.makeSession()
 
@@ -113,15 +113,15 @@ struct ValidationBehaviorTests {
             validator: OrderedValidator(
                 result: .feedback(message: "Need more"),
                 recorder: recorder,
-                label: "first"
+                label: "first",
             ),
-            policy: .permissive
+            policy: .permissive,
         ).adding(
             OrderedValidator(
                 result: .pass,
                 recorder: recorder,
-                label: "second"
-            )
+                label: "second",
+            ),
         )
         let turn = try await session.send("Hello", validation: validation)
         _ = try await collectEvents(from: turn)
@@ -131,7 +131,7 @@ struct ValidationBehaviorTests {
 
     @Test func defaultRetryFeedbackMessage_hidesValidationMechanicsFromUserAnswer() {
         let message = ValidationConfiguration<AssistantMessage>.defaultRetryFeedbackMessage(
-            "Add more detail."
+            "Add more detail.",
         )
 
         #expect(message.text.contains("Add more detail."))

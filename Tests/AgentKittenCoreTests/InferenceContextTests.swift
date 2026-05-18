@@ -1,8 +1,8 @@
 // SPDX-FileCopyrightText: 2026 AgentKitten Authors
 // SPDX-License-Identifier: Apache-2.0
 
-import Testing
 @testable import AgentKittenCore
+import Testing
 
 // MARK: - Keys
 
@@ -112,13 +112,13 @@ private enum TestApprovalKey: ExecutionConfigurationKey {
 @Test func behaviorPhaseLookup_fallsBackToBasePhaseBehavior() {
     let base = PhaseBehavior(
         provider: .default,
-        inferenceConfiguration: InferenceConfiguration(temperature: 0.3)
+        inferenceConfiguration: InferenceConfiguration(temperature: 0.3),
     )
     let phaseBehaviors = PhaseBehaviorSet(base: base)
 
     #expect(phaseBehaviors.behavior(for: .compaction).provider == base.provider)
     #expect(
         phaseBehaviors.behavior(for: .compaction).inferenceConfiguration
-            == base.inferenceConfiguration
+            == base.inferenceConfiguration,
     )
 }

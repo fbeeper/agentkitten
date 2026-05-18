@@ -1,9 +1,9 @@
 // SPDX-FileCopyrightText: 2026 AgentKitten Authors
 // SPDX-License-Identifier: Apache-2.0
 
-import Testing
-import Synchronization
 @testable import AgentKittenCore
+import Synchronization
+import Testing
 
 @Suite("Conversation Provider")
 struct ConversationProviderTests {
@@ -12,23 +12,23 @@ struct ConversationProviderTests {
             responses: [
                 .success("first"),
                 .success("second"),
-            ]
+            ],
         )
         var conversationProvider = makeConversationProvider(
-            registry: ProviderRegistry(default: provider)
+            registry: ProviderRegistry(default: provider),
         )
 
         let firstConversation = try await prepareConversation(
             &conversationProvider,
             for: EffectiveExecutionConfiguration(
-                inferenceConfiguration: InferenceConfiguration(temperature: 0.1)
-            )
+                inferenceConfiguration: InferenceConfiguration(temperature: 0.1),
+            ),
         )
         let secondConversation = try await prepareConversation(
             &conversationProvider,
             for: EffectiveExecutionConfiguration(
-                inferenceConfiguration: InferenceConfiguration(temperature: 0.9)
-            )
+                inferenceConfiguration: InferenceConfiguration(temperature: 0.9),
+            ),
         )
 
         let firstConversationID = try await conversationID(from: firstConversation)
@@ -43,17 +43,17 @@ struct ConversationProviderTests {
             responses: [
                 .success("first"),
                 .success("second"),
-            ]
+            ],
         )
         let provider = RebuildingProvider(base: script)
         var conversationProvider = makeConversationProvider(
-            registry: ProviderRegistry(default: provider)
+            registry: ProviderRegistry(default: provider),
         )
 
         // Obtain and use the first conversation so provider session A is exercised.
         let firstConversation = try await prepareConversation(
             &conversationProvider,
-            for: EffectiveExecutionConfiguration()
+            for: EffectiveExecutionConfiguration(),
         )
         let firstConversationID = try await conversationID(from: firstConversation)
 
@@ -61,7 +61,7 @@ struct ConversationProviderTests {
         // same conversation actor — the conversation identity is preserved.
         let secondConversation = try await prepareConversation(
             &conversationProvider,
-            for: EffectiveExecutionConfiguration(toolSelection: .disabled)
+            for: EffectiveExecutionConfiguration(toolSelection: .disabled),
         )
         let secondConversationID = try await conversationID(from: secondConversation)
 
@@ -78,18 +78,18 @@ struct ConversationProviderTests {
         )
         var conversationProvider = makeConversationProvider(
             registry: ProviderRegistry(default: defaultProvider)
-                .registering(ExecutionOverrideProvider(base: overrideProvider))
+                .registering(ExecutionOverrideProvider(base: overrideProvider)),
         )
 
         let firstConversation = try await prepareConversation(
             &conversationProvider,
-            for: EffectiveExecutionConfiguration()
+            for: EffectiveExecutionConfiguration(),
         )
         let secondConversation = try await prepareConversation(
             &conversationProvider,
             for: EffectiveExecutionConfiguration(
-                provider: .ofType(ExecutionOverrideProvider.self)
-            )
+                provider: .ofType(ExecutionOverrideProvider.self),
+            ),
         )
 
         let firstConversationID = try await conversationID(from: firstConversation)
@@ -104,22 +104,22 @@ struct ConversationProviderTests {
         let recorder = PreflightRecorder()
         let provider = PreflightRecordingProvider(
             base: ScriptedInferenceProvider(responses: [.success("first")]),
-            recorder: recorder
+            recorder: recorder,
         )
         var conversationProvider = makeConversationProvider(
             registry: ProviderRegistry(default: provider),
-            toolDefinition: selectionTestToolDefinition()
+            toolDefinition: selectionTestToolDefinition(),
         )
 
         _ = try await prepareConversation(
             &conversationProvider,
-            for: EffectiveExecutionConfiguration(toolSelection: .including(["counting_echo"]))
+            for: EffectiveExecutionConfiguration(toolSelection: .including(["counting_echo"])),
         )
 
         #expect(recorder.snapshots() == [
             PreflightSnapshot(
                 toolNames: ["conversation_other", "counting_echo"],
-                toolSelection: .including(["counting_echo"])
+                toolSelection: .including(["counting_echo"]),
             ),
         ])
     }
@@ -131,33 +131,33 @@ struct ConversationProviderTests {
                 responses: [
                     .success("first"),
                     .success("second"),
-                ]
+                ],
             ),
             recorder: recorder,
-            rebuildOnToolSelectionChange: true
+            rebuildOnToolSelectionChange: true,
         )
         var conversationProvider = makeConversationProvider(
             registry: ProviderRegistry(default: provider),
-            toolDefinition: selectionTestToolDefinition()
+            toolDefinition: selectionTestToolDefinition(),
         )
 
         _ = try await prepareConversation(
             &conversationProvider,
-            for: EffectiveExecutionConfiguration(toolSelection: .all)
+            for: EffectiveExecutionConfiguration(toolSelection: .all),
         )
         _ = try await prepareConversation(
             &conversationProvider,
-            for: EffectiveExecutionConfiguration(toolSelection: .excluding(["conversation_other"]))
+            for: EffectiveExecutionConfiguration(toolSelection: .excluding(["conversation_other"])),
         )
 
         #expect(recorder.snapshots() == [
             PreflightSnapshot(
                 toolNames: ["conversation_other", "counting_echo"],
-                toolSelection: .all
+                toolSelection: .all,
             ),
             PreflightSnapshot(
                 toolNames: ["conversation_other", "counting_echo"],
-                toolSelection: .excluding(["conversation_other"])
+                toolSelection: .excluding(["conversation_other"]),
             ),
         ])
     }
@@ -170,9 +170,9 @@ struct ConversationProviderTests {
         // returns .reuse instead of .rebuildSession.
         let agent = Agent(
             providerRegistry: ProviderRegistry(default: RebuildingProvider(
-                base: ScriptedInferenceProvider(responses: [.success("First response."), .success("Second response.")])
+                base: ScriptedInferenceProvider(responses: [.success("First response."), .success("Second response.")]),
             )),
-            behavior: .test()
+            behavior: .test(),
         )
         let session = agent.makeSession()
 
@@ -181,7 +181,7 @@ struct ConversationProviderTests {
 
         let secondTurn = try await session.send(
             "Second",
-            turnOverrides: TurnOverrides(toolSelection: .disabled)
+            turnOverrides: TurnOverrides(toolSelection: .disabled),
         )
         _ = try await collectEvents(from: secondTurn)
 
@@ -192,7 +192,7 @@ struct ConversationProviderTests {
 
 private func makeConversationProvider(
     registry: ProviderRegistry,
-    toolDefinition: ToolDefinition = .noTools
+    toolDefinition: ToolDefinition = .noTools,
 ) -> ConversationProvider {
     ConversationProvider(
         owner: .local,
@@ -202,8 +202,8 @@ private func makeConversationProvider(
             baseSystemPrompt: "Base prompt",
             toolDefinition: toolDefinition,
             rationaleSchemaDescription: ToolRationale.schemaDescription,
-            toolApprovalGate: ToolApprovalGate()
-        )
+            toolApprovalGate: ToolApprovalGate(),
+        ),
     )
 }
 
@@ -216,23 +216,23 @@ private func selectionTestToolDefinition() -> ToolDefinition {
 
 private func prepareConversation(
     _ conversationProvider: inout ConversationProvider,
-    for turnOverrides: EffectiveExecutionConfiguration
+    for turnOverrides: EffectiveExecutionConfiguration,
 ) async throws -> AnyConversation {
     let conversation = try await conversationProvider.resolveConversation(
         for: turnOverrides,
-        automaticCompactionPolicy: .disabled
+        automaticCompactionPolicy: .disabled,
     ).conversation
     let stream = try await conversation.send(
         userMessage: UserMessage(text: "hello"),
         executionConfiguration: turnOverrides,
-        toolExecutionContext: .empty
+        toolExecutionContext: .empty,
     )
     for try await _ in stream {}
     return conversation
 }
 
 private func conversationID(
-    from conversation: AnyConversation
+    from conversation: AnyConversation,
 ) async throws -> ConversationID {
     await conversation.identity().conversationID
 }
@@ -246,13 +246,13 @@ private struct ExecutionOverrideProvider: InferenceProviding {
         systemPrompt: String?,
         toolRuntime: ToolRuntime,
         toolSelection: ToolSelection,
-        inferenceContext: InferenceContext
+        inferenceContext: InferenceContext,
     ) -> ScriptedInferenceSession {
         base.makeSession(
             systemPrompt: systemPrompt,
             toolRuntime: toolRuntime,
             toolSelection: toolSelection,
-            inferenceContext: inferenceContext
+            inferenceContext: inferenceContext,
         )
     }
 }
@@ -267,7 +267,7 @@ private struct RebuildingProvider: InferenceProviding {
 
     nonisolated func sessionCompatibility(
         from current: EffectiveExecutionConfiguration,
-        to next: EffectiveExecutionConfiguration
+        to next: EffectiveExecutionConfiguration,
     ) -> SessionCompatibility {
         if current.provider != next.provider { return .replace }
         if current.toolSelection != next.toolSelection { return .rebuildSession }
@@ -278,13 +278,13 @@ private struct RebuildingProvider: InferenceProviding {
         systemPrompt: String?,
         toolRuntime: ToolRuntime,
         toolSelection: ToolSelection,
-        inferenceContext: InferenceContext
+        inferenceContext: InferenceContext,
     ) -> ScriptedInferenceSession {
         base.makeSession(
             systemPrompt: systemPrompt,
             toolRuntime: toolRuntime,
             toolSelection: toolSelection,
-            inferenceContext: inferenceContext
+            inferenceContext: inferenceContext,
         )
     }
 }
@@ -301,7 +301,7 @@ private final class PreflightRecorder: @unchecked Sendable {
         snapshotsState.withLock {
             $0.append(PreflightSnapshot(
                 toolNames: registry.all.map(\.name).sorted(),
-                toolSelection: selection
+                toolSelection: selection,
             ))
         }
     }
@@ -320,14 +320,14 @@ private struct PreflightRecordingProvider: InferenceProviding {
 
     nonisolated func preflight(
         toolRegistry: ToolRegistry,
-        toolSelection: ToolSelection
+        toolSelection: ToolSelection,
     ) throws {
         recorder.record(toolRegistry, selection: toolSelection)
     }
 
     nonisolated func sessionCompatibility(
         from current: EffectiveExecutionConfiguration,
-        to next: EffectiveExecutionConfiguration
+        to next: EffectiveExecutionConfiguration,
     ) -> SessionCompatibility {
         if current.provider != next.provider {
             return .replace
@@ -342,13 +342,13 @@ private struct PreflightRecordingProvider: InferenceProviding {
         systemPrompt: String?,
         toolRuntime: ToolRuntime,
         toolSelection: ToolSelection,
-        inferenceContext: InferenceContext
+        inferenceContext: InferenceContext,
     ) -> ScriptedInferenceSession {
         base.makeSession(
             systemPrompt: systemPrompt,
             toolRuntime: toolRuntime,
             toolSelection: toolSelection,
-            inferenceContext: inferenceContext
+            inferenceContext: inferenceContext,
         )
     }
 }

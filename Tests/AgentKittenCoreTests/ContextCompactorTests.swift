@@ -1,8 +1,8 @@
 // SPDX-FileCopyrightText: 2026 AgentKitten Authors
 // SPDX-License-Identifier: Apache-2.0
 
-import Testing
 @testable import AgentKittenCore
+import Testing
 
 @Test func contextCompactor_callsRequestSummaryWithRenderedEntries() async throws {
     let strategy = SummarizationContextCompactionStrategy(options: .init())
@@ -16,7 +16,7 @@ import Testing
         requestSummary: { prompt in
             await recorder.record(prompt)
             return "single summary"
-        }
+        },
     )
 
     let prompts = await recorder.all()
@@ -42,12 +42,12 @@ import Testing
         entries: entries,
         requestSummary: { prompt in
             await counter.increment()
-            if prompt.contains("u1") && prompt.contains("u2") {
+            if prompt.contains("u1"), prompt.contains("u2") {
                 throw InferenceError.contextWindowExceeded(.init(message: "too large"))
             }
             if prompt.contains("u1") { return "summary-one" }
             return "summary-two"
-        }
+        },
     )
 
     #expect(await counter.value == 3)
@@ -71,12 +71,12 @@ import Testing
             await counter.increment()
             // Fail on any multi-turn batch that doesn't contain an existing summary
             let hasExistingSummary = prompt.contains("[Conversation summary]")
-            let entryCount = ["A", "B", "C"].filter { prompt.contains($0) }.count
-            if entryCount > 1 && !hasExistingSummary {
+            let entryCount = ["A", "B", "C"].count(where: { prompt.contains($0) })
+            if entryCount > 1, !hasExistingSummary {
                 throw InferenceError.contextWindowExceeded(.init(message: "too large"))
             }
             return "summary"
-        }
+        },
     )
 
     // At minimum: 1 initial (fails) + 1 for A + 1 fold(A+B) + 1 fold((A+B)+C)
@@ -96,7 +96,7 @@ import Testing
             requestSummary: { _ in
                 await counter.increment()
                 throw CompactionTestError.fatal
-            }
+            },
         )
         Issue.record("Expected fatal error")
     } catch CompactionTestError.fatal {
@@ -112,7 +112,7 @@ import Testing
                 RenderedSessionEntry(isTurnStart: true, rendered: "User: one"),
                 RenderedSessionEntry(isTurnStart: true, rendered: "User: two"),
             ],
-            requestSummary: { _ in throw InferenceError.contextWindowExceeded(.init(message: "too large")) }
+            requestSummary: { _ in throw InferenceError.contextWindowExceeded(.init(message: "too large")) },
         )
         Issue.record("Expected contextWindowExceeded")
     } catch is InferenceError {}
@@ -134,12 +134,12 @@ import Testing
         entries: entries,
         requestSummary: { prompt in
             await counter.increment()
-            if prompt.contains("u1") && prompt.contains("u2") {
+            if prompt.contains("u1"), prompt.contains("u2") {
                 throw InferenceError.contextWindowExceeded(.init(message: "too large"))
             }
             if prompt.contains("u1") { return "summary-turn1" }
             return "summary-turn2"
-        }
+        },
     )
 
     #expect(await counter.value == 3)
@@ -163,19 +163,19 @@ import Testing
         entries: entries,
         requestSummary: { prompt in
             await counter.increment()
-            if prompt.contains("PROMPT_ALPHA") && prompt.contains("PROMPT_BETA") {
+            if prompt.contains("PROMPT_ALPHA"), prompt.contains("PROMPT_BETA") {
                 throw InferenceError.contextWindowExceeded(.init(message: "too large"))
             }
             if prompt.contains("PROMPT_ALPHA") { return "SUM_ALPHA" }
             return "SUM_ALPHA_BETA"
-        }
+        },
     )
 
     #expect(await counter.value == 3)
     #expect(summary == "SUM_ALPHA_BETA")
 }
 
-@Test func contextCompactor_truncationStrategySkipsSummaryGeneration() async throws {
+@Test func contextCompactor_truncationStrategySkipsSummaryGeneration() async {
     let compactor = ContextCompactor()
     let session = TestContextCompactableSession()
     let result = await compactor.compact(
@@ -184,7 +184,7 @@ import Testing
         summaryGenerator: { _ in
             Issue.record("Summary generator should not be called for truncation")
             return "unused"
-        }
+        },
     )
 
     #expect(result.didCompact)
@@ -192,14 +192,14 @@ import Testing
     #expect(applied == [.init(summary: nil, preservedRecentTurnCount: 1)])
 }
 
-@Test func contextCompactor_customStrategyUsesSuppliedImplementation() async throws {
+@Test func contextCompactor_customStrategyUsesSuppliedImplementation() async {
     let compactor = ContextCompactor()
     let session = TestContextCompactableSession()
     let strategy = AnyContextCompactionStrategy(id: "custom-test") { session, summaryGenerator in
         let summary = try await summaryGenerator("custom prompt")
         return try await session.applyCompaction(
             summary: summary,
-            preservedRecentTurnCount: 0
+            preservedRecentTurnCount: 0,
         )
     }
 
@@ -209,7 +209,7 @@ import Testing
         summaryGenerator: { prompt in
             #expect(prompt == "custom prompt")
             return "custom summary"
-        }
+        },
     )
 
     #expect(result.didCompact)
@@ -223,13 +223,20 @@ private enum CompactionTestError: Error {
 
 private actor PromptRecorder {
     private var prompts: [String] = []
-    func record(_ prompt: String) { prompts.append(prompt) }
-    func all() -> [String] { prompts }
+    func record(_ prompt: String) {
+        prompts.append(prompt)
+    }
+
+    func all() -> [String] {
+        prompts
+    }
 }
 
 private actor CallCounter {
     private(set) var value = 0
-    func increment() { value += 1 }
+    func increment() {
+        value += 1
+    }
 }
 
 private actor TestContextCompactableSession: ContextCompactableSession {
@@ -249,15 +256,15 @@ private actor TestContextCompactableSession: ContextCompactableSession {
 
     func applyCompaction(
         summary: String?,
-        preservedRecentTurnCount: Int
+        preservedRecentTurnCount: Int,
     ) async throws -> ContextCompactionResult {
         applied.append(.init(
             summary: summary,
-            preservedRecentTurnCount: preservedRecentTurnCount
+            preservedRecentTurnCount: preservedRecentTurnCount,
         ))
         return .compacted(.init(
             usageBefore: ContextUsage(contextTokens: 90, contextSize: 100),
-            usageAfter: ContextUsage(contextTokens: 10, contextSize: 100)
+            usageAfter: ContextUsage(contextTokens: 10, contextSize: 100),
         ))
     }
 

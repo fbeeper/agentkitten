@@ -1,13 +1,13 @@
 // SPDX-FileCopyrightText: 2026 AgentKitten Authors
 // SPDX-License-Identifier: Apache-2.0
 
-import Testing
 @testable import AgentKittenCore
+import Testing
 
 @Test func turnNote_prependsToUserMessage_turnCompletes() async throws {
     let agent = Agent(
         providerRegistry: ProviderRegistry(default: MockInferenceProvider(responses: ["ok"])),
-        behavior: .test("You are helpful.")
+        behavior: .test("You are helpful."),
     )
     let session = agent.makeSession()
     let turn = try await session.send("hello", turnOverrides: TurnOverrides(turnNote: "Plan mode is active."))
@@ -23,7 +23,7 @@ import Testing
 @Test func turnNote_nil_turnCompletes() async throws {
     let agent = Agent(
         providerRegistry: ProviderRegistry(default: MockInferenceProvider(responses: ["ok"])),
-        behavior: .test("You are helpful.")
+        behavior: .test("You are helpful."),
     )
     let session = agent.makeSession()
     let turn = try await session.send("hello")

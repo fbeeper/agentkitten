@@ -1,9 +1,9 @@
 // SPDX-FileCopyrightText: 2026 AgentKitten Authors
 // SPDX-License-Identifier: Apache-2.0
 
+@testable import AgentKittenCore
 import Foundation
 import Testing
-@testable import AgentKittenCore
 
 struct ScriptedInferenceProvider: InferenceProviding {
     typealias Session = ScriptedInferenceSession
@@ -12,11 +12,11 @@ struct ScriptedInferenceProvider: InferenceProviding {
 
     init(
         responses: [MockResponse] = [.success("This is a mock response.")],
-        structuredResponses: [MockResponse] = []
+        structuredResponses: [MockResponse] = [],
     ) {
-        self.script = SharedScript(
+        script = SharedScript(
             responses: responses,
-            structuredResponses: structuredResponses
+            structuredResponses: structuredResponses,
         )
     }
 
@@ -24,12 +24,12 @@ struct ScriptedInferenceProvider: InferenceProviding {
         systemPrompt: String?,
         toolRuntime: ToolRuntime,
         toolSelection: ToolSelection,
-        inferenceContext: InferenceContext = .empty
+        inferenceContext: InferenceContext = .empty,
     ) -> ScriptedInferenceSession {
         ScriptedInferenceSession(
             script: script,
             systemPrompt: systemPrompt,
-            toolRuntime: toolRuntime
+            toolRuntime: toolRuntime,
         )
     }
 }
@@ -77,13 +77,13 @@ struct CountingEchoTool: AgentTool {
 
 func testToolRuntime(
     registry: ToolRegistry = ToolRegistry(),
-    executionPolicy: some ToolExecutionPolicy = AutoApprovePolicy()
+    executionPolicy: some ToolExecutionPolicy = AutoApprovePolicy(),
 ) -> ToolRuntime {
     ToolRuntime(
         configuration: ToolDefinition(
             tools: registry.all,
-            executionPolicy: executionPolicy
-        )
+            executionPolicy: executionPolicy,
+        ),
     )
 }
 
@@ -103,7 +103,7 @@ func singleTextSummary(in result: ToolResultMessage) -> String? {
 }
 
 func nextApprovalCall(
-    from iterator: inout TurnEventStream<AssistantMessage>.AsyncIterator
+    from iterator: inout TurnEventStream<AssistantMessage>.AsyncIterator,
 ) async throws -> PendingToolCall {
     while let event = try await iterator.next() {
         if case .toolApprovalRequired(let call) = event.kind {

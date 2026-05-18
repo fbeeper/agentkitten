@@ -1,14 +1,14 @@
 // SPDX-FileCopyrightText: 2026 AgentKitten Authors
 // SPDX-License-Identifier: Apache-2.0
 
-import Testing
 @testable import AgentKittenCore
+import Testing
 
 @Test func compaction_trimsSummaryWhitespaceBeforeApplyingSummary() async throws {
     let provider = TrailingWhitespaceSummaryProvider()
     let agent = Agent(
         providerRegistry: ProviderRegistry(default: provider),
-        behavior: .test()
+        behavior: .test(),
     )
     let session = agent.makeSession()
 
@@ -39,11 +39,11 @@ private struct TrailingWhitespaceSummaryProvider: InferenceProviding {
         systemPrompt: String?,
         toolRuntime: ToolRuntime,
         toolSelection: ToolSelection,
-        inferenceContext: InferenceContext
+        inferenceContext: InferenceContext,
     ) -> TrailingWhitespaceSummarySession {
         TrailingWhitespaceSummarySession(
             state: state,
-            isSummarySession: toolSelection == .disabled
+            isSummarySession: toolSelection == .disabled,
         )
     }
 
@@ -71,7 +71,7 @@ private actor TrailingWhitespaceSummarySession: InferenceSession, StructuredInfe
 
     func generateStream<T: Codable & Sendable & JSONSchemaProviding>(
         prompt: String,
-        parameters: InferenceRequestParameters
+        parameters: InferenceRequestParameters,
     ) async throws(StructuredGenerationError) -> StructuredInferenceStream<T> {
         throw .generationFailed(InferenceError.invalidResponse("not supported"))
     }
@@ -88,13 +88,13 @@ extension TrailingWhitespaceSummarySession: ContextCompactableSession {
 
     func applyCompaction(
         summary: String?,
-        preservedRecentTurnCount: Int
+        preservedRecentTurnCount: Int,
     ) async throws -> ContextCompactionResult {
         _ = preservedRecentTurnCount
         await state.record(summary: summary)
         return .compacted(.init(
             usageBefore: ContextUsage(contextTokens: 90, contextSize: 100),
-            usageAfter: ContextUsage(contextTokens: 10, contextSize: 100)
+            usageAfter: ContextUsage(contextTokens: 10, contextSize: 100),
         ))
     }
 }

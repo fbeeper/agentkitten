@@ -1,20 +1,20 @@
 // SPDX-FileCopyrightText: 2026 AgentKitten Authors
 // SPDX-License-Identifier: Apache-2.0
 
-import Testing
-import Synchronization
 @testable import AgentKittenCore
 @testable import AgentKittenInference
+import Synchronization
+import Testing
 
 func testToolRuntime(
     registry: ToolRegistry = ToolRegistry(),
-    executionPolicy: some ToolExecutionPolicy = AutoApprovePolicy()
+    executionPolicy: some ToolExecutionPolicy = AutoApprovePolicy(),
 ) -> ToolRuntime {
     ToolRuntime(
         configuration: ToolDefinition(
             tools: registry.all,
-            executionPolicy: executionPolicy
-        )
+            executionPolicy: executionPolicy,
+        ),
     )
 }
 
@@ -26,7 +26,7 @@ func singleTextContent(in content: [ToolResultContent]) -> String? {
 }
 
 func nextApprovalCall(
-    from iterator: inout TurnEventStream<AssistantMessage>.AsyncIterator
+    from iterator: inout TurnEventStream<AssistantMessage>.AsyncIterator,
 ) async throws -> PendingToolCall {
     while let event = try await iterator.next() {
         if case .toolApprovalRequired(let call) = event.kind {
@@ -39,7 +39,9 @@ func nextApprovalCall(
 }
 
 extension AnthropicHTTPStreaming {
-    func countTokens(request: AnthropicCountTokensRequest) async throws -> Int { 0 }
+    func countTokens(request: AnthropicCountTokensRequest) async throws -> Int {
+        0
+    }
 }
 
 /// Mirrors `AnyInferenceProvider.generateIsolated` for tests: creates an
@@ -51,11 +53,11 @@ func makeSummaryGenerator(client: MinimalCapturingHTTPClient) -> @Sendable (Stri
             defaultModel: "test-model",
             systemPrompt: nil,
             toolRuntime: testToolRuntime(),
-            clientFactory: { _ in client }
+            clientFactory: { _ in client },
         )
         let stream = try await ephemeral.run(
             UserMessage(text: prompt),
-            parameters: InferenceRequestParameters(toolSelection: .disabled)
+            parameters: InferenceRequestParameters(toolSelection: .disabled),
         )
         for try await event in stream {
             if case .result(let text, _) = event {

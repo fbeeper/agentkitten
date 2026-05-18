@@ -1,8 +1,8 @@
 // SPDX-FileCopyrightText: 2026 AgentKitten Authors
 // SPDX-License-Identifier: Apache-2.0
 
-import Testing
 @testable import AgentKittenCore
+import Testing
 
 @Test func mockSession_excludedToolSelectionDeniesToolWithoutExecuting() async throws {
     let counter = ToolCallCounter()
@@ -11,16 +11,16 @@ import Testing
             .toolCall(
                 name: "counting_echo",
                 argumentsJSON: #"{"message":"blocked"}"#,
-                thenRespond: "Done."
+                thenRespond: "Done.",
             ),
         ],
-        counter: counter
+        counter: counter,
     )
 
     var outcome: ToolCallOutcome?
     for try await event in try await session.run(
         UserMessage(text: "Hi"),
-        parameters: InferenceRequestParameters(toolSelection: .excluding(["counting_echo"]))
+        parameters: InferenceRequestParameters(toolSelection: .excluding(["counting_echo"])),
     ) {
         if case .toolCallCompleted(_, _, let completed) = event {
             outcome = completed
@@ -39,16 +39,16 @@ import Testing
             .toolCall(
                 name: "counting_echo",
                 argumentsJSON: #"{"message":"allowed"}"#,
-                thenRespond: "Done."
+                thenRespond: "Done.",
             ),
         ],
-        counter: counter
+        counter: counter,
     )
 
     var outcome: ToolCallOutcome?
     for try await event in try await session.run(
         UserMessage(text: "Hi"),
-        parameters: InferenceRequestParameters(toolSelection: .including(["counting_echo"]))
+        parameters: InferenceRequestParameters(toolSelection: .including(["counting_echo"])),
     ) {
         if case .toolCallCompleted(_, _, let completed) = event {
             outcome = completed
@@ -70,16 +70,16 @@ import Testing
             .toolCall(
                 name: "counting_echo",
                 argumentsJSON: #"{"message":"blocked"}"#,
-                thenRespond: #"{"label":"structured"}"#
+                thenRespond: #"{"label":"structured"}"#,
             ),
         ],
-        counter: counter
+        counter: counter,
     )
 
     let stream: StructuredInferenceStream<SelectionStructuredValue> =
         try await session.generateStream(
             prompt: "Return a label",
-            parameters: InferenceRequestParameters(toolSelection: .including(["other_tool"]))
+            parameters: InferenceRequestParameters(toolSelection: .including(["other_tool"])),
         )
 
     var outcome: ToolCallOutcome?
@@ -97,17 +97,17 @@ import Testing
 private func makeCountingEchoMockSession(
     responses: [MockResponse],
     structuredResponses: [MockResponse] = [],
-    counter: ToolCallCounter
+    counter: ToolCallCounter,
 ) -> MockInferenceSession {
     let provider = MockInferenceProvider(
         mockResponses: responses,
-        structuredMockResponses: structuredResponses
+        structuredMockResponses: structuredResponses,
     )
     let registry = ToolRegistry([AnyAgentTool(CountingEchoTool(counter: counter))])
     return provider.makeSession(
         systemPrompt: nil,
         toolRuntime: testToolRuntime(registry: registry),
-        toolSelection: .all
+        toolSelection: .all,
     )
 }
 
@@ -119,7 +119,7 @@ private struct SelectionStructuredValue: Codable, Sendable, JSONSchemaProviding,
             properties: [
                 "label": .string(description: "The generated label"),
             ],
-            required: ["label"]
+            required: ["label"],
         )
     }
 }

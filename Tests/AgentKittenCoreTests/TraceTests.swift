@@ -1,9 +1,9 @@
 // SPDX-FileCopyrightText: 2026 AgentKitten Authors
 // SPDX-License-Identifier: Apache-2.0
 
+@testable import AgentKittenCore
 import Foundation
 import Testing
-@testable import AgentKittenCore
 
 @Suite("AgentTrace")
 struct TraceTests {
@@ -12,7 +12,7 @@ struct TraceTests {
             providerRegistry: ProviderRegistry(default: ScriptedInferenceProvider(
                 responses: [.success("Direct answer")],
             )),
-            behavior: .test()
+            behavior: .test(),
         )
         let session = agent.makeSession()
 
@@ -34,7 +34,7 @@ struct TraceTests {
                     .success("Second"),
                 ],
             )),
-            behavior: .test()
+            behavior: .test(),
         )
         let session = agent.makeSession()
 
@@ -54,7 +54,7 @@ struct TraceTests {
             providerRegistry: ProviderRegistry(default: ScriptedInferenceProvider(
                 responses: [.success("Direct answer")],
             )),
-            behavior: .test()
+            behavior: .test(),
         )
         let session = agent.makeSession()
 
@@ -86,7 +86,7 @@ struct TraceTests {
         let provider = HangingInferenceProvider()
         let agent = Agent(
             providerRegistry: ProviderRegistry(default: provider),
-            behavior: .test()
+            behavior: .test(),
         )
         let session = agent.makeSession()
 
@@ -110,7 +110,7 @@ struct TraceTests {
             providerRegistry: ProviderRegistry(default: ScriptedInferenceProvider(
                 responses: [.failure(failure)],
             )),
-            behavior: .test()
+            behavior: .test(),
         )
         let session = agent.makeSession()
 
@@ -136,7 +136,7 @@ struct TraceTests {
         let agent = Agent(
             providerRegistry: ProviderRegistry(default: defaultProvider)
                 .registering(TraceExecutionOverrideProvider(base: overrideProvider)),
-            behavior: .test()
+            behavior: .test(),
         )
         let session = agent.makeSession()
 
@@ -145,9 +145,9 @@ struct TraceTests {
             toolStepBudget: .disabled,
             inferenceConfiguration: InferenceConfiguration(
                 temperature: 0.2,
-                maxTokens: 128
+                maxTokens: 128,
             ),
-            provider: .ofType(TraceExecutionOverrideProvider.self)
+            provider: .ofType(TraceExecutionOverrideProvider.self),
         )
         turnOverrides[TraceInferenceContextKey.self] = "trace-model"
         let turn = try await session.send("Hello", turnOverrides: turnOverrides)
@@ -172,7 +172,7 @@ struct TraceTests {
         )
         let agent = Agent(
             providerRegistry: ProviderRegistry(default: TraceRebuildingProvider(base: script)),
-            behavior: .test()
+            behavior: .test(),
         )
         let session = agent.makeSession()
 
@@ -180,7 +180,7 @@ struct TraceTests {
         _ = try await collectEvents(from: firstTurn)
         let secondTurn = try await session.send(
             "Second",
-            turnOverrides: TurnOverrides(toolSelection: .disabled)
+            turnOverrides: TurnOverrides(toolSelection: .disabled),
         )
         _ = try await collectEvents(from: secondTurn)
 
@@ -197,7 +197,7 @@ struct TraceTests {
             providerRegistry: ProviderRegistry(default: ScriptedInferenceProvider(
                 responses: [.success("First"), .success("Second")],
             )),
-            behavior: .test()
+            behavior: .test(),
         )
         let session = agent.makeSession()
 
@@ -209,8 +209,8 @@ struct TraceTests {
         let secondTurn = try await session.send(
             "Second",
             turnOverrides: TurnOverrides(
-                inferenceConfiguration: InferenceConfiguration(temperature: 0.1)
-            )
+                inferenceConfiguration: InferenceConfiguration(temperature: 0.1),
+            ),
         )
         _ = try await collectEvents(from: secondTurn)
 
@@ -224,7 +224,7 @@ struct TraceTests {
     @Test func conversationResolutionFailureRecordsOnlyErrorAndTurnCompletion() async throws {
         let agent = Agent(
             providerRegistry: ProviderRegistry(default: TraceFailingProvider()),
-            behavior: .test()
+            behavior: .test(),
         )
         let session = agent.makeSession()
 
@@ -237,7 +237,7 @@ struct TraceTests {
         #expect(await conversationResolvedEntry(for: turn.id, on: session) == nil)
 
         let failure = AgentTraceEntry.Kind.ErrorInfo(
-            InferenceError.invalidResponse("preflight failed")
+            InferenceError.invalidResponse("preflight failed"),
         )
         #expect((await rawTraceEntries(for: turn.id, on: session)).map(\.kind) == [
             .error(failure),
@@ -260,13 +260,13 @@ private struct TraceExecutionOverrideProvider: InferenceProviding {
         systemPrompt: String?,
         toolRuntime: ToolRuntime,
         toolSelection: ToolSelection,
-        inferenceContext: InferenceContext
+        inferenceContext: InferenceContext,
     ) -> ScriptedInferenceSession {
         base.makeSession(
             systemPrompt: systemPrompt,
             toolRuntime: toolRuntime,
             toolSelection: toolSelection,
-            inferenceContext: inferenceContext
+            inferenceContext: inferenceContext,
         )
     }
 }
@@ -278,7 +278,7 @@ private struct TraceRebuildingProvider: InferenceProviding {
 
     nonisolated func sessionCompatibility(
         from current: EffectiveExecutionConfiguration,
-        to next: EffectiveExecutionConfiguration
+        to next: EffectiveExecutionConfiguration,
     ) -> SessionCompatibility {
         if current.provider != next.provider { return .replace }
         if current.toolSelection != next.toolSelection { return .rebuildSession }
@@ -289,13 +289,13 @@ private struct TraceRebuildingProvider: InferenceProviding {
         systemPrompt: String?,
         toolRuntime: ToolRuntime,
         toolSelection: ToolSelection,
-        inferenceContext: InferenceContext
+        inferenceContext: InferenceContext,
     ) -> ScriptedInferenceSession {
         base.makeSession(
             systemPrompt: systemPrompt,
             toolRuntime: toolRuntime,
             toolSelection: toolSelection,
-            inferenceContext: inferenceContext
+            inferenceContext: inferenceContext,
         )
     }
 }
@@ -309,7 +309,7 @@ private struct TraceFailingProvider: InferenceProviding {
 
     func preflight(
         toolRegistry: ToolRegistry,
-        toolSelection: ToolSelection
+        toolSelection: ToolSelection,
     ) throws {
         throw InferenceError.invalidResponse("preflight failed")
     }
@@ -318,13 +318,13 @@ private struct TraceFailingProvider: InferenceProviding {
         systemPrompt: String?,
         toolRuntime: ToolRuntime,
         toolSelection: ToolSelection,
-        inferenceContext: InferenceContext
+        inferenceContext: InferenceContext,
     ) -> ScriptedInferenceSession {
         base.makeSession(
             systemPrompt: systemPrompt,
             toolRuntime: toolRuntime,
             toolSelection: toolSelection,
-            inferenceContext: inferenceContext
+            inferenceContext: inferenceContext,
         )
     }
 }

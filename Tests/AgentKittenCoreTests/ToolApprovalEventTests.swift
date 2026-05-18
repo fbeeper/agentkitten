@@ -1,9 +1,9 @@
 // SPDX-FileCopyrightText: 2026 AgentKitten Authors
 // SPDX-License-Identifier: Apache-2.0
 
+@testable import AgentKittenCore
 import Foundation
 import Testing
-@testable import AgentKittenCore
 
 private struct ApprovalStructuredValue: Codable, Sendable, JSONSchemaProviding, Equatable {
     let answer: String
@@ -28,11 +28,11 @@ private struct ApprovalEventProvider: InferenceProviding {
         systemPrompt: String?,
         toolRuntime: ToolRuntime,
         toolSelection: ToolSelection,
-        inferenceContext: InferenceContext
+        inferenceContext: InferenceContext,
     ) -> ApprovalEventSession {
         ApprovalEventSession(
             pendingToolCall: pendingToolCall,
-            finalText: finalText
+            finalText: finalText,
         )
     }
 }
@@ -43,7 +43,7 @@ private actor ApprovalEventSession: InferenceSession, StructuredInferenceSession
 
     init(
         pendingToolCall: PendingToolCall,
-        finalText: String
+        finalText: String,
     ) {
         self.pendingToolCall = pendingToolCall
         self.finalText = finalText
@@ -55,8 +55,8 @@ private actor ApprovalEventSession: InferenceSession, StructuredInferenceSession
                 .toolCallRequested(
                     id: pendingToolCall.id,
                     name: pendingToolCall.name,
-                    argumentsJSON: pendingToolCall.argumentsJSON
-                )
+                    argumentsJSON: pendingToolCall.argumentsJSON,
+                ),
             )
             continuation.yield(.toolApprovalRequired(call: pendingToolCall))
             continuation.yield(.result(finalText, .endTurn))
@@ -66,7 +66,7 @@ private actor ApprovalEventSession: InferenceSession, StructuredInferenceSession
 
     func generateStream<T: Codable & Sendable & JSONSchemaProviding>(
         prompt: String,
-        parameters: InferenceRequestParameters
+        parameters: InferenceRequestParameters,
     ) async throws(StructuredGenerationError) -> StructuredInferenceStream<T> {
         throw .generationFailed(InferenceError.invalidResponse("structured generation not supported"))
     }
@@ -85,7 +85,7 @@ struct ToolApprovalEventTests {
             .toolCallRequested(
                 id: pendingToolCall.id,
                 name: pendingToolCall.name,
-                argumentsJSON: pendingToolCall.argumentsJSON
+                argumentsJSON: pendingToolCall.argumentsJSON,
             ),
             .toolApprovalRequired(call: pendingToolCall),
             .result("Done.", .endTurn),
@@ -95,7 +95,7 @@ struct ToolApprovalEventTests {
         guard case .toolCallStarted(
             name: pendingToolCall.name,
             id: pendingToolCall.id,
-            argumentsJSON: pendingToolCall.argumentsJSON
+            argumentsJSON: pendingToolCall.argumentsJSON,
         ) = events[0].kind else {
             Issue.record("Expected toolCallStarted")
             return
@@ -124,13 +124,13 @@ struct ToolApprovalEventTests {
             .toolCallRequested(
                 id: pendingToolCall.id,
                 name: pendingToolCall.name,
-                argumentsJSON: pendingToolCall.argumentsJSON
+                argumentsJSON: pendingToolCall.argumentsJSON,
             ),
             .toolApprovalRequired(call: pendingToolCall),
             .toolCallCompleted(
                 id: pendingToolCall.id,
                 name: pendingToolCall.name,
-                outcome: .success(content: [.text(#"{"echo":"approve"}"#)])
+                outcome: .success(content: [.text(#"{"echo":"approve"}"#)]),
             ),
             .result("Done.", .endTurn),
         ])
@@ -162,7 +162,7 @@ struct ToolApprovalEventTests {
                 eventID: .generate(),
                 conversationID: conversationID,
                 timestamp: startTimestamp,
-            )
+            ),
         )
         let approvalRequired = ConversationEvent<AssistantMessage>(
             kind: .toolApprovalRequired(call: pendingToolCall),
@@ -171,13 +171,13 @@ struct ToolApprovalEventTests {
                 conversationID: conversationID,
                 timestamp: approvalTimestamp,
                 parentEventID: started.metadata.eventID,
-            )
+            ),
         )
 
         var mapper = ConversationEventMapper<AssistantMessage>(
             agentID: "assistant",
             sessionID: sessionID,
-            invocationID: invocationID
+            invocationID: invocationID,
         )
         let startMapped = mapper.map(started)
         let approvalMapped = mapper.map(approvalRequired)
@@ -204,7 +204,7 @@ struct ToolApprovalEventTests {
             .toolCallRequested(
                 id: pendingToolCall.id,
                 name: pendingToolCall.name,
-                argumentsJSON: pendingToolCall.argumentsJSON
+                argumentsJSON: pendingToolCall.argumentsJSON,
             ),
             .toolApprovalRequired(call: pendingToolCall),
             .result(expected, .endTurn),
@@ -247,7 +247,7 @@ struct ToolApprovalEventTests {
         let agent = Agent(
             providerRegistry: ProviderRegistry(default: ApprovalEventProvider(
                 pendingToolCall: pendingToolCall,
-                finalText: "Approved later"
+                finalText: "Approved later",
             )),
             behavior: .test(),
         )
@@ -274,7 +274,7 @@ struct ToolApprovalEventTests {
 }
 
 private func digestConversationEvents(
-    _ events: [InferenceEvent<String>]
+    _ events: [InferenceEvent<String>],
 ) async throws -> [ConversationEvent<AssistantMessage>] {
     let stream = AsyncThrowingStream<InferenceEvent<String>, Error> { continuation in
         for event in events {
@@ -289,7 +289,7 @@ private func digestConversationEvents(
             try await digester.digest(
                 stream: stream,
                 continuation: continuation,
-                conversationID: .generate()
+                conversationID: .generate(),
             )
             continuation.finish()
         } catch {
@@ -308,7 +308,7 @@ private func digestConversationEvents(
 }
 
 private func digestStructuredConversationEvents<T: Sendable>(
-    _ events: [InferenceEvent<T>]
+    _ events: [InferenceEvent<T>],
 ) async throws -> [ConversationEvent<T>] {
     let stream = AsyncThrowingStream<InferenceEvent<T>, Error> { continuation in
         for event in events {
@@ -323,7 +323,7 @@ private func digestStructuredConversationEvents<T: Sendable>(
             try await digester.digestStructured(
                 stream: stream,
                 continuation: continuation,
-                conversationID: .generate()
+                conversationID: .generate(),
             )
             continuation.finish()
         } catch {

@@ -1,8 +1,8 @@
 // SPDX-FileCopyrightText: 2026 AgentKitten Authors
 // SPDX-License-Identifier: Apache-2.0
 
-import Testing
 @testable import AgentKittenCore
+import Testing
 
 private let defaultExecutor = ToolExecutor(registry: ToolRegistry())
 private let defaultToolRuntime = testToolRuntime()
@@ -13,7 +13,7 @@ private let defaultToolRuntime = testToolRuntime()
         systemPrompt: nil,
         toolRuntime: defaultToolRuntime,
         toolSelection: .all,
-    inferenceContext: .empty
+        inferenceContext: .empty,
     )
 
     var chunks: [String] = []
@@ -45,7 +45,7 @@ private let defaultToolRuntime = testToolRuntime()
         systemPrompt: nil,
         toolRuntime: defaultToolRuntime,
         toolSelection: .all,
-    inferenceContext: .empty
+        inferenceContext: .empty,
     )
     let message = UserMessage(text: "Hi")
 
@@ -68,7 +68,7 @@ private let defaultToolRuntime = testToolRuntime()
         systemPrompt: nil,
         toolRuntime: defaultToolRuntime,
         toolSelection: .all,
-    inferenceContext: .empty
+        inferenceContext: .empty,
     )
 
     var caughtError: (any Error)?
@@ -87,14 +87,14 @@ private let defaultToolRuntime = testToolRuntime()
         systemPrompt: nil,
         toolRuntime: defaultToolRuntime,
         toolSelection: .all,
-    inferenceContext: .empty
+        inferenceContext: .empty,
     )
     let fromSession = MockInferenceSession(responses: [])
     for session in [fromProvider, fromSession] {
         var text = ""
         for try await event in try await session.run(
             UserMessage(text: "Hi"),
-            parameters: InferenceRequestParameters()
+            parameters: InferenceRequestParameters(),
         ) {
             if case .delta(let chunk) = event { text += chunk }
         }
@@ -104,13 +104,13 @@ private let defaultToolRuntime = testToolRuntime()
 
 @Test func mockSession_propagatesProviderUnavailable() async throws {
     let provider = MockInferenceProvider(
-        mockResponses: [.failure(.providerUnavailable("test backend offline"))]
+        mockResponses: [.failure(.providerUnavailable("test backend offline"))],
     )
     let session = provider.makeSession(
         systemPrompt: nil,
         toolRuntime: defaultToolRuntime,
         toolSelection: .all,
-    inferenceContext: .empty
+        inferenceContext: .empty,
     )
 
     var caughtError: (any Error)?
@@ -131,7 +131,7 @@ struct MockStructuredValue: Codable, Sendable, JSONSchemaProviding, Equatable {
             properties: [
                 "label": .string(description: "The generated label"),
             ],
-            required: ["label"]
+            required: ["label"],
         )
     }
 }
@@ -151,7 +151,7 @@ private struct MockEchoTool: AgentTool {
     var schema: ToolSchema {
         ToolSchema(parameters: .object(
             properties: ["message": .string(description: "Message to echo.")],
-            required: ["message"]
+            required: ["message"],
         ))
     }
 
@@ -163,13 +163,13 @@ private struct MockEchoTool: AgentTool {
 @Test func mockSession_alsoConformsToStructuredInferenceSession() {
     let provider = MockInferenceProvider(
         responses: ["Hello world"],
-        structuredResponses: [#"{"label":"structured"}"#]
+        structuredResponses: [#"{"label":"structured"}"#],
     )
     let session: any StructuredInferenceSession = provider.makeSession(
         systemPrompt: nil,
         toolRuntime: defaultToolRuntime,
         toolSelection: .all,
-    inferenceContext: .empty
+        inferenceContext: .empty,
     )
 
     #expect(type(of: session) == MockInferenceSession.self)
@@ -178,18 +178,18 @@ private struct MockEchoTool: AgentTool {
 @Test func mockSession_generateDecodesStructuredResponses() async throws {
     let provider = MockInferenceProvider(
         responses: ["Hello world"],
-        structuredResponses: [#"{"label":"structured"}"#]
+        structuredResponses: [#"{"label":"structured"}"#],
     )
     let session = provider.makeSession(
         systemPrompt: nil,
         toolRuntime: defaultToolRuntime,
         toolSelection: .all,
-    inferenceContext: .empty
+        inferenceContext: .empty,
     )
 
     let value: MockStructuredValue = try await session.generate(
-            prompt: "Return a label",
-        parameters: InferenceRequestParameters()
+        prompt: "Return a label",
+        parameters: InferenceRequestParameters(),
     )
     #expect(value == MockStructuredValue(label: "structured"))
 }
@@ -201,22 +201,22 @@ private struct MockEchoTool: AgentTool {
             .toolCall(
                 name: "echo",
                 argumentsJSON: #"{"message":"structured"}"#,
-                thenRespond: #"{"label":"structured"}"#
+                thenRespond: #"{"label":"structured"}"#,
             ),
-        ]
+        ],
     )
     let executor = ToolExecutor(
-        registry: ToolRegistry([AnyAgentTool(MockEchoTool())])
+        registry: ToolRegistry([AnyAgentTool(MockEchoTool())]),
     )
     let session = provider.makeSession(
         systemPrompt: nil,
         toolRuntime: testToolRuntime(registry: executor.registry),
-        toolSelection: .all
+        toolSelection: .all,
     )
 
     let value: MockStructuredValue = try await session.generate(
-            prompt: "Return a label",
-        parameters: InferenceRequestParameters()
+        prompt: "Return a label",
+        parameters: InferenceRequestParameters(),
     )
     #expect(value == MockStructuredValue(label: "structured"))
 }
@@ -228,22 +228,23 @@ private struct MockEchoTool: AgentTool {
             .toolCall(
                 name: "echo",
                 argumentsJSON: #"{"message":"structured"}"#,
-                thenRespond: #"{"label":"structured"}"#
+                thenRespond: #"{"label":"structured"}"#,
             ),
-        ]
+        ],
     )
     let executor = ToolExecutor(
-        registry: ToolRegistry([AnyAgentTool(MockEchoTool())])
+        registry: ToolRegistry([AnyAgentTool(MockEchoTool())]),
     )
     let session = provider.makeSession(
         systemPrompt: nil,
         toolRuntime: testToolRuntime(registry: executor.registry),
-        toolSelection: .all
+        toolSelection: .all,
     )
 
     let stream: StructuredInferenceStream<MockStructuredValue> =
         try await session.generateStream(
-            prompt: "Return a label", parameters: InferenceRequestParameters())
+            prompt: "Return a label", parameters: InferenceRequestParameters(),
+        )
 
     var sawToolStart = false
     var sawToolCompletion = false
@@ -281,24 +282,24 @@ private struct MockEchoTool: AgentTool {
             .toolCall(
                 name: "echo",
                 argumentsJSON: #"{"message":"blocked"}"#,
-                thenRespond: "Done."
+                thenRespond: "Done.",
             ),
-        ]
+        ],
     )
     let executor = ToolExecutor(
-        registry: ToolRegistry([AnyAgentTool(MockEchoTool())])
+        registry: ToolRegistry([AnyAgentTool(MockEchoTool())]),
     )
     let session = provider.makeSession(
         systemPrompt: nil,
         toolRuntime: testToolRuntime(registry: executor.registry),
-        toolSelection: .all
+        toolSelection: .all,
     )
 
     var outcome: ToolCallOutcome?
     var resultText: String?
     for try await event in try await session.run(
         UserMessage(text: "Hi"),
-        parameters: InferenceRequestParameters(toolSelection: .disabled)
+        parameters: InferenceRequestParameters(toolSelection: .disabled),
     ) {
         switch event {
         case .toolCallCompleted(_, _, let completed):
@@ -321,23 +322,23 @@ private struct MockEchoTool: AgentTool {
             .toolCall(
                 name: "echo",
                 argumentsJSON: #"{"message":"blocked"}"#,
-                thenRespond: #"{"label":"structured"}"#
+                thenRespond: #"{"label":"structured"}"#,
             ),
-        ]
+        ],
     )
     let executor = ToolExecutor(
-        registry: ToolRegistry([AnyAgentTool(MockEchoTool())])
+        registry: ToolRegistry([AnyAgentTool(MockEchoTool())]),
     )
     let session = provider.makeSession(
         systemPrompt: nil,
         toolRuntime: testToolRuntime(registry: executor.registry),
-        toolSelection: .all
+        toolSelection: .all,
     )
 
     let stream: StructuredInferenceStream<MockStructuredValue> =
         try await session.generateStream(
             prompt: "Return a label",
-            parameters: InferenceRequestParameters(toolSelection: .disabled)
+            parameters: InferenceRequestParameters(toolSelection: .disabled),
         )
 
     var outcome: ToolCallOutcome?

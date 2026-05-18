@@ -1,14 +1,14 @@
 // SPDX-FileCopyrightText: 2026 AgentKitten Authors
 // SPDX-License-Identifier: Apache-2.0
 
-import Testing
 @testable import AgentKittenCore
+import Testing
 
 @Test func contextOperations_throwBusyDuringActiveTurn() async throws {
     let provider = GateInferenceProvider()
     let agent = Agent(
         providerRegistry: ProviderRegistry(default: provider),
-        behavior: .test()
+        behavior: .test(),
     )
     let session = agent.makeSession()
 
@@ -34,7 +34,7 @@ import Testing
     let provider = GateInferenceProvider()
     let agent = Agent(
         providerRegistry: ProviderRegistry(default: provider),
-        behavior: .test()
+        behavior: .test(),
     )
     let session = agent.makeSession()
 

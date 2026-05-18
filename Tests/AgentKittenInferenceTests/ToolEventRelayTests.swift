@@ -3,15 +3,15 @@
 
 #if canImport(FoundationModels)
 import AgentKittenCore
-import Testing
 @testable import AgentKittenInference
+import Testing
 
 // MARK: - ToolEventRelay
 
-/// `ToolEventRelay` does not depend on Apple Intelligence being available —
-/// it is a plain actor over `AsyncThrowingStream` continuations. These tests
-/// exercise it directly to verify ordering and cancellation semantics without
-/// requiring the on-device model.
+// `ToolEventRelay` does not depend on Apple Intelligence being available —
+// it is a plain actor over `AsyncThrowingStream` continuations. These tests
+// exercise it directly to verify ordering and cancellation semantics without
+// requiring the on-device model.
 
 @available(macOS 26, iOS 26, visionOS 26, macCatalyst 26, *)
 @Test func relay_forwardsEventsInOrder() async throws {
@@ -89,10 +89,14 @@ import Testing
     cont2.finish()
 
     var events1: [InferenceEvent<String>] = []
-    for try await event in stream1 { events1.append(event) }
+    for try await event in stream1 {
+        events1.append(event)
+    }
 
     var events2: [InferenceEvent<String>] = []
-    for try await event in stream2 { events2.append(event) }
+    for try await event in stream2 {
+        events2.append(event)
+    }
 
     #expect(events1.count == 1)
     #expect(events2.count == 1)
@@ -120,10 +124,14 @@ import Testing
     cont2.finish()
 
     var events1: [InferenceEvent<String>] = []
-    for try await event in stream1 { events1.append(event) }
+    for try await event in stream1 {
+        events1.append(event)
+    }
 
     var events2: [InferenceEvent<String>] = []
-    for try await event in stream2 { events2.append(event) }
+    for try await event in stream2 {
+        events2.append(event)
+    }
 
     #expect(events1.count == 1)
     #expect(events2.count == 1)
@@ -154,7 +162,9 @@ import Testing
     continuation.finish()
 
     var received: [InferenceEvent<String>] = []
-    for try await event in stream { received.append(event) }
+    for try await event in stream {
+        received.append(event)
+    }
 
     #expect(received.count == 5)
     guard case .delta(let pre) = received[0] else {

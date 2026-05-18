@@ -1,9 +1,9 @@
 // SPDX-FileCopyrightText: 2026 AgentKitten Authors
 // SPDX-License-Identifier: Apache-2.0
 
+@testable import AgentKittenCore
 import Foundation
 import Testing
-@testable import AgentKittenCore
 
 private struct StructuredLabel: Codable, Sendable, JSONSchemaProviding, Equatable {
     let name: String
@@ -15,7 +15,7 @@ private struct StructuredLabel: Codable, Sendable, JSONSchemaProviding, Equatabl
                 "name": .string(description: "The label name"),
                 "score": .number(description: "The label score"),
             ],
-            required: ["name", "score"]
+            required: ["name", "score"],
         )
     }
 }
@@ -37,7 +37,7 @@ private struct StructuredEchoTool: AgentTool {
     var schema: ToolSchema {
         ToolSchema(parameters: .object(
             properties: ["message": .string(description: "Message to echo.")],
-            required: ["message"]
+            required: ["message"],
         ))
     }
 
@@ -54,11 +54,11 @@ struct ConversationStructuredTests {
             owner: .local,
             provider: MockInferenceProvider(
                 responses: ["ignored"],
-                structuredResponses: [json]
+                structuredResponses: [json],
             ),
             systemPrompt: "You are a classifier.",
             executionConfiguration: EffectiveExecutionConfiguration(
-                inferenceConfiguration: InferenceConfiguration()
+                inferenceConfiguration: InferenceConfiguration(),
             ),
             toolRuntime: emptyToolRuntime,
         )
@@ -66,7 +66,7 @@ struct ConversationStructuredTests {
         let stream: AsyncThrowingStream<ConversationEvent<StructuredLabel>, Error> = try await conversation.generate(
             userMessage: UserMessage(text: "Classify this request"),
             executionConfiguration: EffectiveExecutionConfiguration(),
-            toolExecutionContext: .empty
+            toolExecutionContext: .empty,
         )
         let result = try await collectStructuredResult(from: stream)
 
@@ -79,7 +79,7 @@ struct ConversationStructuredTests {
             provider: MockInferenceProvider(responses: ["ignored"]),
             systemPrompt: "You are a classifier.",
             executionConfiguration: EffectiveExecutionConfiguration(
-                inferenceConfiguration: InferenceConfiguration()
+                inferenceConfiguration: InferenceConfiguration(),
             ),
             toolRuntime: emptyToolRuntime,
         )
@@ -87,9 +87,9 @@ struct ConversationStructuredTests {
         do {
             let stream: AsyncThrowingStream<ConversationEvent<StructuredLabel>, Error> =
                 try await conversation.generate(
-                userMessage: UserMessage(text: "Classify this request"),
-                executionConfiguration: EffectiveExecutionConfiguration(),
-                toolExecutionContext: .empty
+                    userMessage: UserMessage(text: "Classify this request"),
+                    executionConfiguration: EffectiveExecutionConfiguration(),
+                    toolExecutionContext: .empty,
                 )
             let _: StructuredLabel = try await collectStructuredResult(from: stream)
             Issue.record("Expected structured generation to fail")
@@ -110,23 +110,23 @@ struct ConversationStructuredTests {
                     .toolCall(
                         name: "echo",
                         argumentsJSON: #"{"message":"tool-backed"}"#,
-                        thenRespond: json
+                        thenRespond: json,
                     ),
-                ]
+                ],
             ),
             systemPrompt: "You are a classifier.",
             executionConfiguration: EffectiveExecutionConfiguration(
-                inferenceConfiguration: InferenceConfiguration()
+                inferenceConfiguration: InferenceConfiguration(),
             ),
             toolRuntime: testToolRuntime(
-                registry: ToolRegistry([AnyAgentTool(StructuredEchoTool())])
+                registry: ToolRegistry([AnyAgentTool(StructuredEchoTool())]),
             ),
         )
 
         let stream: AsyncThrowingStream<ConversationEvent<StructuredLabel>, Error> = try await conversation.generate(
             userMessage: UserMessage(text: "Classify this request"),
             executionConfiguration: EffectiveExecutionConfiguration(),
-            toolExecutionContext: .empty
+            toolExecutionContext: .empty,
         )
         let events = try await collectConversationEvents(from: stream)
         let result = try #require(events.compactMap { event -> StructuredLabel? in
@@ -140,7 +140,7 @@ struct ConversationStructuredTests {
         try assertStructuredToolFlow(
             events: events,
             expectedArgumentsJSON: #"{"message":"tool-backed"}"#,
-            expectedSummary: .text(#"{"echo":"tool-backed"}"#)
+            expectedSummary: .text(#"{"echo":"tool-backed"}"#),
         )
     }
 
@@ -151,20 +151,20 @@ struct ConversationStructuredTests {
                 owner: .local,
                 provider: MockInferenceProvider(
                     responses: ["ignored"],
-                    structuredResponses: [json]
+                    structuredResponses: [json],
                 ),
                 systemPrompt: "You are a classifier.",
                 executionConfiguration: EffectiveExecutionConfiguration(
-                    inferenceConfiguration: InferenceConfiguration()
+                    inferenceConfiguration: InferenceConfiguration(),
                 ),
                 toolRuntime: emptyToolRuntime,
-            )
+            ),
         )
 
         let stream: AsyncThrowingStream<ConversationEvent<StructuredLabel>, Error> = try await anyConversation.generate(
             userMessage: UserMessage(text: "Classify this request"),
             executionConfiguration: EffectiveExecutionConfiguration(),
-            toolExecutionContext: .empty
+            toolExecutionContext: .empty,
         )
         let result = try await collectStructuredResult(from: stream)
 
@@ -182,24 +182,24 @@ struct ConversationStructuredTests {
                         .toolCall(
                             name: "echo",
                             argumentsJSON: #"{"message":"tool-forwarded"}"#,
-                            thenRespond: json
+                            thenRespond: json,
                         ),
-                    ]
+                    ],
                 ),
                 systemPrompt: "You are a classifier.",
                 executionConfiguration: EffectiveExecutionConfiguration(
-                    inferenceConfiguration: InferenceConfiguration()
+                    inferenceConfiguration: InferenceConfiguration(),
                 ),
                 toolRuntime: testToolRuntime(
-                    registry: ToolRegistry([AnyAgentTool(StructuredEchoTool())])
+                    registry: ToolRegistry([AnyAgentTool(StructuredEchoTool())]),
                 ),
-            )
+            ),
         )
 
         let stream: AsyncThrowingStream<ConversationEvent<StructuredLabel>, Error> = try await anyConversation.generate(
             userMessage: UserMessage(text: "Classify this request"),
             executionConfiguration: EffectiveExecutionConfiguration(),
-            toolExecutionContext: .empty
+            toolExecutionContext: .empty,
         )
         let events = try await collectConversationEvents(from: stream)
         let result = try #require(events.compactMap { event -> StructuredLabel? in
@@ -213,13 +213,13 @@ struct ConversationStructuredTests {
         try assertStructuredToolFlow(
             events: events,
             expectedArgumentsJSON: #"{"message":"tool-forwarded"}"#,
-            expectedSummary: .text(#"{"echo":"tool-forwarded"}"#)
+            expectedSummary: .text(#"{"echo":"tool-forwarded"}"#),
         )
     }
 }
 
 private func collectConversationEvents<Result: Sendable>(
-    from stream: AsyncThrowingStream<ConversationEvent<Result>, Error>
+    from stream: AsyncThrowingStream<ConversationEvent<Result>, Error>,
 ) async throws -> [ConversationEvent<Result>] {
     var events: [ConversationEvent<Result>] = []
     for try await event in stream {
@@ -229,7 +229,7 @@ private func collectConversationEvents<Result: Sendable>(
 }
 
 private func collectStructuredResult<Result: Sendable>(
-    from stream: AsyncThrowingStream<ConversationEvent<Result>, Error>
+    from stream: AsyncThrowingStream<ConversationEvent<Result>, Error>,
 ) async throws -> Result {
     let events = try await collectConversationEvents(from: stream)
     return try #require(events.compactMap { event -> Result? in
@@ -241,7 +241,7 @@ private func collectStructuredResult<Result: Sendable>(
 }
 
 private func firstToolCallStarted<Result: Sendable>(
-    in events: [ConversationEvent<Result>]
+    in events: [ConversationEvent<Result>],
 ) -> ConversationEvent<Result>? {
     events.first {
         if case .toolCallStarted = $0.kind {
@@ -252,7 +252,7 @@ private func firstToolCallStarted<Result: Sendable>(
 }
 
 private func firstToolCallCompleted<Result: Sendable>(
-    in events: [ConversationEvent<Result>]
+    in events: [ConversationEvent<Result>],
 ) -> ConversationEvent<Result>? {
     events.first {
         if case .toolCallCompleted = $0.kind {
@@ -265,7 +265,7 @@ private func firstToolCallCompleted<Result: Sendable>(
 private func assertStructuredToolFlow<Result: Sendable>(
     events: [ConversationEvent<Result>],
     expectedArgumentsJSON: String,
-    expectedSummary: ToolResultContentSummary
+    expectedSummary: ToolResultContentSummary,
 ) throws {
     let started = try #require(firstToolCallStarted(in: events))
     let completed = try #require(firstToolCallCompleted(in: events))

@@ -1,9 +1,9 @@
 // SPDX-FileCopyrightText: 2026 AgentKitten Authors
 // SPDX-License-Identifier: Apache-2.0
 
+@testable import AgentKittenCore
 import Foundation
 import Testing
-@testable import AgentKittenCore
 
 @Suite("Agent Session")
 struct AgentSessionTests {
@@ -12,7 +12,7 @@ struct AgentSessionTests {
             agentId: "assistant",
             providerRegistry: ProviderRegistry(default: ScriptedInferenceProvider()),
             behavior: .test(),
-            owner: "default-user"
+            owner: "default-user",
         )
 
         let defaultSession = agent.makeSession()
@@ -30,7 +30,7 @@ struct AgentSessionTests {
             responses: [
                 .success("First response"),
                 .success("Second response"),
-            ]
+            ],
         )
         let agent = Agent(
             providerRegistry: ProviderRegistry(default: provider),
@@ -113,12 +113,12 @@ struct AgentSessionTests {
         let behavior = AgentBehavior(
             systemPrompt: "Test",
             phaseBehaviors: .init(base: .init(inferenceConfiguration: InferenceConfiguration(
-                temperature: 0.9
-            )))
+                temperature: 0.9,
+            ))),
         )
         let agent = Agent(
             providerRegistry: ProviderRegistry(default: provider),
-            behavior: behavior
+            behavior: behavior,
         )
 
         _ = try await collectEvents(from: await agent.makeSession().send("hello"))
@@ -126,7 +126,7 @@ struct AgentSessionTests {
         #expect(
             await provider.recordedConfigurations() == [
                 InferenceConfiguration(temperature: 0.9),
-            ]
+            ],
         )
     }
 
@@ -135,31 +135,30 @@ struct AgentSessionTests {
         let behavior = AgentBehavior(
             systemPrompt: "Test",
             phaseBehaviors: .init(base: .init(inferenceConfiguration: InferenceConfiguration(
-                temperature: 0.1
-            )))
+                temperature: 0.1,
+            ))),
         )
         let agent = Agent(
             providerRegistry: ProviderRegistry(default: provider),
-            behavior: behavior
+            behavior: behavior,
         )
         let turnOverrides = TurnOverrides(
             inferenceConfiguration: InferenceConfiguration(
-                temperature: 0.7
-            )
+                temperature: 0.7,
+            ),
         )
 
         _ = try await collectEvents(from: await agent.makeSession().send(
             "hello",
-            turnOverrides: turnOverrides
+            turnOverrides: turnOverrides,
         ))
 
         #expect(
             await provider.recordedConfigurations() == [
                 InferenceConfiguration(temperature: 0.7),
-            ]
+            ],
         )
     }
-
 }
 
 actor GateInferenceState {
@@ -225,7 +224,7 @@ struct GateInferenceProvider: InferenceProviding {
         systemPrompt: String?,
         toolRuntime: ToolRuntime,
         toolSelection: ToolSelection,
-        inferenceContext: InferenceContext
+        inferenceContext: InferenceContext,
     ) -> GateInferenceSession {
         GateInferenceSession(state: state)
     }
@@ -279,7 +278,7 @@ actor GateInferenceSession: InferenceSession, StructuredInferenceSession {
 
     func generateStream<T: Codable & Sendable & JSONSchemaProviding>(
         prompt: String,
-        parameters: InferenceRequestParameters
+        parameters: InferenceRequestParameters,
     ) async throws(StructuredGenerationError) -> StructuredInferenceStream<T> {
         throw .generationFailed(InferenceError.invalidResponse("structured generation not supported"))
     }
@@ -316,7 +315,7 @@ struct InvalidConfigurationProvider: InferenceProviding {
 
     func preflight(
         toolRegistry: ToolRegistry,
-        toolSelection: ToolSelection
+        toolSelection: ToolSelection,
     ) throws {
         throw InferenceError.unsupportedConfiguration("invalid test configuration")
     }
@@ -325,7 +324,7 @@ struct InvalidConfigurationProvider: InferenceProviding {
         systemPrompt: String?,
         toolRuntime: ToolRuntime,
         toolSelection: ToolSelection,
-        inferenceContext: InferenceContext
+        inferenceContext: InferenceContext,
     ) -> InvalidConfigurationSession {
         InvalidConfigurationSession(state: state)
     }
@@ -352,7 +351,7 @@ actor InvalidConfigurationSession: InferenceSession, StructuredInferenceSession 
 
     func generateStream<T: Codable & Sendable & JSONSchemaProviding>(
         prompt: String,
-        parameters: InferenceRequestParameters
+        parameters: InferenceRequestParameters,
     ) async throws(StructuredGenerationError) -> StructuredInferenceStream<T> {
         throw .generationFailed(InferenceError.invalidResponse("structured generation not supported"))
     }
@@ -367,7 +366,7 @@ struct ConfigurationRecordingProvider: InferenceProviding {
         systemPrompt: String?,
         toolRuntime: ToolRuntime,
         toolSelection: ToolSelection,
-        inferenceContext: InferenceContext
+        inferenceContext: InferenceContext,
     ) -> ConfigurationRecordingSession {
         _ = systemPrompt
         _ = toolRuntime
@@ -396,7 +395,7 @@ actor ConfigurationRecordingSession: InferenceSession, StructuredInferenceSessio
 
     func generateStream<T: Codable & Sendable & JSONSchemaProviding>(
         prompt: String,
-        parameters: InferenceRequestParameters
+        parameters: InferenceRequestParameters,
     ) async throws(StructuredGenerationError) -> StructuredInferenceStream<T> {
         throw .generationFailed(InferenceError.invalidResponse("structured generation not supported"))
     }

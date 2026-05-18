@@ -1,14 +1,14 @@
 // SPDX-FileCopyrightText: 2026 AgentKitten Authors
 // SPDX-License-Identifier: Apache-2.0
 
-import Testing
 @testable import AgentKittenCore
 @testable import AgentKittenInference
+import Testing
 
 @Test func httpError_mapsContextWindowFailureToTypedInferenceError() {
     let error = AnthropicHTTPClient.error(
         statusCode: 400,
-        body: #"{"error":{"type":"invalid_request_error","message":"prompt is too long"}}"#
+        body: #"{"error":{"type":"invalid_request_error","message":"prompt is too long"}}"#,
     )
 
     guard case .contextWindowExceeded(let info) = error else {
@@ -22,7 +22,7 @@ import Testing
 @Test func httpError_keepsNonContextFailureAsInvalidResponse() {
     let error = AnthropicHTTPClient.error(
         statusCode: 401,
-        body: #"{"error":{"type":"authentication_error","message":"bad key"}}"#
+        body: #"{"error":{"type":"authentication_error","message":"bad key"}}"#,
     )
 
     guard case .invalidResponse(let message) = error else {

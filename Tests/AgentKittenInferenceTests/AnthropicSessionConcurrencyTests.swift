@@ -1,9 +1,9 @@
 // SPDX-FileCopyrightText: 2026 AgentKitten Authors
 // SPDX-License-Identifier: Apache-2.0
 
-import Testing
 @testable import AgentKittenCore
 @testable import AgentKittenInference
+import Testing
 
 private actor BlockingHTTPState {
     private var continuations: [AsyncThrowingStream<SSEEvent, Error>.Continuation] = []
@@ -56,14 +56,14 @@ private final class BlockingHTTPClient: AnthropicHTTPStreaming, @unchecked Senda
 }
 
 private func makeBlockingSession(
-    client: BlockingHTTPClient
+    client: BlockingHTTPClient,
 ) -> AnthropicInferenceSession {
     AnthropicInferenceSession(
         credentials: MockAPIKeyProvider("test-key"),
         defaultModel: "test-model",
         systemPrompt: nil,
         toolRuntime: testToolRuntime(executionPolicy: AutoApprovePolicy()),
-        clientFactory: { _ in client }
+        clientFactory: { _ in client },
     )
 }
 

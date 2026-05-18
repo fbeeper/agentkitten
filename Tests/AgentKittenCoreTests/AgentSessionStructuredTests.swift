@@ -1,9 +1,9 @@
 // SPDX-FileCopyrightText: 2026 AgentKitten Authors
 // SPDX-License-Identifier: Apache-2.0
 
+@testable import AgentKittenCore
 import Foundation
 import Testing
-@testable import AgentKittenCore
 
 private struct SessionStructuredLabel: Codable, Sendable, JSONSchemaProviding, Equatable {
     let name: String
@@ -15,7 +15,7 @@ private struct SessionStructuredLabel: Codable, Sendable, JSONSchemaProviding, E
                 "name": .string(description: "The label name"),
                 "score": .number(description: "The confidence score"),
             ],
-            required: ["name", "score"]
+            required: ["name", "score"],
         )
     }
 }
@@ -26,9 +26,9 @@ struct AgentSessionStructuredTests {
         let json = #"{"name":"urgent","score":0.9}"#
         let agent = Agent(
             providerRegistry: ProviderRegistry(default: ScriptedInferenceProvider(
-                structuredResponses: [.success(json)]
+                structuredResponses: [.success(json)],
             )),
-            behavior: .test("Classify the input.")
+            behavior: .test("Classify the input."),
         )
         let session = agent.makeSession()
 
@@ -42,9 +42,9 @@ struct AgentSessionStructuredTests {
         let json = #"{"name":"low","score":0.1}"#
         let agent = Agent(
             providerRegistry: ProviderRegistry(default: ScriptedInferenceProvider(
-                structuredResponses: [.success(json)]
+                structuredResponses: [.success(json)],
             )),
-            behavior: .test("Classify.")
+            behavior: .test("Classify."),
         )
         let session = agent.makeSession()
 
@@ -69,9 +69,9 @@ struct AgentSessionStructuredTests {
         let json = #"{"name":"urgent","score":0.9}"#
         let agent = Agent(
             providerRegistry: ProviderRegistry(default: ScriptedInferenceProvider(
-                structuredResponses: [.success(json)]
+                structuredResponses: [.success(json)],
             )),
-            behavior: .test("Classify.")
+            behavior: .test("Classify."),
         )
         let session = agent.makeSession()
 
@@ -90,9 +90,9 @@ struct AgentSessionStructuredTests {
         let json = #"[{"name":"park","score":0.9},{"name":"museum","score":0.7}]"#
         let agent = Agent(
             providerRegistry: ProviderRegistry(default: ScriptedInferenceProvider(
-                structuredResponses: [.success(json)]
+                structuredResponses: [.success(json)],
             )),
-            behavior: .test("Extract nearby places.")
+            behavior: .test("Extract nearby places."),
         )
         let session = agent.makeSession()
 
@@ -109,9 +109,9 @@ struct AgentSessionStructuredTests {
         let json = #"[{"name":"park","score":0.9},{"name":"museum","score":0.7}]"#
         let agent = Agent(
             providerRegistry: ProviderRegistry(default: ScriptedInferenceProvider(
-                structuredResponses: [.success(json)]
+                structuredResponses: [.success(json)],
             )),
-            behavior: .test("Extract nearby places.")
+            behavior: .test("Extract nearby places."),
         )
         let session = agent.makeSession()
 
@@ -131,11 +131,11 @@ struct AgentSessionStructuredTests {
     @Test func generate_queuedAfterTextTurnCompletesInOrder() async throws {
         let provider = ScriptedInferenceProvider(
             responses: [.success("Text response")],
-            structuredResponses: [.success(#"{"name":"first","score":0.1}"#)]
+            structuredResponses: [.success(#"{"name":"first","score":0.1}"#)],
         )
         let agent = Agent(
             providerRegistry: ProviderRegistry(default: provider),
-            behavior: .test("Test.")
+            behavior: .test("Test."),
         )
         let session = agent.makeQueuedSession()
 
@@ -153,17 +153,17 @@ struct AgentSessionStructuredTests {
         let json = #"{"name":"valid","score":0.8}"#
         let agent = Agent(
             providerRegistry: ProviderRegistry(default: ScriptedInferenceProvider(
-                structuredResponses: [.success(json)]
+                structuredResponses: [.success(json)],
             )),
-            behavior: .test("Classify.")
+            behavior: .test("Classify."),
         )
         let session = agent.makeSession()
 
         let turn: Turn<SessionStructuredLabel> = try await session.generate(
             "go",
             validation: ValidationConfiguration(
-                validator: StructuredScoreThresholdValidator(minimumScore: 0.5)
-            )
+                validator: StructuredScoreThresholdValidator(minimumScore: 0.5),
+            ),
         )
         let result = try await firstStructuredResult(from: turn)
 
@@ -175,11 +175,11 @@ struct AgentSessionStructuredTests {
             structuredResponses: [
                 .success(#"{"name":"low","score":0.2}"#),
                 .success(#"{"name":"high","score":0.9}"#),
-            ]
+            ],
         )
         let agent = Agent(
             providerRegistry: ProviderRegistry(default: provider),
-            behavior: .test("Classify.")
+            behavior: .test("Classify."),
         )
         let session = agent.makeSession()
 
@@ -187,8 +187,8 @@ struct AgentSessionStructuredTests {
             "go",
             validation: ValidationConfiguration(
                 validator: StructuredScoreThresholdValidator(minimumScore: 0.5),
-                maxRetries: 1
-            )
+                maxRetries: 1,
+            ),
         )
         let result = try await firstStructuredResult(from: turn)
 
@@ -201,11 +201,11 @@ struct AgentSessionStructuredTests {
             structuredResponses: [
                 .success(#"{"name":"low","score":0.2}"#),
                 .success(#"{"name":"still-low","score":0.3}"#),
-            ]
+            ],
         )
         let agent = Agent(
             providerRegistry: ProviderRegistry(default: provider),
-            behavior: .test("Classify.")
+            behavior: .test("Classify."),
         )
         let session = agent.makeSession()
 
@@ -214,8 +214,8 @@ struct AgentSessionStructuredTests {
             validation: ValidationConfiguration(
                 validator: StructuredScoreThresholdValidator(minimumScore: 0.5),
                 maxRetries: 1,
-                policy: .permissive
-            )
+                policy: .permissive,
+            ),
         )
         let result = try await firstStructuredResult(from: turn)
 
@@ -225,26 +225,26 @@ struct AgentSessionStructuredTests {
             .turnStarted(UserMessage(text: "go")),
             .structuredResult(
                 type: structuredResultTypeLabel(for: SessionStructuredLabel.self),
-                json: try structuredResultJSON(for: SessionStructuredLabel(name: "low", score: 0.2))
+                json: try structuredResultJSON(for: SessionStructuredLabel(name: "low", score: 0.2)),
             ),
             .validation(.init(
                 result: .feedback,
                 message: "Score 0.2 is below minimum 0.5.",
-                validator: "StructuredScoreThresholdValidator"
+                validator: "StructuredScoreThresholdValidator",
             )),
             .structuredResult(
                 type: structuredResultTypeLabel(for: SessionStructuredLabel.self),
-                json: try structuredResultJSON(for: SessionStructuredLabel(name: "still-low", score: 0.3))
+                json: try structuredResultJSON(for: SessionStructuredLabel(name: "still-low", score: 0.3)),
             ),
             .validation(.init(
                 result: .feedback,
                 message: "Score 0.3 is below minimum 0.5.",
-                validator: "StructuredScoreThresholdValidator"
+                validator: "StructuredScoreThresholdValidator",
             )),
             .validation(.init(
                 result: .waived,
                 message: "Score 0.3 is below minimum 0.5.",
-                validator: "StructuredScoreThresholdValidator"
+                validator: "StructuredScoreThresholdValidator",
             )),
             .turnCompleted(.completed),
         ])
@@ -273,7 +273,7 @@ private func firstStructuredResult<Result>(from turn: Turn<Result>) async throws
 }
 
 private func collectStructuredEvents<Result>(
-    from turn: Turn<Result>
+    from turn: Turn<Result>,
 ) async throws -> [AgentEvent<Result>] {
     var events: [AgentEvent<Result>] = []
     for try await event in turn.events {
@@ -283,7 +283,7 @@ private func collectStructuredEvents<Result>(
 }
 
 private func completedStructuredAssistantText(
-    from turn: Turn<AssistantMessage>
+    from turn: Turn<AssistantMessage>,
 ) async throws -> String {
     var lastText: String?
     for try await event in turn.events {

@@ -1,10 +1,11 @@
 // SPDX-FileCopyrightText: 2026 AgentKitten Authors
 // SPDX-License-Identifier: Apache-2.0
 
-import Foundation
 import AgentKittenCore
-import Testing
 @testable import AgentKittenInference
+import Foundation
+import Testing
+
 @Test func packageManifest_declaresExpectedApplePlatforms() throws {
     let testsDirectory = URL(filePath: #filePath).deletingLastPathComponent()
     let packageFile = testsDirectory
@@ -24,6 +25,7 @@ import Testing
         #expect(manifest.contains(expectedLine))
     }
 }
+
 #if canImport(FoundationModels)
 import FoundationModels
 
@@ -49,7 +51,7 @@ private struct AppleStructuredAnswer: Codable, Sendable, JSONSchemaProviding, Eq
             properties: [
                 "answer": .string(description: "The final answer."),
             ],
-            required: ["answer"]
+            required: ["answer"],
         )
     }
 }
@@ -79,7 +81,7 @@ private struct AppleEchoTool: AgentTool {
     var schema: ToolSchema {
         ToolSchema(parameters: .object(
             properties: ["message": .string(description: "Message to echo.")],
-            required: ["message"]
+            required: ["message"],
         ))
     }
 
@@ -101,7 +103,7 @@ private struct AppleImageTool: RichAgentTool {
     var schema: ToolSchema {
         ToolSchema(parameters: .object(
             properties: ["message": .string(description: "Message to echo.")],
-            required: ["message"]
+            required: ["message"],
         ))
     }
 
@@ -116,6 +118,7 @@ private struct AppleImageTool: RichAgentTool {
         ]
     }
 }
+
 private let appleApprovalAttemptCount = 10
 
 @available(macOS 26, iOS 26, visionOS 26, macCatalyst 26, *)
@@ -126,10 +129,10 @@ private struct AppleStructuredStreamAttempt {
 }
 
 @available(macOS 26, iOS 26, visionOS 26, macCatalyst 26, *)
-@Test func appleProviderFactory_isVisibleWhenFoundationModelsIsImportable() async throws {
+@Test func appleProviderFactory_isVisibleWhenFoundationModelsIsImportable() {
     let provider = InferenceProvider.apple()
     let session: any InferenceSession = provider.makeSession(
-        systemPrompt: "test", toolRuntime: testToolRuntime(), toolSelection: .all, inferenceContext: .empty
+        systemPrompt: "test", toolRuntime: testToolRuntime(), toolSelection: .all, inferenceContext: .empty,
     )
 
     #expect(type(of: session) == AppleInferenceSession.self)
@@ -139,7 +142,7 @@ private struct AppleStructuredStreamAttempt {
 @Test func appleStructuredSessionFactory_returnsAppleInferenceSession() {
     let provider = InferenceProvider.apple()
     let session: any StructuredInferenceSession = provider.makeSession(
-        systemPrompt: "test", toolRuntime: testToolRuntime(), toolSelection: .all, inferenceContext: .empty
+        systemPrompt: "test", toolRuntime: testToolRuntime(), toolSelection: .all, inferenceContext: .empty,
     )
 
     #expect(type(of: session) == AppleInferenceSession.self)
@@ -151,12 +154,12 @@ private struct AppleStructuredStreamAttempt {
         return
     }
 
-    for _ in 0..<appleApprovalAttemptCount {
+    for _ in 0 ..< appleApprovalAttemptCount {
         let (session, counter) = try makeAppleStructuredToolSession()
 
         let result: AppleStructuredAnswer = try await session.generate(
             prompt: "Use the tool and return the structured answer.",
-            parameters: InferenceRequestParameters()
+            parameters: InferenceRequestParameters(),
         )
         if await counter.value() == 1,
            result.answer.contains("structured-tool-test") {
@@ -173,7 +176,7 @@ private struct AppleStructuredStreamAttempt {
         return
     }
 
-    for _ in 0..<appleApprovalAttemptCount {
+    for _ in 0 ..< appleApprovalAttemptCount {
         let (session, counter) = try makeAppleStructuredToolSession()
 
         let events = try await collectAppleStructuredStreamEvents(from: session)
@@ -189,9 +192,9 @@ private struct AppleStructuredStreamAttempt {
 }
 
 @available(macOS 26, iOS 26, visionOS 26, macCatalyst 26, *)
-@Test func appleProvider_rejectsImageProducingTools() async throws {
+@Test func appleProvider_rejectsImageProducingTools() throws {
     let executor = ToolExecutor(
-        registry: ToolRegistry([AnyAgentTool(AppleImageTool())])
+        registry: ToolRegistry([AnyAgentTool(AppleImageTool())]),
     )
     let provider = InferenceProvider.apple()
     do {
@@ -205,18 +208,19 @@ private struct AppleStructuredStreamAttempt {
         #expect(message.contains("image_echo"))
     }
 }
+
 @available(macOS 26, iOS 26, visionOS 26, macCatalyst 26, *)
 @Test func appleAgentTurn_approvalRequiredResumesSameTurn() async throws {
     guard case .available = SystemLanguageModel.default.availability else {
         return
     }
 
-    for _ in 0..<appleApprovalAttemptCount {
+    for _ in 0 ..< appleApprovalAttemptCount {
         let counter = AppleToolCounter()
         let session = makeAppleApprovalSession(
             counter: counter,
             message: "apple-agent-approved",
-            afterToolGuidance: "After the tool returns, answer briefly."
+            afterToolGuidance: "After the tool returns, answer briefly.",
         )
         let turn = try await session.send("Use the tool and respond.")
         var iterator = turn.events.makeAsyncIterator()
@@ -228,7 +232,7 @@ private struct AppleStructuredStreamAttempt {
 
         let postApproval = try await collectApplePostApprovalEvents(
             from: &iterator,
-            approvalID: approval.id
+            approvalID: approval.id,
         )
 
         #expect(await counter.value() == 1)
@@ -248,12 +252,12 @@ private struct AppleStructuredStreamAttempt {
         return
     }
 
-    for _ in 0..<appleApprovalAttemptCount {
+    for _ in 0 ..< appleApprovalAttemptCount {
         let counter = AppleToolCounter()
         let session = makeAppleApprovalSession(
             counter: counter,
             message: "apple-agent-denied",
-            afterToolGuidance: "After the tool returns, answer briefly."
+            afterToolGuidance: "After the tool returns, answer briefly.",
         )
         let turn = try await session.send("Use the tool and respond.")
         var iterator = turn.events.makeAsyncIterator()
@@ -284,7 +288,7 @@ private struct AppleStructuredStreamAttempt {
 
 @available(macOS 26, iOS 26, visionOS 26, macCatalyst 26, *)
 private func nextAppleApprovalCallIfAny(
-    from iterator: inout TurnEventStream<AssistantMessage>.AsyncIterator
+    from iterator: inout TurnEventStream<AssistantMessage>.AsyncIterator,
 ) async throws -> PendingToolCall? {
     while let event = try await iterator.next() {
         if case .toolApprovalRequired(let call) = event.kind {
@@ -298,7 +302,7 @@ private func nextAppleApprovalCallIfAny(
 private func makeAppleApprovalSession(
     counter: AppleToolCounter,
     message: String,
-    afterToolGuidance: String
+    afterToolGuidance: String,
 ) -> AgentSession {
     let agent = Agent(
         providerRegistry: ProviderRegistry(default: InferenceProvider.apple()),
@@ -310,7 +314,7 @@ private func makeAppleApprovalSession(
         """),
         toolDefinition: ToolDefinition(
             tools: [AnyAgentTool(AppleEchoTool(counter: counter))],
-            executionPolicy: AppleRequiresApprovalPolicy()
+            executionPolicy: AppleRequiresApprovalPolicy(),
         ),
     )
     return agent.makeSession()
@@ -319,7 +323,7 @@ private func makeAppleApprovalSession(
 @available(macOS 26, iOS 26, visionOS 26, macCatalyst 26, *)
 private func collectApplePostApprovalEvents(
     from iterator: inout TurnEventStream<AssistantMessage>.AsyncIterator,
-    approvalID: ToolCallID
+    approvalID: ToolCallID,
 ) async throws -> (sawSuccessfulToolCompletion: Bool, assistantCompletions: Int) {
     var sawSuccessfulToolCompletion = false
     var assistantCompletions = 0
@@ -344,7 +348,7 @@ private func collectApplePostApprovalEvents(
 private func makeAppleStructuredToolSession() throws -> (some StructuredInferenceSession, AppleToolCounter) {
     let counter = AppleToolCounter()
     let executor = ToolExecutor(
-        registry: ToolRegistry([AnyAgentTool(AppleEchoTool(counter: counter))])
+        registry: ToolRegistry([AnyAgentTool(AppleEchoTool(counter: counter))]),
     )
     let provider = InferenceProvider.apple()
     try provider.preflight(toolRegistry: executor.registry, toolSelection: .all)
@@ -356,19 +360,19 @@ private func makeAppleStructuredToolSession() throws -> (some StructuredInferenc
         """,
         toolRuntime: testToolRuntime(registry: executor.registry),
         toolSelection: .all,
-        inferenceContext: .empty
+        inferenceContext: .empty,
     )
     return (session, counter)
 }
 
 @available(macOS 26, iOS 26, visionOS 26, macCatalyst 26, *)
 private func collectAppleStructuredStreamEvents(
-    from session: some StructuredInferenceSession
+    from session: some StructuredInferenceSession,
 ) async throws -> AppleStructuredStreamAttempt {
     let stream: StructuredInferenceStream<AppleStructuredAnswer> =
         try await session.generateStream(
             prompt: "Use the tool and return the structured answer.",
-            parameters: InferenceRequestParameters()
+            parameters: InferenceRequestParameters(),
         )
 
     var sawToolStart = false
@@ -396,8 +400,8 @@ private func collectAppleStructuredStreamEvents(
     return AppleStructuredStreamAttempt(
         sawToolStart: sawToolStart,
         sawToolCompletion: sawToolCompletion,
-        result: result
+        result: result,
     )
 }
 
-#endif
+#endif // swiftlint:disable:this file_length

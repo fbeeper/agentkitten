@@ -1,21 +1,20 @@
 // SPDX-FileCopyrightText: 2026 AgentKitten Authors
 // SPDX-License-Identifier: Apache-2.0
 
-import Testing
 @testable import AgentKittenCore
+import Testing
 
 @Test func contextUsage_throwsWithoutActiveConversation() async throws {
     let agent = Agent(
         providerRegistry: ProviderRegistry(default: MockInferenceProvider()),
-        behavior: .test()
+        behavior: .test(),
     )
     let session = agent.makeSession()
 
     do {
         _ = try await session.contextUsage()
         Issue.record("Expected AgentSessionError.noActiveConversation")
-    } catch AgentSessionError.noActiveConversation {
-    }
+    } catch AgentSessionError.noActiveConversation {}
 }
 
 @Test func contextUsage_returnsActiveProviderUsageAfterTurn() async throws {
@@ -23,7 +22,7 @@ import Testing
         providerRegistry: ProviderRegistry(default: MockInferenceProvider(responses: [
             "First response.",
         ])),
-        behavior: .test()
+        behavior: .test(),
     )
     let session = agent.makeSession()
 
@@ -42,7 +41,7 @@ import Testing
             "First response.",
             "Second response.",
         ])),
-        behavior: .test()
+        behavior: .test(),
     )
     let session = agent.makeSession()
 
@@ -70,7 +69,7 @@ import Testing
 @Test func compactContext_withoutActiveConversationRecordsSkippedResult() async throws {
     let agent = Agent(
         providerRegistry: ProviderRegistry(default: MockInferenceProvider()),
-        behavior: .test()
+        behavior: .test(),
     )
     let session = agent.makeSession()
 
@@ -89,15 +88,15 @@ import Testing
         systemPrompt: "Test",
         defaultAutomaticCompactionPolicy: .enabled(
             trigger: .percentOfContextWindow(0.01),
-            options: .init()
-        )
+            options: .init(),
+        ),
     )
     let agent = Agent(
         providerRegistry: ProviderRegistry(default: MockInferenceProvider(responses: [
             "First response.",
             "Second response.",
         ])),
-        behavior: behavior
+        behavior: behavior,
     )
     let session = agent.makeSession()
 
@@ -106,7 +105,7 @@ import Testing
     let firstCompaction = try #require(await contextCompaction(
         on: session,
         mode: .automatic,
-        invocationID: firstTurn.id
+        invocationID: firstTurn.id,
     ))
     #expect(firstCompaction.result == .skipped(.conversationReplaced))
 
@@ -142,15 +141,15 @@ import Testing
         systemPrompt: "Test",
         defaultAutomaticCompactionPolicy: .enabled(
             trigger: .percentOfContextWindow(0.99),
-            options: .init()
-        )
+            options: .init(),
+        ),
     )
     let agent = Agent(
         providerRegistry: ProviderRegistry(default: MockInferenceProvider(responses: [
             "First response.",
             "Second response.",
         ])),
-        behavior: behavior
+        behavior: behavior,
     )
     let session = agent.makeSession()
 
@@ -162,7 +161,7 @@ import Testing
     let compaction = try #require(await contextCompaction(
         on: session,
         mode: .automatic,
-        invocationID: secondTurn.id
+        invocationID: secondTurn.id,
     ))
     guard case .skipped(.triggerNotMet(let usage)) = compaction.result else {
         Issue.record("Expected automatic compaction to record trigger-not-met skip")
@@ -179,15 +178,15 @@ import Testing
         systemPrompt: "Test",
         defaultAutomaticCompactionPolicy: .enabled(
             trigger: .percentOfContextWindow(0.01),
-            options: .init()
-        )
+            options: .init(),
+        ),
     )
     let agent = Agent(
         providerRegistry: ProviderRegistry(default: MockInferenceProvider(responses: [
             "First response.",
             "Second response.",
         ])),
-        behavior: behavior
+        behavior: behavior,
     )
     let session = agent.makeSession()
 
@@ -196,15 +195,15 @@ import Testing
     let secondTurn = try await session.send(
         "Second",
         turnOverrides: TurnOverrides(
-            inferenceConfiguration: InferenceConfiguration(maxTokens: 128)
-        )
+            inferenceConfiguration: InferenceConfiguration(maxTokens: 128),
+        ),
     )
     _ = try await collectEvents(from: secondTurn)
 
     let compaction = try #require(await contextCompaction(
         on: session,
         mode: .automatic,
-        invocationID: secondTurn.id
+        invocationID: secondTurn.id,
     ))
     let resolution = try #require(await conversationResolvedEntry(for: secondTurn.id, on: session))
     #expect(compaction.result.didCompact)
@@ -219,15 +218,15 @@ import Testing
         systemPrompt: "Test",
         defaultAutomaticCompactionPolicy: .enabled(
             trigger: .percentOfContextWindow(0.01),
-            options: .init()
-        )
+            options: .init(),
+        ),
     )
     let agent = Agent(
         providerRegistry: ProviderRegistry(default: RebuildingMockProvider(responses: [
             "First response.",
             "Second response.",
         ])),
-        behavior: behavior
+        behavior: behavior,
     )
     let session = agent.makeSession()
 
@@ -235,14 +234,14 @@ import Testing
     _ = try await collectEvents(from: firstTurn)
     let secondTurn = try await session.send(
         "Second",
-        turnOverrides: TurnOverrides(toolSelection: .disabled)
+        turnOverrides: TurnOverrides(toolSelection: .disabled),
     )
     _ = try await collectEvents(from: secondTurn)
 
     let compaction = try #require(await contextCompaction(
         on: session,
         mode: .automatic,
-        invocationID: secondTurn.id
+        invocationID: secondTurn.id,
     ))
     let firstResolution = try #require(await conversationResolvedEntry(for: firstTurn.id, on: session))
     let secondResolution = try #require(await conversationResolvedEntry(for: secondTurn.id, on: session))
@@ -258,15 +257,15 @@ import Testing
         systemPrompt: "Test",
         defaultAutomaticCompactionPolicy: .enabled(
             trigger: .percentOfContextWindow(0.01),
-            options: .init()
-        )
+            options: .init(),
+        ),
     )
     let replacement = ReplacementMockProvider(responses: ["Replacement response."])
     let agent = Agent(
         providerRegistry: ProviderRegistry(default: MockInferenceProvider(responses: [
             "First response.",
         ])).registering(replacement),
-        behavior: behavior
+        behavior: behavior,
     )
     let session = agent.makeSession()
 
@@ -275,15 +274,15 @@ import Testing
     let secondTurn = try await session.send(
         "Second",
         turnOverrides: TurnOverrides(
-            provider: .ofType(ReplacementMockProvider.self)
-        )
+            provider: .ofType(ReplacementMockProvider.self),
+        ),
     )
     _ = try await collectEvents(from: secondTurn)
 
     let compaction = try #require(await contextCompaction(
         on: session,
         mode: .automatic,
-        invocationID: secondTurn.id
+        invocationID: secondTurn.id,
     ))
     let resolution = try #require(await conversationResolvedEntry(for: secondTurn.id, on: session))
     #expect(resolution.resolutionKind == .replace)
@@ -296,14 +295,14 @@ import Testing
             "First response.",
             "Second response.",
         ])),
-        behavior: .test()
+        behavior: .test(),
     )
     let session = agent.makeSession()
 
     #expect(await session.automaticCompactionPolicy == .disabled)
     await session.setAutomaticCompactionPolicy(.enabled(
         trigger: .percentOfContextWindow(0.01),
-        options: .init()
+        options: .init(),
     ))
 
     let firstTurn = try await session.send("First")
@@ -315,12 +314,12 @@ import Testing
     let firstCompaction = try #require(await contextCompaction(
         on: session,
         mode: .automatic,
-        invocationID: firstTurn.id
+        invocationID: firstTurn.id,
     ))
     let secondCompaction = try #require(await contextCompaction(
         on: session,
         mode: .automatic,
-        invocationID: secondTurn.id
+        invocationID: secondTurn.id,
     ))
     #expect(firstCompaction.result == .skipped(.conversationReplaced))
     #expect(secondCompaction.result.didCompact)
@@ -328,7 +327,7 @@ import Testing
 
 private func firstContextCompaction(
     on session: AgentSession,
-    mode: AgentTraceEntry.Kind.ContextCompactionInfo.Mode
+    mode: AgentTraceEntry.Kind.ContextCompactionInfo.Mode,
 ) async -> AgentTraceEntry.Kind.ContextCompactionInfo? {
     let trace = await session.trace
     for entry in await trace.snapshot() {
@@ -342,7 +341,7 @@ private func firstContextCompaction(
 private func contextCompaction(
     on session: AgentSession,
     mode: AgentTraceEntry.Kind.ContextCompactionInfo.Mode,
-    invocationID: InvocationID
+    invocationID: InvocationID,
 ) async -> AgentTraceEntry.Kind.ContextCompactionInfo? {
     for entry in await rawTraceEntries(for: invocationID, on: session) {
         if case .contextCompaction(let info) = entry.kind, info.mode == mode {

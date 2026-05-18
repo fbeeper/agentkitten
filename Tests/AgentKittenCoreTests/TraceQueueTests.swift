@@ -1,9 +1,9 @@
 // SPDX-FileCopyrightText: 2026 AgentKitten Authors
 // SPDX-License-Identifier: Apache-2.0
 
+@testable import AgentKittenCore
 import Foundation
 import Testing
-@testable import AgentKittenCore
 
 @Suite("AgentTrace Queue")
 struct TraceQueueTests {
@@ -13,7 +13,7 @@ struct TraceQueueTests {
 
         trace.append(
             kind: .turnStarted(UserMessage(text: "Hello")),
-            invocationID: invocationID
+            invocationID: invocationID,
         )
 
         let eventualEntries = await trace.entries
@@ -31,15 +31,15 @@ struct TraceQueueTests {
 
         trace.append(
             kind: .turnStarted(UserMessage(text: "Hello")),
-            invocationID: invocationID
+            invocationID: invocationID,
         )
         trace.append(
             kind: .message(.assistant(AssistantMessage(text: "One"))),
-            invocationID: invocationID
+            invocationID: invocationID,
         )
         trace.append(
             kind: .turnCompleted(.completed),
-            invocationID: invocationID
+            invocationID: invocationID,
         )
 
         #expect((await trace.snapshot()).map(\.kind) == [
@@ -52,14 +52,14 @@ struct TraceQueueTests {
     @Test func concurrentAppendsRetainArrivalOrderedEntries() async {
         let trace = AgentTrace(retentionPolicy: .unbounded)
         let invocationID = InvocationID.generate()
-        let messages = (0..<20).map { "message-\($0)" }
+        let messages = (0 ..< 20).map { "message-\($0)" }
 
         await withTaskGroup(of: Void.self) { group in
             for message in messages {
                 group.addTask {
                     trace.append(
                         kind: .message(.assistant(AssistantMessage(text: message))),
-                        invocationID: invocationID
+                        invocationID: invocationID,
                     )
                 }
             }
@@ -83,7 +83,7 @@ struct TraceQueueTests {
 
         trace.append(
             kind: .message(.assistant(AssistantMessage(text: "before"))),
-            invocationID: invocationID
+            invocationID: invocationID,
         )
 
         let stream = trace.observe()
@@ -94,7 +94,7 @@ struct TraceQueueTests {
 
         trace.append(
             kind: .message(.assistant(AssistantMessage(text: "after"))),
-            invocationID: invocationID
+            invocationID: invocationID,
         )
 
         let entry = await streamTask.value
@@ -111,11 +111,11 @@ struct TraceQueueTests {
 
         trace.append(
             kind: .message(.assistant(AssistantMessage(text: "first"))),
-            invocationID: invocationID
+            invocationID: invocationID,
         )
         trace.append(
             kind: .message(.assistant(AssistantMessage(text: "second"))),
-            invocationID: invocationID
+            invocationID: invocationID,
         )
 
         let timestamps = await trace.snapshot().map(\.timestamp)
@@ -131,7 +131,7 @@ struct TraceQueueTests {
         let entry = AgentTraceEntry(
             kind: .turnCompleted(.completed),
             timestamp: timestamp,
-            invocationID: .generate()
+            invocationID: .generate(),
         )
 
         let data = try JSONEncoder().encode(entry)
@@ -151,7 +151,7 @@ struct TraceQueueTests {
 
         trace.append(
             kind: .message(.assistant(AssistantMessage(text: "anchored"))),
-            invocationID: invocationID
+            invocationID: invocationID,
         )
 
         let entry = try #require(await trace.snapshot().first)

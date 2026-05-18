@@ -1,9 +1,9 @@
 // SPDX-FileCopyrightText: 2026 AgentKitten Authors
 // SPDX-License-Identifier: Apache-2.0
 
+@testable import AgentKittenCore
 import Foundation
 import Testing
-@testable import AgentKittenCore
 
 @Test func userMessage_codableRoundTrip() throws {
     let original = AgentMessage.user(UserMessage(text: "Hello", sender: "alice"))

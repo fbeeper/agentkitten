@@ -1,10 +1,10 @@
 // SPDX-FileCopyrightText: 2026 AgentKitten Authors
 // SPDX-License-Identifier: Apache-2.0
 
-import Foundation
-import Testing
-@testable import Playground
 import AgentKittenCore
+import Foundation
+@testable import Playground
+import Testing
 
 @Suite("Chicken Wizard")
 struct ChickenWizardTests {
@@ -28,9 +28,9 @@ struct ChickenWizardTests {
             brewed.availableIngredients.contains(
                 ChickenWizardIngredientStack(
                     name: ChickenWizardGameState.potionInventoryKey,
-                    quantity: 1
-                )
-            )
+                    quantity: 1,
+                ),
+            ),
         )
 
         let after = await state.inspectPantry()
@@ -39,9 +39,9 @@ struct ChickenWizardTests {
             after.availableIngredients.contains(
                 ChickenWizardIngredientStack(
                     name: ChickenWizardGameState.potionInventoryKey,
-                    quantity: 1
-                )
-            )
+                    quantity: 1,
+                ),
+            ),
         )
         #expect(after.missingIngredients == [
             ChickenWizardIngredientStack(name: "moonmint", quantity: 1),
@@ -70,9 +70,9 @@ struct ChickenWizardTests {
             brewed.availableIngredients.contains(
                 ChickenWizardIngredientStack(
                     name: ChickenWizardGameState.potionInventoryKey,
-                    quantity: 1
-                )
-            )
+                    quantity: 1,
+                ),
+            ),
         )
     }
 
@@ -89,7 +89,7 @@ struct ChickenWizardTests {
             ],
             brewable: true,
             brewed: true,
-            message: "Brewed."
+            message: "Brewed.",
         )
         let encoded = try JSONEncoder().encode(brewOutput)
         let outcome = ToolCallOutcome.success(content: [
@@ -98,19 +98,19 @@ struct ChickenWizardTests {
 
         let notification = ChickenWizardOutputFormatter.potionNotification(
             toolName: ChickenWizardPotionTool.name,
-            outcome: outcome
+            outcome: outcome,
         )
         #expect(
             notification ==
                 "[ingredients consumed: 1x moonmint, 1x rainwater; " +
-                "potion brewed: Elixir of Astonishing Second Chances]"
+                "potion brewed: Elixir of Astonishing Second Chances]",
         )
 
         #expect(
             ChickenWizardOutputFormatter.potionNotification(
                 toolName: CurrentTimeTool.name,
-                outcome: outcome
-            ) == nil
+                outcome: outcome,
+            ) == nil,
         )
     }
 

@@ -1,9 +1,9 @@
 // SPDX-FileCopyrightText: 2026 AgentKitten Authors
 // SPDX-License-Identifier: Apache-2.0
 
+@testable import AgentKittenCore
 import Foundation
 import Testing
-@testable import AgentKittenCore
 
 private struct RequiresApprovalPolicy: ToolExecutionPolicy {
     func resolve(call: PendingToolCall, context: ToolExecutionContext) async -> ToolExecutionDecision {
@@ -26,10 +26,10 @@ struct ToolApprovalRuntimeTests {
                 .toolCall(
                     name: CountingEchoTool.name,
                     argumentsJSON: #"{"message":"approved"}"#,
-                    thenRespond: "Done."
+                    thenRespond: "Done.",
                 ),
             ],
-            tools: [AnyAgentTool(CountingEchoTool(counter: counter))]
+            tools: [AnyAgentTool(CountingEchoTool(counter: counter))],
         )
         let turn = await session.send("go")
         var iterator = turn.events.makeAsyncIterator()
@@ -68,10 +68,10 @@ struct ToolApprovalRuntimeTests {
                 .toolCall(
                     name: CountingEchoTool.name,
                     argumentsJSON: #"{"message":"denied"}"#,
-                    thenRespond: "Done."
+                    thenRespond: "Done.",
                 ),
             ],
-            tools: [AnyAgentTool(CountingEchoTool(counter: counter))]
+            tools: [AnyAgentTool(CountingEchoTool(counter: counter))],
         )
         let turn = await session.send("go")
         var iterator = turn.events.makeAsyncIterator()
@@ -108,10 +108,10 @@ struct ToolApprovalRuntimeTests {
                 .toolCall(
                     name: CountingEchoTool.name,
                     argumentsJSON: #"{"message":"denied"}"#,
-                    thenRespond: "Done."
+                    thenRespond: "Done.",
                 ),
             ],
-            tools: [AnyAgentTool(CountingEchoTool(counter: counter))]
+            tools: [AnyAgentTool(CountingEchoTool(counter: counter))],
         )
         var turnOverrides = TurnOverrides()
         turnOverrides[TraceApprovalReasonKey.self] = "requires human review"
@@ -126,7 +126,7 @@ struct ToolApprovalRuntimeTests {
                     return info.call.id == approval.id
                 }
                 return false
-            }
+            },
         )
         guard case .toolApprovalRequired(let info) = traceEntry.kind else {
             Issue.record("Expected tool approval trace entry")
@@ -159,7 +159,7 @@ struct ToolApprovalRuntimeTests {
 
         try await gate.register(callID: "call-1")
         let waitingRequest = Task {
-            return try await gate.waitForResolution(callID: "call-1")
+            try await gate.waitForResolution(callID: "call-1")
         }
 
         await Task.yield()
@@ -224,11 +224,11 @@ struct ToolApprovalRuntimeTests {
                 .toolCall(
                     name: CountingEchoTool.name,
                     argumentsJSON: #"{"message":"first"}"#,
-                    thenRespond: "First done."
+                    thenRespond: "First done.",
                 ),
                 .success("Second done."),
             ],
-            tools: [AnyAgentTool(CountingEchoTool(counter: counter))]
+            tools: [AnyAgentTool(CountingEchoTool(counter: counter))],
         )
         let firstTurn = await session.send("first")
         var firstIterator = firstTurn.events.makeAsyncIterator()
@@ -257,17 +257,17 @@ struct ToolApprovalRuntimeTests {
 
 private func makeApprovalSession(
     responses: [MockResponse],
-    tools: [AnyAgentTool]
+    tools: [AnyAgentTool],
 ) -> AgentQueuedSession {
     let agent = Agent(
         providerRegistry: ProviderRegistry(default: ScriptedInferenceProvider(
-            responses: responses
+            responses: responses,
         )),
         behavior: .test(),
         toolDefinition: ToolDefinition(
             tools: tools,
-            executionPolicy: RequiresApprovalPolicy()
-        )
+            executionPolicy: RequiresApprovalPolicy(),
+        ),
     )
     return agent.makeQueuedSession()
 }

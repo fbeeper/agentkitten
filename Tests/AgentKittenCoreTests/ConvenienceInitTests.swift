@@ -1,21 +1,21 @@
 // SPDX-FileCopyrightText: 2026 AgentKitten Authors
 // SPDX-License-Identifier: Apache-2.0
 
+@testable import AgentKittenCore
 import Foundation
 import Testing
-@testable import AgentKittenCore
 
 @Suite("Convenience Inits")
 struct ConvenienceInitTests {
     @Test func agent_singleProviderInit_runsTurnSuccessfully() async throws {
         let provider = ScriptedInferenceProvider(
-            responses: [.success("Hello from convenience init.")]
+            responses: [.success("Hello from convenience init.")],
         )
         let agent = Agent(
             agentId: "convenience-test",
             provider: provider,
             behavior: .test("You are a test agent."),
-            owner: "test-user"
+            owner: "test-user",
         )
 
         let session = agent.makeSession()
@@ -43,7 +43,7 @@ struct ConvenienceInitTests {
         let behavior = AgentBehavior(
             systemPrompt: "Test",
             inferenceConfiguration: config,
-            defaultAutomaticCompactionPolicy: .enabled()
+            defaultAutomaticCompactionPolicy: .enabled(),
         )
         #expect(behavior.phaseBehaviors.base.inferenceConfiguration == config)
         #expect(behavior.defaultAutomaticCompactionPolicy == .enabled())
@@ -57,7 +57,7 @@ struct ConvenienceInitTests {
             agentId: "sp-provider",
             provider: provider,
             systemPrompt: "You are a test agent.",
-            owner: "test-user"
+            owner: "test-user",
         )
 
         #expect(agent.owner == "test-user")
@@ -71,7 +71,7 @@ struct ConvenienceInitTests {
         let agent = Agent(
             provider: provider,
             systemPrompt: "Test",
-            inferenceConfiguration: config
+            inferenceConfiguration: config,
         )
 
         let session = agent.makeSession()
@@ -88,12 +88,12 @@ struct ConvenienceInitTests {
         #expect(prepInfo?.inferenceConfiguration.maxTokens == config.maxTokens)
     }
 
-    @Test func agent_systemPromptWithAutomaticCompactionPolicy_appliesPolicy() async throws {
+    @Test func agent_systemPromptWithAutomaticCompactionPolicy_appliesPolicy() async {
         let provider = ScriptedInferenceProvider(responses: [.success("ok")])
         let agent = Agent(
             provider: provider,
             systemPrompt: "Test",
-            defaultAutomaticCompactionPolicy: .enabled()
+            defaultAutomaticCompactionPolicy: .enabled(),
         )
 
         let session = agent.makeSession()

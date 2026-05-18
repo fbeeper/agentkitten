@@ -1,9 +1,9 @@
 // SPDX-FileCopyrightText: 2026 AgentKitten Authors
 // SPDX-License-Identifier: Apache-2.0
 
+@testable import AgentKittenCore
 import Foundation
 import Testing
-@testable import AgentKittenCore
 
 private struct EventMetadataEchoTool: AgentTool {
     struct Arguments: Codable, Sendable {
@@ -29,8 +29,7 @@ private struct EventMetadataEchoTool: AgentTool {
     }
 }
 
-@Suite struct EventMetadataValueTests {
-
+struct EventMetadataValueTests {
     @Test func construction_fieldsReadable() {
         let metadata = AgentEvent<AssistantMessage>.Metadata(
             eventID: .generate(),
@@ -75,7 +74,7 @@ private struct EventMetadataEchoTool: AgentTool {
     }
 }
 
-@Suite struct AgentEventMetadataMapperTests {
+struct AgentEventMetadataMapperTests {
     // swiftlint:disable:next function_body_length
     @Test func conversationEventMapper_createsFreshAgentIDsAndPreservesToolLinkage() throws {
         let invocationID = InvocationID.generate()
@@ -95,26 +94,26 @@ private struct EventMetadataEchoTool: AgentTool {
                 eventID: .generate(),
                 conversationID: conversationID,
                 timestamp: startTimestamp,
-            )
+            ),
         )
         let conversationCompleted = ConversationEvent<AssistantMessage>(
             kind: .toolCallCompleted(
                 name: "echo",
                 id: toolID,
-                outcome: .success(content: [.text(#"{"echo":"ok"}"#)])
+                outcome: .success(content: [.text(#"{"echo":"ok"}"#)]),
             ),
             metadata: ConversationEvent<AssistantMessage>.Metadata(
                 eventID: .generate(),
                 conversationID: conversationID,
                 timestamp: completionTimestamp,
                 parentEventID: conversationStarted.metadata.eventID,
-            )
+            ),
         )
 
         var mapper = ConversationEventMapper<AssistantMessage>(
             agentID: "assistant",
             sessionID: sessionID,
-            invocationID: invocationID
+            invocationID: invocationID,
         )
         let startedMapped = mapper.map(conversationStarted)
         let completedMapped = mapper.map(conversationCompleted)
@@ -146,13 +145,13 @@ private struct EventMetadataEchoTool: AgentTool {
             conversationID: conversationID,
             toolID: toolID,
             startTimestamp: startTimestamp,
-            completionTimestamp: completionTimestamp
+            completionTimestamp: completionTimestamp,
         )
 
         var mapper = ConversationEventMapper<String>(
             agentID: "assistant",
             sessionID: sessionID,
-            invocationID: invocationID
+            invocationID: invocationID,
         )
         let startedMapped = mapper.map(conversationStarted)
         let completedMapped = mapper.map(conversationCompleted)
@@ -163,7 +162,7 @@ private struct EventMetadataEchoTool: AgentTool {
         #expect(completed.kind == AgentEvent<String>.Kind.toolCallCompleted(
             name: "echo",
             id: toolID,
-            outcome: .success(content: [.text(#"{"echo":"ok"}"#)])
+            outcome: .success(content: [.text(#"{"echo":"ok"}"#)]),
         ))
         Self.expectToolEventMetadata(
             started: started,
@@ -172,8 +171,8 @@ private struct EventMetadataEchoTool: AgentTool {
                 sessionID: sessionID,
                 invocationID: invocationID,
                 startTimestamp: startTimestamp,
-                completionTimestamp: completionTimestamp
-            )
+                completionTimestamp: completionTimestamp,
+            ),
         )
     }
 
@@ -188,7 +187,7 @@ private struct EventMetadataEchoTool: AgentTool {
         conversationID: ConversationID,
         toolID: String,
         startTimestamp: Date,
-        completionTimestamp: Date
+        completionTimestamp: Date,
     ) -> (ConversationEvent<String>, ConversationEvent<String>) {
         let started = ConversationEvent<String>(
             kind: .toolCallStarted(
@@ -200,20 +199,20 @@ private struct EventMetadataEchoTool: AgentTool {
                 eventID: .generate(),
                 conversationID: conversationID,
                 timestamp: startTimestamp,
-            )
+            ),
         )
         let completed = ConversationEvent<String>(
             kind: .toolCallCompleted(
                 name: "echo",
                 id: toolID,
-                outcome: .success(content: [.text(#"{"echo":"ok"}"#)])
+                outcome: .success(content: [.text(#"{"echo":"ok"}"#)]),
             ),
             metadata: ConversationEvent<String>.Metadata(
                 eventID: .generate(),
                 conversationID: conversationID,
                 timestamp: completionTimestamp,
                 parentEventID: started.metadata.eventID,
-            )
+            ),
         )
         return (started, completed)
     }
@@ -221,7 +220,7 @@ private struct EventMetadataEchoTool: AgentTool {
     private static func expectToolEventMetadata<Result: Sendable>(
         started: AgentEvent<Result>,
         completed: AgentEvent<Result>,
-        expected: ToolEventMetadataExpectation
+        expected: ToolEventMetadataExpectation,
     ) {
         #expect(started.metadata.sessionID == expected.sessionID)
         #expect(completed.metadata.sessionID == expected.sessionID)
@@ -235,14 +234,14 @@ private struct EventMetadataEchoTool: AgentTool {
     }
 }
 
-@Suite struct AgentTurnEventMetadataTests {
+struct AgentTurnEventMetadataTests {
     @Test func invocationIDConsistencyWithinTurn_andTurnIDStability() async throws {
         let agent = Agent(
             agentId: "assistant",
             providerRegistry: ProviderRegistry(
-                default: ScriptedInferenceProvider(responses: [.success("Hello world")])
+                default: ScriptedInferenceProvider(responses: [.success("Hello world")]),
             ),
-            behavior: .test()
+            behavior: .test(),
         )
         let session = agent.makeSession()
         let turn = try await session.send("Hi")
@@ -269,7 +268,7 @@ private struct EventMetadataEchoTool: AgentTool {
                 .success("First"),
                 .success("Second"),
             ])),
-            behavior: .test()
+            behavior: .test(),
         )
         let session = agent.makeSession()
 
@@ -306,7 +305,7 @@ private struct EventMetadataEchoTool: AgentTool {
             agentId: "assistant",
             providerRegistry: ProviderRegistry(default: provider),
             behavior: .test(),
-            toolDefinition: ToolDefinition(tools: [AnyAgentTool(EventMetadataEchoTool())])
+            toolDefinition: ToolDefinition(tools: [AnyAgentTool(EventMetadataEchoTool())]),
         )
         let session = agent.makeSession()
         let turn = try await session.send("go")
@@ -336,7 +335,7 @@ private struct EventMetadataEchoTool: AgentTool {
         #expect(started.metadata.author == .agent("assistant"))
         #expect(completed.metadata.author == .tool("echo"))
 
-        for index in 1..<events.count {
+        for index in 1 ..< events.count {
             #expect(events[index - 1].metadata.timestamp <= events[index].metadata.timestamp)
         }
     }
@@ -354,7 +353,7 @@ private struct EventMetadataEchoTool: AgentTool {
             providerRegistry: ProviderRegistry(default: provider),
             behavior: .test(),
             toolDefinition: ToolDefinition(tools: [AnyAgentTool(EventMetadataEchoTool())]),
-            toolBehavior: ToolBehavior(defaultStepBudget: .disabled)
+            toolBehavior: ToolBehavior(defaultStepBudget: .disabled),
         )
         let session = agent.makeSession()
         let turn = try await session.send("go")
@@ -386,5 +385,4 @@ private struct EventMetadataEchoTool: AgentTool {
             Issue.record("Expected toolCallCompleted event")
         }
     }
-
 }

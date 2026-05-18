@@ -2,8 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import AgentKittenCore
-import Testing
 @testable import AgentKittenInference
+import Testing
 
 #if canImport(FoundationModels)
 import FoundationModels
@@ -15,11 +15,11 @@ private func makeSummaryGenerator(model: SystemLanguageModel) -> @Sendable (Stri
             systemPrompt: nil,
             model: model,
             toolRuntime: testToolRuntime(),
-            toolSelection: .disabled
+            toolSelection: .disabled,
         )
         let stream = try await ephemeral.run(
             UserMessage(text: prompt),
-            parameters: InferenceRequestParameters(toolSelection: .disabled)
+            parameters: InferenceRequestParameters(toolSelection: .disabled),
         )
         for try await event in stream {
             if case .result(let text, _) = event {
@@ -31,7 +31,7 @@ private func makeSummaryGenerator(model: SystemLanguageModel) -> @Sendable (Stri
 }
 
 @available(macOS 26.4, iOS 26.4, visionOS 26.4, macCatalyst 26.4, *)
-@Test func appleCompactedTranscript_excludesInstructionsAndSummarizesOlderTurns() async throws {
+@Test func appleCompactedTranscript_excludesInstructionsAndSummarizesOlderTurns() async {
     let transcript = FoundationModels.Transcript(entries: [
         .instructions(.init(segments: [.text(.init(content: "System instructions."))], toolDefinitions: [])),
         .prompt(.init(segments: [.text(.init(content: "Old user request."))])),
@@ -46,13 +46,12 @@ private func makeSummaryGenerator(model: SystemLanguageModel) -> @Sendable (Stri
         transcript: transcript,
         model: SystemLanguageModel.default,
         toolRuntime: testToolRuntime(),
-        toolSelection: .all
+        toolSelection: .all,
     )
 
     let result = await ContextCompactor().compact(session,
-        options: .summarize(.init(preservedRecentTurnCount: 2)),
-        summaryGenerator: makeSummaryGenerator(model: session.model)
-    )
+                                                  options: .summarize(.init(preservedRecentTurnCount: 2)),
+                                                  summaryGenerator: makeSummaryGenerator(model: session.model))
     #expect(result.didCompact)
 
     let compacted = await session.captureTranscript()
@@ -66,7 +65,7 @@ private func makeSummaryGenerator(model: SystemLanguageModel) -> @Sendable (Stri
 }
 
 @available(macOS 26.4, iOS 26.4, visionOS 26.4, macCatalyst 26.4, *)
-@Test func appleCompactedTranscript_truncatesOldEntriesWithoutSummarizing() async throws {
+@Test func appleCompactedTranscript_truncatesOldEntriesWithoutSummarizing() async {
     let transcript = FoundationModels.Transcript(entries: [
         .instructions(.init(segments: [.text(.init(content: "System instructions."))], toolDefinitions: [])),
         .prompt(.init(segments: [.text(.init(content: "Old user request."))])),
@@ -79,13 +78,12 @@ private func makeSummaryGenerator(model: SystemLanguageModel) -> @Sendable (Stri
         transcript: transcript,
         model: SystemLanguageModel.default,
         toolRuntime: testToolRuntime(),
-        toolSelection: .all
+        toolSelection: .all,
     )
 
     let result = await ContextCompactor().compact(session,
-        options: .truncate(.init(preservedRecentTurnCount: 1)),
-        summaryGenerator: makeSummaryGenerator(model: session.model)
-    )
+                                                  options: .truncate(.init(preservedRecentTurnCount: 1)),
+                                                  summaryGenerator: makeSummaryGenerator(model: session.model))
     #expect(result.didCompact)
 
     let compacted = await session.captureTranscript()
