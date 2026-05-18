@@ -12,9 +12,9 @@ public enum ContextCompactionResult: Sendable, Codable, Equatable, Hashable {
     public var didCompact: Bool {
         switch self {
         case .compacted:
-            return true
+            true
         case .skipped:
-            return false
+            false
         }
     }
 

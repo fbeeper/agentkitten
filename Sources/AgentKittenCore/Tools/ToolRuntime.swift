@@ -203,11 +203,11 @@ public actor ToolTurnRuntime {
     private var hasRemainingStepCapacity: Bool {
         switch toolStepBudget {
         case .disabled:
-            return false
+            false
         case .budget(let remainingSteps):
-            return remainingSteps > 0
+            remainingSteps > 0
         case .unbounded:
-            return true
+            true
         }
     }
 

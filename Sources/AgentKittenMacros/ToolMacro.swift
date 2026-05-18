@@ -264,22 +264,26 @@ private enum ToolMacroDiagnostic: DiagnosticMessage {
     var message: String {
         switch self {
         case .unknownType(let name):
-            return "@Tool: unrecognised type '\(name)' — schema falls back to .string; "
-                + "use .enumeration(values:description:) or another JSONSchema case to hand-author the correct schema"
+            """
+            @Tool: unrecognised type '\(name)' — schema falls back to .string; \
+            use .enumeration(values:description:) or another JSONSchema case to hand-author the correct schema
+            """
         case .narrowOrUnsignedInteger(let name):
-            return "@Tool: '\(name)' is a narrow or unsigned integer — "
-                + "the Apple schema bridge represents all integers as Int with no range constraint; "
-                + "the model may generate out-of-range values that fail to decode on the Apple provider. "
-                + "Prefer Int (or Int64) for Apple provider compatibility."
+            """
+            @Tool: '\(name)' is a narrow or unsigned integer — \
+            the Apple schema bridge represents all integers as Int with no range constraint; \
+            the model may generate out-of-range values that fail to decode on the Apple provider. \
+            Prefer Int (or Int64) for Apple provider compatibility.
+            """
         }
     }
 
     var diagnosticID: MessageID {
         switch self {
         case .unknownType:
-            return MessageID(domain: "AgentKittenMacros", id: "unknownParameterType")
+            MessageID(domain: "AgentKittenMacros", id: "unknownParameterType")
         case .narrowOrUnsignedInteger:
-            return MessageID(domain: "AgentKittenMacros", id: "narrowOrUnsignedInteger")
+            MessageID(domain: "AgentKittenMacros", id: "narrowOrUnsignedInteger")
         }
     }
 
@@ -298,11 +302,11 @@ private enum ToolMacroError: Error, CustomStringConvertible {
     var description: String {
         switch self {
         case .missingArguments:
-            return "@Tool requires: @Tool(\"name\", description: \"description\")"
+            "@Tool requires: @Tool(\"name\", description: \"description\")"
         case .invalidName:
-            return "@Tool first argument must be a string literal name"
+            "@Tool first argument must be a string literal name"
         case .invalidDescription:
-            return "@Tool requires description: \"...\" as a string literal"
+            "@Tool requires description: \"...\" as a string literal"
         }
     }
 }

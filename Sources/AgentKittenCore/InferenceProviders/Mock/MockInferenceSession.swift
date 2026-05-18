@@ -362,12 +362,12 @@ private enum MockStructuredGenerationError: Error, CustomStringConvertible {
     var description: String {
         switch self {
         case .noResponsesConfigured:
-            return """
+            """
             MockInferenceSession has no configured structured responses. \
             Pass structuredResponses to MockInferenceProvider.
             """
         case .stepLimitExceeded:
-            return "step limit exceeded"
+            "step limit exceeded"
         }
     }
 }

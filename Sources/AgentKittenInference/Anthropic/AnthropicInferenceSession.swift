@@ -211,7 +211,7 @@ public actor AnthropicInferenceSession: InferenceSession {
             // Parse argsJSON once here; fall back to an empty object so history
             // re-encoding never throws if the model emitted malformed JSON.
             let inputValue: AnthropicJSONValue = if let data = call.argsJSON.data(using: .utf8),
-               let raw = try? JSONSerialization.jsonObject(with: data) {
+                                                    let raw = try? JSONSerialization.jsonObject(with: data) {
                 AnthropicJSONValue(raw)
             } else {
                 .object([:])

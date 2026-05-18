@@ -13,9 +13,9 @@ enum PlaygroundError: LocalizedError, Equatable {
     var errorDescription: String? {
         switch self {
         case .appleIntelligenceRequiresMacOS26:
-            return "Apple Intelligence requires macOS 26 or later."
+            "Apple Intelligence requires macOS 26 or later."
         case .appleIntelligenceNeedsFoundationModels:
-            return "Apple Intelligence requires FoundationModels (Apple platforms only)."
+            "Apple Intelligence requires FoundationModels (Apple platforms only)."
         }
     }
 }

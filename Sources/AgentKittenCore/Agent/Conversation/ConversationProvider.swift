@@ -162,13 +162,13 @@ struct ConversationProvider {
     ) async throws -> ContextCompactionResult {
         switch plannedKind {
         case .reuse:
-            return try await AutomaticCompactionOperation.compactIfNeeded(
+            try await AutomaticCompactionOperation.compactIfNeeded(
                 conversation,
                 policy: automaticCompactionPolicy,
                 summaryGenerator: assembler.makeSummaryGenerator(),
             )
         case .rebuildSession:
-            return try await assembler.updateConversationSession(
+            try await assembler.updateConversationSession(
                 conversation,
                 for: executionConfiguration,
                 automaticCompactionPolicy: automaticCompactionPolicy,

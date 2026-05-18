@@ -31,9 +31,9 @@ extension AppleLanguageModel {
     var systemLanguageModel: SystemLanguageModel {
         switch self {
         case .default:
-            return SystemLanguageModel.default
+            SystemLanguageModel.default
         case .contentTagging:
-            return SystemLanguageModel(useCase: .contentTagging)
+            SystemLanguageModel(useCase: .contentTagging)
         }
     }
 }

@@ -307,13 +307,13 @@ private struct JudgeDecision: Codable, Sendable, JSONSchemaProviding {
     var validationResult: ValidationResult {
         switch verdict {
         case .pass:
-            return .pass
+            .pass
         case .fail:
-            return .fail(reason: resolvedMessage(
+            .fail(reason: resolvedMessage(
                 fallback: AgentKittenLocalization.string("validation.rejectedFallback"),
             ))
         case .feedback:
-            return .feedback(message: resolvedMessage(
+            .feedback(message: resolvedMessage(
                 fallback: AgentKittenLocalization.string("validation.revisedFallback"),
             ))
         }

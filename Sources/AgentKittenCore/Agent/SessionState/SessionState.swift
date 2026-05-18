@@ -18,9 +18,9 @@ public enum SessionStateError: Error, LocalizedError, Equatable {
     public var errorDescription: String? {
         switch self {
         case .disabled:
-            return "Session state is disabled."
+            "Session state is disabled."
         case .readOnlyMutation:
-            return "Session state is read-only."
+            "Session state is read-only."
         }
     }
 }

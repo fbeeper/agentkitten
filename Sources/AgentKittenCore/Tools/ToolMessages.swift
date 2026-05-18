@@ -24,7 +24,7 @@ public enum ToolRationale {
         }
         let rationale = obj.removeValue(forKey: schemaKey) as? String
         let stripped: String = if let strippedData = try? JSONSerialization.data(withJSONObject: obj),
-           let strippedString = String(data: strippedData, encoding: .utf8) {
+                                  let strippedString = String(data: strippedData, encoding: .utf8) {
             strippedString
         } else {
             argumentsJSON

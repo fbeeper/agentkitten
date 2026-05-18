@@ -9,8 +9,11 @@ public struct AnyToolHook: Sendable {
     public let phases: Set<ToolHookPhase>
 
     private let beforeHandler: @Sendable (PendingToolCall, ToolExecutionContext) async throws -> PendingToolCall
-    private let afterHandler: @Sendable (PendingToolCall, ToolCallOutcome, ToolExecutionContext) async -> ToolCallOutcome
-    // swiftlint:disable:previous line_length
+    private let afterHandler: @Sendable (
+        PendingToolCall,
+        ToolCallOutcome,
+        ToolExecutionContext
+    ) async -> ToolCallOutcome
 
     /// Creates a type-erased wrapper from a concrete ``ToolHook``.
     public init<H: ToolHook>(_ hook: H) {

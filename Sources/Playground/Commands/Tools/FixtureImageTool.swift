@@ -49,7 +49,7 @@ private enum FixtureImageToolError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .missingFixture(let message):
-            return message
+            message
         }
     }
 }

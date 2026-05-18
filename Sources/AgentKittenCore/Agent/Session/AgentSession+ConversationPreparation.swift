@@ -57,7 +57,9 @@ extension AgentSession {
         if case .skipped(.disabled) = result {
             return
         }
-        let info: AgentTraceEntry.Kind.ContextCompactionInfo = if shouldRecordAutomaticCompactionConfiguration(for: result) {
+        let info: AgentTraceEntry
+            .Kind
+            .ContextCompactionInfo = if shouldRecordAutomaticCompactionConfiguration(for: result) {
             conversationProvider.compactionTraceInfo(
                 mode: .automatic,
                 result: result,
@@ -76,13 +78,13 @@ extension AgentSession {
     ) -> Bool {
         switch result {
         case .compacted:
-            return true
+            true
         case .skipped(let reason):
             switch reason {
             case .inferenceError, .failed, .sessionReleased, .noActiveConversation:
-                return true
+                true
             case .disabled, .conversationReplaced, .triggerNotMet:
-                return false
+                false
             }
         }
     }
