@@ -38,6 +38,7 @@ public actor AppleInferenceSession: InferenceSession {
     let toolRuntime: ToolRuntime
     let toolBridgeRuntime: AppleToolBridgeRuntime
     let bridgedTools: [any Tool]
+    let historyRenderingConfiguration: HistoryRenderingConfiguration
     let operationGate = SingleFlightOperationGate<InferenceSessionOperationKind> {
         InferenceError.concurrentOperationInProgress(active: $0)
     }
@@ -54,7 +55,9 @@ public actor AppleInferenceSession: InferenceSession {
         model: SystemLanguageModel,
         toolRuntime: ToolRuntime,
         toolSelection: ToolSelection,
+        historyRenderingConfiguration: HistoryRenderingConfiguration = .init(),
     ) {
+        self.historyRenderingConfiguration = historyRenderingConfiguration
         let eventRelay = ToolEventRelay()
         self.eventRelay = eventRelay
         self.toolRuntime = toolRuntime
@@ -86,7 +89,9 @@ public actor AppleInferenceSession: InferenceSession {
         model: SystemLanguageModel,
         toolRuntime: ToolRuntime,
         toolSelection: ToolSelection,
+        historyRenderingConfiguration: HistoryRenderingConfiguration = .init(),
     ) {
+        self.historyRenderingConfiguration = historyRenderingConfiguration
         let eventRelay = ToolEventRelay()
         self.eventRelay = eventRelay
         self.toolRuntime = toolRuntime

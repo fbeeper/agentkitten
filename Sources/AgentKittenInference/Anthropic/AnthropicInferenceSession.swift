@@ -24,6 +24,8 @@ public actor AnthropicInferenceSession: InferenceSession {
     let toolRuntime: ToolRuntime
     let tools: [AnthropicTool]
     let clientFactory: @Sendable (String) -> any AnthropicHTTPStreaming
+    let historyRenderingConfiguration: HistoryRenderingConfiguration
+    let structuredOutputInstructionFormat: String
     private let maxEmptyToolUseFollowUps: Int
     private var currentModel: String
     private var resolvedContextSizes: [String: Int] = [:]
@@ -41,6 +43,8 @@ public actor AnthropicInferenceSession: InferenceSession {
         toolRuntime: ToolRuntime,
         initialHistory: [AnthropicMessage] = [],
         maxEmptyToolUseFollowUps: Int = 8,
+        historyRenderingConfiguration: HistoryRenderingConfiguration = .init(),
+        structuredOutputInstructionFormat: String = AnthropicInferenceProvider.defaultStructuredOutputInstructionFormat,
         clientFactory: @escaping @Sendable (String) -> any AnthropicHTTPStreaming = { AnthropicHTTPClient(apiKey: $0) },
     ) {
         self.credentials = credentials
@@ -53,6 +57,8 @@ public actor AnthropicInferenceSession: InferenceSession {
         }
         history = initialHistory
         self.maxEmptyToolUseFollowUps = maxEmptyToolUseFollowUps
+        self.historyRenderingConfiguration = historyRenderingConfiguration
+        self.structuredOutputInstructionFormat = structuredOutputInstructionFormat
         currentModel = defaultModel
         self.clientFactory = clientFactory
     }

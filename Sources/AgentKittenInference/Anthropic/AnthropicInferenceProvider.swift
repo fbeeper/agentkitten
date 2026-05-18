@@ -23,8 +23,22 @@ import AgentKittenCore
 /// let provider = InferenceProvider.anthropic(credentials: MyVaultProvider())
 /// ```
 public actor AnthropicInferenceProvider: InferenceProviding {
+    /// The default structured-output instruction format string.
+    ///
+    /// Used when no custom `structuredOutputInstructionFormat` is supplied to the provider initializer.
+    /// Exposed so callers can build on or inspect the default without duplicating it.
+    public static let defaultStructuredOutputInstructionFormat = """
+    Respond with a single valid JSON value that conforms to this schema:
+    %@
+    Output only the raw JSON value. Do not use markdown, code blocks, or backticks. \
+    When the root schema is an object, start with { and end with }; \
+    when it is an array, start with [ and end with ].
+    """
+
     private let credentials: any APIKeyProviding
     private let model: String
+    private let historyRenderingConfiguration: HistoryRenderingConfiguration
+    private let structuredOutputInstructionFormat: String
 
     /// Creates an Anthropic provider.
     ///
@@ -32,12 +46,20 @@ public actor AnthropicInferenceProvider: InferenceProviding {
     ///   - credentials: The credential source. Defaults to reading `ANTHROPIC_API_KEY`
     ///     from the process environment.
     ///   - model: The Anthropic model identifier. Defaults to `"claude-sonnet-4-5"`.
+    ///   - historyRenderingConfiguration: Labels and format strings used when rendering history
+    ///     during context compaction. Defaults to built-in English values.
+    ///   - structuredOutputInstructionFormat: System-prompt instruction injected for structured
+    ///     output requests. Receives one `%@` argument: the JSON schema string.
     public init(
         credentials: any APIKeyProviding = EnvironmentAPIKeyProvider("ANTHROPIC_API_KEY"),
         model: String = "claude-sonnet-4-5",
+        historyRenderingConfiguration: HistoryRenderingConfiguration = .init(),
+        structuredOutputInstructionFormat: String = AnthropicInferenceProvider.defaultStructuredOutputInstructionFormat,
     ) {
         self.credentials = credentials
         self.model = model
+        self.historyRenderingConfiguration = historyRenderingConfiguration
+        self.structuredOutputInstructionFormat = structuredOutputInstructionFormat
     }
 
     /// Returns whether a conversation can be reused across a turn-configuration transition.
@@ -81,6 +103,8 @@ public actor AnthropicInferenceProvider: InferenceProviding {
             systemPrompt: systemPrompt,
             toolRuntime: toolRuntime,
             initialHistory: initialHistory,
+            historyRenderingConfiguration: historyRenderingConfiguration,
+            structuredOutputInstructionFormat: structuredOutputInstructionFormat,
         )
     }
 
