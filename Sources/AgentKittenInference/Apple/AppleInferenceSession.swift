@@ -247,6 +247,10 @@ public actor AppleInferenceSession: InferenceSession {
         } catch is CancellationError {
             continuation.finish()
         } catch LanguageModelSession.GenerationError.exceededContextWindowSize {
+            // FoundationModels.SystemLanguageModel.tokenCount(for:) and .contextSize
+            // ship in the Xcode 26.4 SDK. Use Swift 6.3 as a proxy since Xcode 26.4
+            // is the toolchain that vends them.
+            #if compiler(>=6.3)
             var contextTokens: Int?
             if #available(macOS 26.4, iOS 26.4, visionOS 26.4, macCatalyst 26.4, *) {
                 contextTokens = try? await model.tokenCount(for: languageSession.transcript)
@@ -259,6 +263,14 @@ public actor AppleInferenceSession: InferenceSession {
                     contextSize: model.contextSize
                 )
             ))
+            #else
+            continuation.finish(throwing: InferenceError.contextWindowExceeded(
+                ContextWindowExceededInfo(
+                    provider: Self.providerName,
+                    message: "Context window exceeded"
+                )
+            ))
+            #endif
         } catch {
             continuation.finish(throwing: error)
         }
