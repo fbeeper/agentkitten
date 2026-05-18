@@ -284,7 +284,9 @@ private enum ToolMacroDiagnostic: DiagnosticMessage {
         }
     }
 
-    var severity: DiagnosticSeverity { .warning }
+    var severity: DiagnosticSeverity {
+        .warning
+    }
 }
 
 // MARK: - Error type

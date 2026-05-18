@@ -11,7 +11,9 @@ struct TurnQueue {
     private var processorTask: Task<Void, Never>?
 
     /// Whether a processor task is currently running.
-    var hasProcessorTask: Bool { processorTask != nil }
+    var hasProcessorTask: Bool {
+        processorTask != nil
+    }
 
     /// Appends a type-erased queue item to the end of the queue.
     mutating func enqueue(_ turn: AnyQueuedTurn) {

@@ -63,7 +63,9 @@ public protocol AgentTool: Sendable {
 }
 
 extension AgentTool {
-    public var capabilities: ToolCapabilities { .none }
+    public var capabilities: ToolCapabilities {
+        .none
+    }
 }
 
 /// A typed tool that returns provider-neutral rich content blocks.
@@ -90,5 +92,7 @@ public protocol RichAgentTool: Sendable {
 }
 
 extension RichAgentTool {
-    public var capabilities: ToolCapabilities { .none }
+    public var capabilities: ToolCapabilities {
+        .none
+    }
 }

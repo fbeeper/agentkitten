@@ -18,7 +18,9 @@ public struct ToolBehavior: Sendable {
         /// Use the provided custom tool guidance text.
         case custom(String)
 
-        static var defaultPrompt: String { AgentKittenLocalization.string("tools.guidancePrompt") }
+        static var defaultPrompt: String {
+            AgentKittenLocalization.string("tools.guidancePrompt")
+        }
 
         var prompt: String {
             switch self {

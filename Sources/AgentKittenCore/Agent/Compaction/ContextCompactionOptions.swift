@@ -120,7 +120,8 @@ extension ContextCompactionOptions.SummarizationOptions {
                 AgentKittenLocalization.string("contextCompaction.summarizeHistory"),
                 AgentKittenLocalization.string("contextCompaction.preserveFacts"),
                 AgentKittenLocalization.formattedString(
-                    "contextCompaction.additionalInstructionsFormat", instructions),
+                    "contextCompaction.additionalInstructionsFormat", instructions
+                ),
             ]
         case .custom(let override):
             parts = [override]

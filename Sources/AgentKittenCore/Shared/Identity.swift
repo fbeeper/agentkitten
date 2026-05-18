@@ -16,7 +16,9 @@ public struct TypedID<Tag>: Sendable, Hashable, Codable, CustomStringConvertible
     }
 
     /// A human-readable representation equal to the raw backing string.
-    public var description: String { rawValue }
+    public var description: String {
+        rawValue
+    }
 
     public init(from decoder: any Decoder) throws {
         let container = try decoder.singleValueContainer()
@@ -63,7 +65,9 @@ public struct UserID: Sendable, Hashable, Codable, CustomStringConvertible, Expr
     public static let local = UserID("_local")
 
     /// A human-readable representation equal to the raw backing string.
-    public var description: String { rawValue }
+    public var description: String {
+        rawValue
+    }
 
     public init(from decoder: any Decoder) throws {
         let container = try decoder.singleValueContainer()

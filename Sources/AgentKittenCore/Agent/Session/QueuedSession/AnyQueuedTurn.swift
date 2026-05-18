@@ -23,7 +23,9 @@ struct AnyQueuedTurn: Sendable {
         self._performWork = performWork
     }
 
-    var isCancelled: Bool { get async { await _isCancelled() } }
+    var isCancelled: Bool {
+        get async { await _isCancelled() }
+    }
 
     @discardableResult
     func markRunning(task: Task<Void, Never>) async -> Bool {
