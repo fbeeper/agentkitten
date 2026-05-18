@@ -61,7 +61,7 @@ public actor Turn<Result: Sendable> {
     }
 
     /// The resolved execution environment for this turn.
-    internal nonisolated var executionEnvironment: ExecutionEnvironment {
+    nonisolated var executionEnvironment: ExecutionEnvironment {
         runtime.executionEnvironment
     }
 

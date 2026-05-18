@@ -150,9 +150,9 @@ public typealias EventID = TypedID<EventIDTag>
 
 // MARK: - Internal runtime IDs
 
-internal typealias ConversationID = TypedID<ConversationIDTag>
+typealias ConversationID = TypedID<ConversationIDTag>
 
-internal typealias InferenceSessionID = TypedID<InferenceSessionIDTag>
+typealias InferenceSessionID = TypedID<InferenceSessionIDTag>
 
 struct ConversationIdentity: Sendable, Hashable, Codable {
     let conversationID: ConversationID

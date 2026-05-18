@@ -13,10 +13,6 @@ public struct ProviderReference: Sendable, Equatable, Hashable {
 
     private let storage: Storage
 
-    private init(storage: Storage) {
-        self.storage = storage
-    }
-
     /// Use the agent's default provider.
     public static let `default` = Self(storage: .default)
 
