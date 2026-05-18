@@ -138,8 +138,7 @@ public actor AppleInferenceSession: InferenceSession {
                 )
             }
         if bridged.count < selectedTools.count {
-            assert(
-                false,
+            assertionFailure(
                 "AppleInferenceSession initialized without provider preflight; unsupported tools were dropped.",
             )
             logger.error(
