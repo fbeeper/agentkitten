@@ -68,7 +68,7 @@ public struct AnyContextCompactionStrategy: Sendable, Equatable, Hashable {
     public let id: String
     private let body:
         @Sendable (any ContextCompactableSession, ContextCompactionSummaryGenerator)
-            async throws -> ContextCompactionResult
+        async throws -> ContextCompactionResult
 
     /// Creates a custom compaction strategy.
     ///

@@ -159,7 +159,7 @@ struct ConversationAssembler: Sendable {
             .preflight(
                 toolRegistry: toolRuntime.toolRegistry,
                 toolSelection: executionConfiguration.toolSelection
-        )
+            )
         return try await conversation.rebuildSession(
             compacting: options,
             summaryGenerator: makeSummaryGenerator(),

@@ -197,8 +197,8 @@ extension Playground {
 
         private static func planApprovedPrompt(plan: String) -> String {
             "[CODE MODE] Execute this plan.\n\n\(plan)\n\n" +
-            "Get straight to the work. " +
-            "Only narrate what changed if it helps the user understand the result."
+                "Get straight to the work. " +
+                "Only narrate what changed if it helps the user understand the result."
         }
 
         private static func userPrompt(mode: PlanModeState.Mode) -> String {
@@ -207,22 +207,22 @@ extension Playground {
         }
 
         private static let systemPrompt = """
-            You are a coding assistant working on a shared scratchpad file of Swift \
-            source code. You operate in two modes indicated by [PLAN MODE] and \
-            [CODE MODE] markers, each carrying specific instructions for that mode. \
-            Never mention the mode system, tool names, or per-turn instructions to the user.
-            """
+        You are a coding assistant working on a shared scratchpad file of Swift \
+        source code. You operate in two modes indicated by [PLAN MODE] and \
+        [CODE MODE] markers, each carrying specific instructions for that mode. \
+        Never mention the mode system, tool names, or per-turn instructions to the user.
+        """
 
         private static let planModeNote = """
-            [PLAN MODE]
-            Only call propose_plan when the user explicitly asks for a change to the \
-            scratchpad. For greetings, questions, or discussion, just respond in text.
-            When a change is requested, always read the scratchpad first, then call \
-            propose_plan with a specific plan: numbered steps, exact signatures or \
-            snippets for each change, and the expected final state.
-            Do not write to the scratchpad. \
-            Call propose_plan at most once; make no further tool calls after it returns.
-            """
+        [PLAN MODE]
+        Only call propose_plan when the user explicitly asks for a change to the \
+        scratchpad. For greetings, questions, or discussion, just respond in text.
+        When a change is requested, always read the scratchpad first, then call \
+        propose_plan with a specific plan: numbered steps, exact signatures or \
+        snippets for each change, and the expected final state.
+        Do not write to the scratchpad. \
+        Call propose_plan at most once; make no further tool calls after it returns.
+        """
 
         private static let codeModeNote =
             "[CODE MODE] Read the scratchpad first, then execute the user's request. " +

@@ -221,7 +221,7 @@ enum PlaygroundSessionFactory {
         case .failure(let failure):
             print(
                 "\n[tool:failed] \(name) (\(id)) -> " +
-                PlaygroundTracePrinter.trim(failure.resultJSON)
+                    PlaygroundTracePrinter.trim(failure.resultJSON)
             )
         }
         fflush(stdout)
