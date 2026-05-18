@@ -1,9 +1,9 @@
 // SPDX-FileCopyrightText: 2026 AgentKitten Authors
 // SPDX-License-Identifier: Apache-2.0
 
+import AgentKitten
 import ArgumentParser
 import Darwin
-import AgentKitten
 
 extension Playground {
     /// Multi-turn conversation that exercises the Agent layer.

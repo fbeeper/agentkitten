@@ -1,8 +1,8 @@
 // SPDX-FileCopyrightText: 2026 AgentKitten Authors
 // SPDX-License-Identifier: Apache-2.0
 
-import Foundation
 import AgentKittenCore
+import Foundation
 
 /// Streams SSE events and counts tokens for Anthropic Messages API requests.
 protocol AnthropicHTTPStreaming: Sendable {

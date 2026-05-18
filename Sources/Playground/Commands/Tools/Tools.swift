@@ -1,12 +1,12 @@
 // SPDX-FileCopyrightText: 2026 AgentKitten Authors
 // SPDX-License-Identifier: Apache-2.0
 
-import ArgumentParser
-import Darwin
-import Foundation
 import AgentKitten
 import AgentKittenCore
 import AgentKittenInference
+import ArgumentParser
+import Darwin
+import Foundation
 
 extension Playground {
     /// Demonstrates tool calling end-to-end with two built-in demo tools.

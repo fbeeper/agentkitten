@@ -1,11 +1,11 @@
 // SPDX-FileCopyrightText: 2026 AgentKitten Authors
 // SPDX-License-Identifier: Apache-2.0
 
+import AgentKitten
+import AgentKittenCore
 import ArgumentParser
 import Darwin
 import Foundation
-import AgentKitten
-import AgentKittenCore
 
 extension Playground {
     /// Demonstrates PII-safe tool execution via the tool hook chain.

@@ -1,10 +1,10 @@
 // SPDX-FileCopyrightText: 2026 AgentKitten Authors
 // SPDX-License-Identifier: Apache-2.0
 
-import ArgumentParser
-import Darwin
 import AgentKitten
 import AgentKittenCore
+import ArgumentParser
+import Darwin
 
 extension Playground {
     /// Minimal role-playing chat with a reserved chicken wizard.
