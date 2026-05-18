@@ -1,10 +1,10 @@
 // SPDX-FileCopyrightText: 2026 AgentKitten Authors
 // SPDX-License-Identifier: Apache-2.0
 
-import Testing
 @testable import AgentKittenCore
+import Testing
 
-@Test func testMultiTurn() async throws {
+@Test func multiTurn() async throws {
     let agent = Agent(
         providerRegistry: ProviderRegistry(default: ScriptedInferenceProvider(responses: [
             .success("First response"),
@@ -21,7 +21,7 @@ import Testing
     #expect(second == "Second response")
 }
 
-@Test func testStreamEvents() async throws {
+@Test func streamEvents() async throws {
     let agent = Agent(
         providerRegistry: ProviderRegistry(default: ScriptedInferenceProvider(responses: [.success("Hello world")])),
         behavior: .test(),
@@ -47,7 +47,7 @@ import Testing
     }
 }
 
-@Test func testConcurrentTurnStartFailsFast() async throws {
+@Test func concurrentTurnStartFailsFast() async throws {
     let provider = GateInferenceProvider()
     let conversation = Conversation(
         owner: .local,
@@ -60,7 +60,7 @@ import Testing
     let firstStream = try await conversation.send(
         userMessage: UserMessage(text: "a1"),
         executionConfiguration: EffectiveExecutionConfiguration(),
-        toolExecutionContext: .empty
+        toolExecutionContext: .empty,
     )
     let firstTask = Task {
         for try await _ in firstStream {}
@@ -71,7 +71,7 @@ import Testing
         _ = try await conversation.send(
             userMessage: UserMessage(text: "a2"),
             executionConfiguration: EffectiveExecutionConfiguration(),
-            toolExecutionContext: .empty
+            toolExecutionContext: .empty,
         )
     }
 
@@ -79,10 +79,10 @@ import Testing
     _ = try await firstTask.value
 }
 
-@Test func testTurnEventIteratorRetainsTurnForInlineConsumption() async throws {
+@Test func turnEventIteratorRetainsTurnForInlineConsumption() async throws {
     let agent = Agent(
         providerRegistry: ProviderRegistry(default: ScriptedInferenceProvider(
-            responses: [.success("Inline response")]
+            responses: [.success("Inline response")],
         )),
         behavior: .test(),
     )
@@ -113,7 +113,7 @@ import Testing
     #expect(turnWitness == nil)
 }
 
-@Test func testCancellationNoCorruption() async throws {
+@Test func cancellationNoCorruption() async throws {
     let agent = Agent(
         providerRegistry: ProviderRegistry(default: ScriptedInferenceProvider(responses: [
             .success("Cancel this now"),
@@ -135,7 +135,7 @@ import Testing
     #expect(secondText == "Safe response")
 }
 
-@Test func testExplicitCancellation() async throws {
+@Test func explicitCancellation() async throws {
     let agent = Agent(
         providerRegistry: ProviderRegistry(default: ScriptedInferenceProvider(responses: [.success("Response")])),
         behavior: .test(),
@@ -156,7 +156,7 @@ import Testing
     #expect(receivedCompletion)
 }
 
-@Test func testConsumerStreamEndsAfterCancel() async throws {
+@Test func consumerStreamEndsAfterCancel() async throws {
     let agent = Agent(
         providerRegistry: ProviderRegistry(default: ScriptedInferenceProvider(responses: [.success("Response")])),
         behavior: .test(),
@@ -173,7 +173,7 @@ import Testing
     #expect(eventCount >= 0)
 }
 
-@Test func testQueueOrdering() async throws {
+@Test func queueOrdering() async throws {
     let agent = Agent(
         providerRegistry: ProviderRegistry(default: ScriptedInferenceProvider(responses: [
             .success("First response"),
@@ -193,7 +193,7 @@ import Testing
     #expect(text2 == "Second response")
 }
 
-@Test func testSelfDraining() async throws {
+@Test func selfDraining() async throws {
     let agent = Agent(
         providerRegistry: ProviderRegistry(default: ScriptedInferenceProvider(responses: [
             .success("First"),
@@ -210,7 +210,7 @@ import Testing
     #expect(second == "Second")
 }
 
-@Test func testIndependentAgents() async throws {
+@Test func independentAgents() async throws {
     let agent1 = Agent(
         providerRegistry: ProviderRegistry(default: ScriptedInferenceProvider(responses: [.success("Response")])),
         behavior: .test(),
@@ -234,7 +234,7 @@ import Testing
     let namedAgent = Agent(
         agentId: "myAgent",
         providerRegistry: ProviderRegistry(default: ScriptedInferenceProvider()),
-        behavior: .test()
+        behavior: .test(),
     )
     #expect(namedAgent.agentId == "myAgent")
 }
@@ -242,11 +242,11 @@ import Testing
 @Test func agent_defaultIDIsUnique() {
     let agent1 = Agent(
         providerRegistry: ProviderRegistry(default: ScriptedInferenceProvider()),
-        behavior: .test()
+        behavior: .test(),
     )
     let agent2 = Agent(
         providerRegistry: ProviderRegistry(default: ScriptedInferenceProvider()),
-        behavior: .test()
+        behavior: .test(),
     )
     #expect(agent1.agentId != agent2.agentId)
 }
@@ -254,7 +254,7 @@ import Testing
 @Test func agent_defaultOwnerIsLocal() {
     let agent = Agent(
         providerRegistry: ProviderRegistry(default: ScriptedInferenceProvider()),
-        behavior: .test()
+        behavior: .test(),
     )
     #expect(agent.owner == .local)
 }
@@ -264,7 +264,7 @@ import Testing
     let agent = Agent(
         providerRegistry: ProviderRegistry(default: ScriptedInferenceProvider()),
         behavior: .test(),
-        owner: user
+        owner: user,
     )
     #expect(agent.owner == user)
 }

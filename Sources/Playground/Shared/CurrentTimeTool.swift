@@ -1,8 +1,8 @@
 // SPDX-FileCopyrightText: 2026 AgentKitten Authors
 // SPDX-License-Identifier: Apache-2.0
 
-import Foundation
 import AgentKittenCore
+import Foundation
 
 /// Returns the current date and time in ISO 8601 and human-readable formats.
 struct CurrentTimeTool: AgentTool {

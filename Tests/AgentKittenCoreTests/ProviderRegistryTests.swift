@@ -1,8 +1,8 @@
 // SPDX-FileCopyrightText: 2026 AgentKitten Authors
 // SPDX-License-Identifier: Apache-2.0
 
-import Testing
 @testable import AgentKittenCore
+import Testing
 
 @Suite("Provider Registry")
 struct ProviderRegistryTests {
@@ -12,7 +12,7 @@ struct ProviderRegistryTests {
         )
         let conversation = try makeConversation(
             registry: ProviderRegistry(default: defaultProvider),
-            provider: .default
+            provider: .default,
         )
 
         let completions = try await assistantCompletions(from: conversation)
@@ -27,7 +27,7 @@ struct ProviderRegistryTests {
         )
         let conversation = try makeConversation(
             registry: ProviderRegistry(default: defaultProvider),
-            provider: .ofType(UnregisteredOverrideProvider.self)
+            provider: .ofType(UnregisteredOverrideProvider.self),
         )
 
         let completions = try await assistantCompletions(from: conversation)
@@ -46,7 +46,7 @@ struct ProviderRegistryTests {
         let conversation = try makeConversation(
             registry: ProviderRegistry(default: defaultProvider)
                 .registering(ExecutionOverrideProvider(base: overrideProvider)),
-            provider: .ofType(ExecutionOverrideProvider.self)
+            provider: .ofType(ExecutionOverrideProvider.self),
         )
 
         let completions = try await assistantCompletions(from: conversation)
@@ -70,7 +70,7 @@ struct ProviderRegistryTests {
             registry: ProviderRegistry(default: defaultProvider)
                 .registering(ExecutionOverrideProvider(base: firstProvider))
                 .registering(ExecutionOverrideProvider(base: secondProvider)),
-            provider: .ofType(ExecutionOverrideProvider.self)
+            provider: .ofType(ExecutionOverrideProvider.self),
         )
 
         let completions = try await assistantCompletions(from: conversation)
@@ -84,7 +84,7 @@ struct ProviderRegistryTests {
 
 private func makeConversation(
     registry: ProviderRegistry,
-    provider: ProviderReference
+    provider: ProviderReference,
 ) throws -> AnyConversation {
     let factory = ConversationAssembler(
         phaseBehaviors: .init(),
@@ -92,11 +92,11 @@ private func makeConversation(
         baseSystemPrompt: "Base prompt",
         toolDefinition: .noTools,
         rationaleSchemaDescription: ToolRationale.schemaDescription,
-        toolApprovalGate: ToolApprovalGate()
+        toolApprovalGate: ToolApprovalGate(),
     )
     return try factory.makeConversation(
         owner: UserID.local,
-        executionConfiguration: EffectiveExecutionConfiguration(provider: provider)
+        executionConfiguration: EffectiveExecutionConfiguration(provider: provider),
     )
 }
 
@@ -104,7 +104,7 @@ private func assistantCompletions(from conversation: AnyConversation) async thro
     let stream = try await conversation.send(
         userMessage: UserMessage(text: "hello"),
         executionConfiguration: EffectiveExecutionConfiguration(),
-        toolExecutionContext: .empty
+        toolExecutionContext: .empty,
     )
     var completions: [String] = []
     for try await event in stream {
@@ -124,13 +124,13 @@ private struct ExecutionOverrideProvider: InferenceProviding {
         systemPrompt: String?,
         toolRuntime: ToolRuntime,
         toolSelection: ToolSelection,
-        inferenceContext: InferenceContext
+        inferenceContext: InferenceContext,
     ) -> ScriptedInferenceSession {
         base.makeSession(
             systemPrompt: systemPrompt,
             toolRuntime: toolRuntime,
             toolSelection: toolSelection,
-            inferenceContext: inferenceContext
+            inferenceContext: inferenceContext,
         )
     }
 }
@@ -142,7 +142,7 @@ private struct UnregisteredOverrideProvider: InferenceProviding {
         systemPrompt: String?,
         toolRuntime: ToolRuntime,
         toolSelection: ToolSelection,
-        inferenceContext: InferenceContext
+        inferenceContext: InferenceContext,
     ) -> ScriptedInferenceSession {
         fatalError("Should not be called when lookup falls back to the default provider")
     }

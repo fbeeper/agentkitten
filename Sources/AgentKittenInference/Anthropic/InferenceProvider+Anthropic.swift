@@ -13,7 +13,7 @@ extension InferenceProvider where Provider == AnthropicInferenceProvider {
     public static func anthropic(model: String = "claude-sonnet-4-5") -> Self {
         Self(AnthropicInferenceProvider(
             credentials: EnvironmentAPIKeyProvider("ANTHROPIC_API_KEY"),
-            model: model
+            model: model,
         ))
     }
 
@@ -28,7 +28,7 @@ extension InferenceProvider where Provider == AnthropicInferenceProvider {
     static func anthropic(credentials: some APIKeyProviding, model: String = "claude-sonnet-4-5") -> Self {
         Self(AnthropicInferenceProvider(
             credentials: credentials,
-            model: model
+            model: model,
         ))
     }
 
@@ -44,11 +44,11 @@ extension InferenceProvider where Provider == AnthropicInferenceProvider {
     public static func anthropic(
         keychain service: String,
         account: String,
-        model: String = "claude-sonnet-4-5"
+        model: String = "claude-sonnet-4-5",
     ) -> Self {
         Self(AnthropicInferenceProvider(
             credentials: KeychainAPIKeyProvider(service: service, account: account),
-            model: model
+            model: model,
         ))
     }
 }

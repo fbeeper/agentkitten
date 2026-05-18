@@ -16,11 +16,13 @@ public struct TypedID<Tag>: Sendable, Hashable, Codable, CustomStringConvertible
     }
 
     /// A human-readable representation equal to the raw backing string.
-    public var description: String { rawValue }
+    public var description: String {
+        rawValue
+    }
 
     public init(from decoder: any Decoder) throws {
         let container = try decoder.singleValueContainer()
-        self.rawValue = try container.decode(String.self)
+        rawValue = try container.decode(String.self)
     }
 
     public func encode(to encoder: any Encoder) throws {
@@ -46,7 +48,6 @@ enum InferenceSessionIDTag {}
 /// The backing representation is an implementation detail — construct
 /// via ``init(_:)``; never assume the raw format.
 public struct UserID: Sendable, Hashable, Codable, CustomStringConvertible, ExpressibleByStringLiteral {
-
     private let rawValue: String
 
     /// Creates a user identifier from the given string.
@@ -64,11 +65,13 @@ public struct UserID: Sendable, Hashable, Codable, CustomStringConvertible, Expr
     public static let local = UserID("_local")
 
     /// A human-readable representation equal to the raw backing string.
-    public var description: String { rawValue }
+    public var description: String {
+        rawValue
+    }
 
     public init(from decoder: any Decoder) throws {
         let container = try decoder.singleValueContainer()
-        self.rawValue = try container.decode(String.self)
+        rawValue = try container.decode(String.self)
     }
 
     public func encode(to encoder: any Encoder) throws {
@@ -147,9 +150,9 @@ public typealias EventID = TypedID<EventIDTag>
 
 // MARK: - Internal runtime IDs
 
-internal typealias ConversationID = TypedID<ConversationIDTag>
+typealias ConversationID = TypedID<ConversationIDTag>
 
-internal typealias InferenceSessionID = TypedID<InferenceSessionIDTag>
+typealias InferenceSessionID = TypedID<InferenceSessionIDTag>
 
 struct ConversationIdentity: Sendable, Hashable, Codable {
     let conversationID: ConversationID

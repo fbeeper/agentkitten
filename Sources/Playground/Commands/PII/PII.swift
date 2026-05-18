@@ -1,11 +1,11 @@
 // SPDX-FileCopyrightText: 2026 AgentKitten Authors
 // SPDX-License-Identifier: Apache-2.0
 
+import AgentKitten
+import AgentKittenCore
 import ArgumentParser
 import Darwin
 import Foundation
-import AgentKitten
-import AgentKittenCore
 
 extension Playground {
     /// Demonstrates PII-safe tool execution via the tool hook chain.
@@ -15,7 +15,7 @@ extension Playground {
     /// so the model never sees privileged data at any point in the inference loop.
     struct PII: AsyncParsableCommand {
         static let configuration = CommandConfiguration(
-            abstract: "PII-safe tool demo: emails are tokenized before reaching the model."
+            abstract: "PII-safe tool demo: emails are tokenized before reaching the model.",
         )
 
         @Option(name: .long, help: "Inference provider: anthropic, apple.")
@@ -33,7 +33,7 @@ extension Playground {
                     "Emails in input are replaced with sentinels before reaching the model.",
                     "A pre-execution hook rehydrates them just before tool execution.",
                 ],
-                instructions: "Type a message with an email address, ask the agent to notify them.\nCtrl-D to exit."
+                instructions: "Type a message with an email address, ask the agent to notify them.\nCtrl-D to exit.",
             ))
 
             let vault = PIIVault()
@@ -47,12 +47,12 @@ extension Playground {
                     You are an assistant that helps send notifications to contacts. \
                     When a user asks to notify or message someone at a given address, \
                     use the notify_contact tool to deliver the message.
-                    """
+                    """,
                 ),
                 toolDefinition: ToolDefinition(
                     tools: [AnyAgentTool(NotifyContactTool())],
                     hooks: [AnyToolHook(rehydrationHook)],
-                )
+                ),
             )
             let session = agent.makeSession()
             try await chat(session: session, sanitizer: sanitizer, vault: vault)
@@ -84,7 +84,7 @@ extension Playground {
                 if trace {
                     await PlaygroundTracePrinter.printTurnTrace(
                         trace: session.trace,
-                        invocationID: turn.id
+                        invocationID: turn.id,
                     )
                 }
                 print(PlaygroundChatOutputFormatter.separator)
@@ -161,7 +161,7 @@ struct PIIStreamRehydrator {
                 break
             }
             // Flush everything before the `<`.
-            output += held[held.startIndex..<ltIdx]
+            output += held[held.startIndex ..< ltIdx]
             held = String(held[ltIdx...])
 
             if prefix.hasPrefix(held) {
@@ -173,7 +173,7 @@ struct PIIStreamRehydrator {
                 let digits = held.dropFirst(prefix.count)
                 if let gtIdx = digits.firstIndex(of: ">") {
                     // Complete sentinel.
-                    let sentinel = String(held[held.startIndex...gtIdx])
+                    let sentinel = String(held[held.startIndex ... gtIdx])
                     // Rehydrate via the vault; falls back to the original if unknown.
                     output += await vault.rehydrate(sentinel)
                     held = String(held.dropFirst(sentinel.count))
@@ -217,7 +217,7 @@ private struct NotifyContactTool: AgentTool {
                 "email": .string(description: "The recipient's email address."),
                 "message": .string(description: "The message body to send."),
             ],
-            required: ["email", "message"]
+            required: ["email", "message"],
         ))
     }
 
@@ -266,7 +266,7 @@ struct PIIInputSanitizer {
     private let vault: PIIVault
     // swiftlint:disable:next force_try
     private let emailRegex = try! NSRegularExpression(
-        pattern: #"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b"#
+        pattern: #"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b"#,
     )
 
     init(vault: PIIVault) {
@@ -312,7 +312,7 @@ struct PIIRehydrationHook: ToolHook {
 
     func beforeExecute(
         _ call: PendingToolCall,
-        context: ToolExecutionContext
+        context: ToolExecutionContext,
     ) async throws -> PendingToolCall {
         let rehydrated = await vault.rehydrate(call.argumentsJSON)
         guard rehydrated != call.argumentsJSON else {
@@ -322,14 +322,14 @@ struct PIIRehydrationHook: ToolHook {
             id: call.id,
             name: call.name,
             argumentsJSON: rehydrated,
-            modelRationale: call.modelRationale
+            modelRationale: call.modelRationale,
         )
     }
 
     func afterExecute(
         _ call: PendingToolCall,
         outcome: ToolCallOutcome,
-        context: ToolExecutionContext
+        context: ToolExecutionContext,
     ) async -> ToolCallOutcome {
         guard case .success(let content) = outcome else {
             return outcome

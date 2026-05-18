@@ -16,11 +16,11 @@ actor ScratchpadStore {
 }
 
 private let initialContent = """
-    struct Greeter {
-        let name: String
+struct Greeter {
+    let name: String
 
-        func greet() -> String {
-            "Hello, \\(name)!"
-        }
+    func greet() -> String {
+        "Hello, \\(name)!"
     }
-    """
+}
+"""

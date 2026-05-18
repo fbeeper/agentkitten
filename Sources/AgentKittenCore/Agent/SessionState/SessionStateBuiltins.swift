@@ -34,7 +34,9 @@ private struct GetStateTool: AgentTool {
     }
 
     static let name = "get_state"
-    static var description: String { AgentKittenLocalization.string("sessionState.getStateDescription") }
+    static var description: String {
+        AgentKittenLocalization.string("sessionState.getStateDescription")
+    }
 
     let state: SessionState
 
@@ -61,7 +63,9 @@ private struct ListStateKeysTool: AgentTool {
     }
 
     static let name = "list_state_keys"
-    static var description: String { AgentKittenLocalization.string("sessionState.listStateKeysDescription") }
+    static var description: String {
+        AgentKittenLocalization.string("sessionState.listStateKeysDescription")
+    }
 
     let state: SessionState
 
@@ -89,7 +93,9 @@ private struct SetStateTool: AgentTool {
     }
 
     static let name = "set_state"
-    static var description: String { AgentKittenLocalization.string("sessionState.setStateDescription") }
+    static var description: String {
+        AgentKittenLocalization.string("sessionState.setStateDescription")
+    }
 
     let state: SessionState
 
@@ -98,7 +104,7 @@ private struct SetStateTool: AgentTool {
             properties: [
                 "key": .string(description: AgentKittenLocalization.string("sessionState.setStateKeyDescription")),
                 "value": .string(
-                    description: AgentKittenLocalization.string("sessionState.setStateValueDescription")
+                    description: AgentKittenLocalization.string("sessionState.setStateValueDescription"),
                 ),
             ],
             required: [
@@ -125,7 +131,9 @@ private struct RemoveStateTool: AgentTool {
     }
 
     static let name = "remove_state"
-    static var description: String { AgentKittenLocalization.string("sessionState.removeStateDescription") }
+    static var description: String {
+        AgentKittenLocalization.string("sessionState.removeStateDescription")
+    }
 
     let state: SessionState
 

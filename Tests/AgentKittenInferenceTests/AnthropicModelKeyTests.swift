@@ -1,9 +1,9 @@
 // SPDX-FileCopyrightText: 2026 AgentKitten Authors
 // SPDX-License-Identifier: Apache-2.0
 
-import Testing
 @testable import AgentKittenCore
 @testable import AgentKittenInference
+import Testing
 
 /// AnthropicModelKey in inferenceContext overrides the provider default model.
 @Test func session_anthropicModelKey_overridesDefaultModel() async throws {
@@ -16,7 +16,7 @@ import Testing
         defaultModel: "default-model",
         systemPrompt: nil,
         toolRuntime: testToolRuntime(),
-        clientFactory: { _ in client }
+        clientFactory: { _ in client },
     )
 
     var inferenceContext = InferenceContext()
@@ -39,7 +39,7 @@ import Testing
         defaultModel: "default-model",
         systemPrompt: nil,
         toolRuntime: testToolRuntime(),
-        clientFactory: { _ in client }
+        clientFactory: { _ in client },
     )
 
     let parameters = InferenceRequestParameters()

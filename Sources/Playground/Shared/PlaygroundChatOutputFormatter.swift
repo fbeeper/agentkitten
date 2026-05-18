@@ -1,8 +1,8 @@
 // SPDX-FileCopyrightText: 2026 AgentKitten Authors
 // SPDX-License-Identifier: Apache-2.0
 
-import Foundation
 import AgentKittenCore
+import Foundation
 
 enum PlaygroundChatOutputFormatter {
     static let separator = "--------------------------------------------------"
@@ -13,7 +13,7 @@ enum PlaygroundChatOutputFormatter {
     static func sessionHeader(
         title: String,
         detailLines: [String],
-        instructions: String = instructions
+        instructions: String = instructions,
     ) -> String {
         ([separator, title] + detailLines + [instructions, separator]).joined(separator: "\n")
     }

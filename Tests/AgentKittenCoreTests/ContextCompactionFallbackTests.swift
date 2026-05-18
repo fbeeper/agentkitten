@@ -1,16 +1,16 @@
 // SPDX-FileCopyrightText: 2026 AgentKitten Authors
 // SPDX-License-Identifier: Apache-2.0
 
-import Testing
 @testable import AgentKittenCore
+import Testing
 
 @Test func automaticContextCompaction_failsTurnWhenUsageUnavailableOnReusePath() async throws {
     let agent = Agent(
         providerRegistry: ProviderRegistry(default: UsageUnavailableProvider()),
         behavior: AgentBehavior(
             systemPrompt: "Test",
-            defaultAutomaticCompactionPolicy: .enabled()
-        )
+            defaultAutomaticCompactionPolicy: .enabled(),
+        ),
     )
     let session = agent.makeSession()
 
@@ -31,8 +31,8 @@ import Testing
         providerRegistry: ProviderRegistry(default: UsageUnavailableRebuildProvider()),
         behavior: AgentBehavior(
             systemPrompt: "Test",
-            defaultAutomaticCompactionPolicy: .enabled()
-        )
+            defaultAutomaticCompactionPolicy: .enabled(),
+        ),
     )
     let session = agent.makeSession()
 
@@ -41,7 +41,7 @@ import Testing
 
     let secondTurn = try await session.send(
         "second",
-        turnOverrides: TurnOverrides(toolSelection: .disabled)
+        turnOverrides: TurnOverrides(toolSelection: .disabled),
     )
     do {
         _ = try await collectEvents(from: secondTurn)
@@ -56,7 +56,7 @@ private struct UsageUnavailableProvider: InferenceProviding {
         systemPrompt: String?,
         toolRuntime: ToolRuntime,
         toolSelection: ToolSelection,
-        inferenceContext: InferenceContext
+        inferenceContext: InferenceContext,
     ) -> UsageUnavailableSession {
         UsageUnavailableSession()
     }
@@ -65,7 +65,7 @@ private struct UsageUnavailableProvider: InferenceProviding {
 private struct UsageUnavailableRebuildProvider: InferenceProviding {
     nonisolated func sessionCompatibility(
         from current: EffectiveExecutionConfiguration,
-        to next: EffectiveExecutionConfiguration
+        to next: EffectiveExecutionConfiguration,
     ) -> SessionCompatibility {
         current.toolSelection == next.toolSelection ? .reuse : .rebuildSession
     }
@@ -74,7 +74,7 @@ private struct UsageUnavailableRebuildProvider: InferenceProviding {
         systemPrompt: String?,
         toolRuntime: ToolRuntime,
         toolSelection: ToolSelection,
-        inferenceContext: InferenceContext
+        inferenceContext: InferenceContext,
     ) -> UsageUnavailableSession {
         UsageUnavailableSession()
     }
@@ -84,7 +84,7 @@ private struct UsageUnavailableRebuildProvider: InferenceProviding {
         systemPrompt: String?,
         toolRuntime: ToolRuntime,
         toolSelection: ToolSelection,
-        inferenceContext: InferenceContext
+        inferenceContext: InferenceContext,
     ) async throws -> UsageUnavailableSession {
         throw InferenceError.invalidResponse("rebuild failed")
     }
@@ -109,7 +109,7 @@ private actor UsageUnavailableSession: InferenceSession, StructuredInferenceSess
 
     func generateStream<T: Codable & Sendable & JSONSchemaProviding>(
         prompt: String,
-        parameters: InferenceRequestParameters
+        parameters: InferenceRequestParameters,
     ) async throws(StructuredGenerationError) -> StructuredInferenceStream<T> {
         throw .generationFailed(InferenceError.invalidResponse("structured generation unsupported"))
     }

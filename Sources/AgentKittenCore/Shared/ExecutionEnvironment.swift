@@ -61,7 +61,7 @@ extension ExecutionEnvironment {
         self[ToolStepBudgetKey.self] = toolBehavior.defaultStepBudget
         self[InferenceConfigurationKey.self] = behavior.phaseBehaviors.base.inferenceConfiguration
         self[ProviderKey.self] = behavior.phaseBehaviors.base.provider
-        self.customValues = behavior.phaseBehaviors.base.storedCustomValues
+        customValues = behavior.phaseBehaviors.base.storedCustomValues
     }
 
     init(turnOverrides: TurnOverrides) {
@@ -77,7 +77,7 @@ extension ExecutionEnvironment {
         if let provider = turnOverrides.provider {
             self.provider = provider
         }
-        self.customValues = turnOverrides.storedCustomValues
+        customValues = turnOverrides.storedCustomValues
     }
 
     var toolSelection: ToolSelection {

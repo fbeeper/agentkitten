@@ -1,9 +1,9 @@
 // SPDX-FileCopyrightText: 2026 AgentKitten Authors
 // SPDX-License-Identifier: Apache-2.0
 
+import AgentKittenCore
 import Foundation
 import Synchronization
-import AgentKittenCore
 
 /// Localization lookup for model-facing strings owned by AgentKittenInference.
 ///
@@ -39,7 +39,7 @@ public enum AgentKittenInferenceLocalization {
             key,
             overrideBundle: overrideBundle,
             packagedBundle: packagedBundle,
-            arguments: arguments
+            arguments: arguments,
         )
     }
 }

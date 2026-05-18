@@ -1,9 +1,9 @@
 // SPDX-FileCopyrightText: 2026 AgentKitten Authors
 // SPDX-License-Identifier: Apache-2.0
 
+@testable import AgentKittenCore
 import Foundation
 import Testing
-@testable import AgentKittenCore
 
 private struct QueuedStructuredLabel: Codable, Sendable, JSONSchemaProviding, Equatable {
     let name: String
@@ -15,7 +15,7 @@ private struct QueuedStructuredLabel: Codable, Sendable, JSONSchemaProviding, Eq
                 "name": .string(description: "The label name"),
                 "score": .number(description: "The label score"),
             ],
-            required: ["name", "score"]
+            required: ["name", "score"],
         )
     }
 }
@@ -26,7 +26,7 @@ struct AgentQueuedSessionTests {
         let provider = GateInferenceProvider()
         let agent = Agent(
             provider: provider,
-            behavior: .test()
+            behavior: .test(),
         )
         let session = agent.makeQueuedSession()
 
@@ -52,10 +52,10 @@ struct AgentQueuedSessionTests {
         _ = try await collectEvents(from: secondTurn)
 
         let firstConversationID = try #require(
-            await conversationID(for: firstTurn.id, on: session.trace)
+            await conversationID(for: firstTurn.id, on: session.trace),
         )
         let secondConversationID = try #require(
-            await conversationID(for: secondTurn.id, on: session.trace)
+            await conversationID(for: secondTurn.id, on: session.trace),
         )
 
         #expect(firstConversationID != secondConversationID)
@@ -64,9 +64,9 @@ struct AgentQueuedSessionTests {
     @Test func contextUsageAndCompaction_runInQueuedOrder() async throws {
         let agent = Agent(
             provider: MockInferenceProvider(
-                responses: ["one two three four five"]
+                responses: ["one two three four five"],
             ),
-            behavior: .test()
+            behavior: .test(),
         )
         let session = agent.makeQueuedSession()
 
@@ -74,7 +74,7 @@ struct AgentQueuedSessionTests {
         let maintenanceTask = Task {
             let usageBefore = try await session.contextUsage()
             let compaction = try await session.compactContext(
-                .truncate(.init(preservedRecentTurnCount: 0))
+                .truncate(.init(preservedRecentTurnCount: 0)),
             )
             let usageAfter = try await session.contextUsage()
             return (usageBefore, compaction, usageAfter)
@@ -92,11 +92,11 @@ struct AgentQueuedSessionTests {
 
     @Test func structuredGeneration_waitsForQueuedMaintenanceOperation() async throws {
         let provider = GateStructuredInferenceProvider(
-            structuredJSON: #"{"name":"queued","score":0.7}"#
+            structuredJSON: #"{"name":"queued","score":0.7}"#,
         )
         let agent = Agent(
             provider: provider,
-            behavior: .test()
+            behavior: .test(),
         )
         let session = agent.makeQueuedSession()
 
@@ -119,10 +119,10 @@ struct AgentQueuedSessionTests {
         let structuredResult = try await firstStructuredResult(from: structuredTurn)
 
         let firstConversationID = try #require(
-            await conversationID(for: firstTurn.id, on: session.trace)
+            await conversationID(for: firstTurn.id, on: session.trace),
         )
         let structuredConversationID = try #require(
-            await conversationID(for: structuredTurn.id, on: session.trace)
+            await conversationID(for: structuredTurn.id, on: session.trace),
         )
 
         #expect(structuredResult == QueuedStructuredLabel(name: "queued", score: 0.7))
@@ -133,7 +133,7 @@ struct AgentQueuedSessionTests {
         let provider = GateInferenceProvider()
         let agent = Agent(
             provider: provider,
-            behavior: .test()
+            behavior: .test(),
         )
         let session = agent.makeQueuedSession()
 
@@ -167,7 +167,7 @@ struct AgentQueuedSessionTests {
         let provider = GateInferenceProvider()
         let agent = Agent(
             provider: provider,
-            behavior: .test()
+            behavior: .test(),
         )
         let session = agent.makeQueuedSession()
 
@@ -183,7 +183,7 @@ struct AgentQueuedSessionTests {
             droppedTurnID = turn.id
         }
 
-        for _ in 0..<20 where droppedTurn != nil {
+        for _ in 0 ..< 20 where droppedTurn != nil {
             await Task.yield()
         }
         #expect(droppedTurn == nil)
@@ -216,11 +216,11 @@ private struct GateStructuredInferenceProvider: InferenceProviding {
         systemPrompt: String?,
         toolRuntime: ToolRuntime,
         toolSelection: ToolSelection,
-        inferenceContext: InferenceContext
+        inferenceContext: InferenceContext,
     ) -> GateStructuredInferenceSession {
         GateStructuredInferenceSession(
             state: state,
-            structuredJSON: structuredJSON
+            structuredJSON: structuredJSON,
         )
     }
 
@@ -243,7 +243,7 @@ private actor GateStructuredInferenceSession: InferenceSession, StructuredInfere
 
     init(
         state: GateInferenceState,
-        structuredJSON: String
+        structuredJSON: String,
     ) {
         self.state = state
         self.structuredJSON = structuredJSON
@@ -270,7 +270,7 @@ private actor GateStructuredInferenceSession: InferenceSession, StructuredInfere
 
     func generateStream<Result: Codable & Sendable & JSONSchemaProviding>(
         prompt: String,
-        parameters: InferenceRequestParameters
+        parameters: InferenceRequestParameters,
     ) async throws(StructuredGenerationError) -> StructuredInferenceStream<Result> {
         AsyncThrowingStream { continuation in
             let task = Task {
@@ -296,7 +296,7 @@ private actor GateStructuredInferenceSession: InferenceSession, StructuredInfere
 
 private func conversationID(
     for invocationID: InvocationID,
-    on trace: AgentTrace
+    on trace: AgentTrace,
 ) async -> String? {
     for entry in await rawTraceEntries(for: invocationID, on: trace) {
         if case .conversationResolved(let info) = entry.kind {
@@ -307,7 +307,7 @@ private func conversationID(
 }
 
 private func firstStructuredResult<Result>(
-    from turn: Turn<Result>
+    from turn: Turn<Result>,
 ) async throws -> Result {
     var result: Result?
     for try await event in turn.events {
@@ -320,9 +320,9 @@ private func firstStructuredResult<Result>(
 
 func eventually(
     maxAttempts: Int = 100,
-    operation: @escaping @Sendable () async -> Bool
+    operation: @escaping @Sendable () async -> Bool,
 ) async -> Bool {
-    for _ in 0..<maxAttempts {
+    for _ in 0 ..< maxAttempts {
         if await operation() {
             return true
         }
@@ -332,7 +332,7 @@ func eventually(
 }
 
 private func compactedResult(
-    from result: ContextCompactionResult
+    from result: ContextCompactionResult,
 ) -> ContextCompactionResult.Compacted? {
     guard case .compacted(let compacted) = result else {
         return nil

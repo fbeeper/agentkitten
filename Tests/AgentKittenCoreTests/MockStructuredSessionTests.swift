@@ -1,8 +1,8 @@
 // SPDX-FileCopyrightText: 2026 AgentKitten Authors
 // SPDX-License-Identifier: Apache-2.0
 
-import Testing
 @testable import AgentKittenCore
+import Testing
 
 private struct Label: Codable, Sendable, JSONSchemaProviding, Equatable {
     let name: String
@@ -14,14 +14,13 @@ private struct Label: Codable, Sendable, JSONSchemaProviding, Equatable {
                 "name": .string(description: "The label name"),
                 "score": .number(description: "Confidence score"),
             ],
-            required: ["name", "score"]
+            required: ["name", "score"],
         )
     }
 }
 
 @Suite("Mock Structured Generation")
 struct MockStructuredSessionTests {
-
     // MARK: No responses configured
 
     @Test func generate_throwsGenerationFailedWhenNoResponses() async {
@@ -41,7 +40,7 @@ struct MockStructuredSessionTests {
     @Test func generate_decodesValidJSON() async throws {
         let session = MockInferenceSession(
             responses: [],
-            structuredResponses: [#"{"name":"urgent","score":0.95}"#]
+            structuredResponses: [#"{"name":"urgent","score":0.95}"#],
         )
         let result: Label = try await session.generate(prompt: "test", parameters: InferenceRequestParameters())
         #expect(result.name == "urgent")
@@ -54,7 +53,7 @@ struct MockStructuredSessionTests {
             structuredResponses: [
                 #"{"name":"first","score":0.1}"#,
                 #"{"name":"second","score":0.2}"#,
-            ]
+            ],
         )
 
         let first: Label = try await session.generate(prompt: "test", parameters: InferenceRequestParameters())
@@ -63,13 +62,13 @@ struct MockStructuredSessionTests {
 
         #expect(first.name == "first")
         #expect(second.name == "second")
-        #expect(third.name == "first")  // wraps around
+        #expect(third.name == "first") // wraps around
     }
 
     @Test func generate_decodesTopLevelArrayJSON() async throws {
         let session = MockInferenceSession(
             responses: [],
-            structuredResponses: [#"[{"name":"urgent","score":0.95},{"name":"park","score":0.8}]"#]
+            structuredResponses: [#"[{"name":"urgent","score":0.95},{"name":"park","score":0.8}]"#],
         )
         let result: [Label] = try await session.generate(prompt: "test", parameters: InferenceRequestParameters())
         #expect(result == [
@@ -83,7 +82,7 @@ struct MockStructuredSessionTests {
     @Test func generate_throwsDecodingFailedForInvalidJSON() async {
         let session = MockInferenceSession(
             responses: [],
-            structuredResponses: ["not json"]
+            structuredResponses: ["not json"],
         )
         do {
             let _: Label = try await session.generate(prompt: "test", parameters: InferenceRequestParameters())
@@ -99,13 +98,13 @@ struct MockStructuredSessionTests {
 
     @Test func provider_passesStructuredResponsesToSession() async throws {
         let provider = MockInferenceProvider(
-            structuredResponses: [#"{"name":"positive","score":0.8}"#]
+            structuredResponses: [#"{"name":"positive","score":0.8}"#],
         )
         let session = provider.makeSession(
             systemPrompt: nil,
             toolRuntime: testToolRuntime(),
             toolSelection: .all,
-            inferenceContext: .empty
+            inferenceContext: .empty,
         )
         let result: Label = try await session.generate(prompt: "test", parameters: InferenceRequestParameters())
         #expect(result.name == "positive")
@@ -117,7 +116,7 @@ struct MockStructuredSessionTests {
             systemPrompt: nil,
             toolRuntime: testToolRuntime(),
             toolSelection: .all,
-            inferenceContext: .empty
+            inferenceContext: .empty,
         )
         do {
             let _: Label = try await session.generate(prompt: "test", parameters: InferenceRequestParameters())

@@ -21,7 +21,7 @@ public actor AgentTrace {
 
         fileprivate init(
             date: Date = Date(),
-            instant: ContinuousClock.Instant = ContinuousClock().now
+            instant: ContinuousClock.Instant = ContinuousClock().now,
         ) {
             self.date = date
             self.instant = instant
@@ -32,7 +32,7 @@ public actor AgentTrace {
         case appendEntry(AgentTraceEntry)
         case registerObserver(
             id: UUID,
-            continuation: AsyncStream<AgentTraceEntry>.Continuation
+            continuation: AsyncStream<AgentTraceEntry>.Continuation,
         )
         case removeObserver(id: UUID)
         case snapshot(CheckedContinuation<[AgentTraceEntry], Never>)
@@ -60,17 +60,17 @@ public actor AgentTrace {
     /// - Parameter retentionPolicy: In-memory retention policy for `entries`.
     public init(retentionPolicy: TraceRetentionPolicy = .maxTurns(150)) {
         self.retentionPolicy = retentionPolicy
-        self.timestampAnchor = TimestampAnchor()
+        timestampAnchor = TimestampAnchor()
         let commandStream: AsyncStream<Command>
         (commandStream, commandContinuation) = AsyncStream.makeStream(
-            bufferingPolicy: .unbounded
+            bufferingPolicy: .unbounded,
         )
         Task { [weak self] in
             for await command in commandStream {
                 guard let self else {
                     break
                 }
-                await self.apply(command)
+                await apply(command)
             }
         }
     }
@@ -91,7 +91,7 @@ public actor AgentTrace {
         return AsyncStream(bufferingPolicy: .unbounded) { continuation in
             commandContinuation.yield(.registerObserver(
                 id: id,
-                continuation: continuation
+                continuation: continuation,
             ))
             continuation.onTermination = { [commandContinuation] _ in
                 commandContinuation.yield(.removeObserver(id: id))
@@ -114,12 +114,12 @@ public actor AgentTrace {
 
     nonisolated func append(
         kind: AgentTraceEntry.Kind,
-        invocationID: InvocationID
+        invocationID: InvocationID,
     ) {
         commandContinuation.yield(.appendEntry(AgentTraceEntry(
             kind: kind,
             timestamp: AgentTraceEntry.Timestamp(),
-            invocationID: invocationID
+            invocationID: invocationID,
         )))
     }
 

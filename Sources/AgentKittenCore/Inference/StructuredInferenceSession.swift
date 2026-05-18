@@ -33,7 +33,7 @@ public protocol StructuredInferenceSession: Actor {
     ///   ``StructuredGenerationError`` for structured-output-specific failures.
     func generateStream<T: Codable & Sendable & JSONSchemaProviding>(
         prompt: String,
-        parameters: InferenceRequestParameters
+        parameters: InferenceRequestParameters,
     ) async throws
         -> StructuredInferenceStream<T>
 
@@ -50,14 +50,14 @@ public protocol StructuredInferenceSession: Actor {
     ///   ``StructuredGenerationError`` for structured-output-specific failures.
     func generate<T: Codable & Sendable & JSONSchemaProviding>(
         prompt: String,
-        parameters: InferenceRequestParameters
+        parameters: InferenceRequestParameters,
     ) async throws -> T
 }
 
 extension StructuredInferenceSession {
     public func generate<T: Codable & Sendable & JSONSchemaProviding>(
         prompt: String,
-        parameters: InferenceRequestParameters
+        parameters: InferenceRequestParameters,
     ) async throws -> T {
         let stream: StructuredInferenceStream<T> = try await generateStream(prompt: prompt, parameters: parameters)
         for try await event in stream {
@@ -66,7 +66,7 @@ extension StructuredInferenceSession {
             }
         }
         throw StructuredGenerationError.generationFailed(
-            StructuredGenerationStreamError.missingResult
+            StructuredGenerationStreamError.missingResult,
         )
     }
 }

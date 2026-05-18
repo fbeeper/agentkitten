@@ -25,14 +25,14 @@ struct AgentSessionRuntime {
         sessionID: AgentSessionID,
         trace: AgentTrace,
         approvalGate: ToolApprovalGate,
-        state: AgentSession.SessionStateAccess
+        state: AgentSession.SessionStateAccess,
     ) {
         self.trace = trace
         self.approvalGate = approvalGate
         self.state = state
-        self.eventConsumer = ConversationEventConsumer(
+        eventConsumer = ConversationEventConsumer(
             agentID: agentID,
-            sessionID: sessionID
+            sessionID: sessionID,
         )
     }
 
@@ -40,29 +40,29 @@ struct AgentSessionRuntime {
         userMessage: UserMessage,
         turnRuntime: TurnRuntime<AssistantMessage>,
         validation: ValidationConfiguration<AssistantMessage>,
-        conversation: AnyConversation
+        conversation: AnyConversation,
     ) async throws {
         let executionConfiguration = EffectiveExecutionConfiguration(
-            environment: turnRuntime.executionEnvironment
+            environment: turnRuntime.executionEnvironment,
         )
         let context = TurnRuntimeContext(
             turnRuntime: turnRuntime,
             traceSink: makeTurnTraceSink(invocationID: turnRuntime.id),
             toolExecutionContext: makeToolExecutionContext(environment: turnRuntime.executionEnvironment),
-            conversation: conversation
+            conversation: conversation,
         )
         if validation.isEnabled {
             try await executeValidated(
                 userMessage: userMessage,
                 executionConfiguration: executionConfiguration,
                 validation: validation,
-                context: context
+                context: context,
             )
         } else {
             try await executeDirect(
                 userMessage: userMessage,
                 executionConfiguration: executionConfiguration,
-                context: context
+                context: context,
             )
         }
     }
@@ -71,29 +71,29 @@ struct AgentSessionRuntime {
         userMessage: UserMessage,
         turnRuntime: TurnRuntime<Result>,
         validation: ValidationConfiguration<Result>,
-        conversation: AnyConversation
+        conversation: AnyConversation,
     ) async throws {
         let executionConfiguration = EffectiveExecutionConfiguration(
-            environment: turnRuntime.executionEnvironment
+            environment: turnRuntime.executionEnvironment,
         )
         let context = TurnRuntimeContext(
             turnRuntime: turnRuntime,
             traceSink: makeTurnTraceSink(invocationID: turnRuntime.id),
             toolExecutionContext: makeToolExecutionContext(environment: turnRuntime.executionEnvironment),
-            conversation: conversation
+            conversation: conversation,
         )
         if validation.isEnabled {
             try await executeStructuredValidated(
                 userMessage: userMessage,
                 executionConfiguration: executionConfiguration,
                 validation: validation,
-                context: context
+                context: context,
             )
         } else {
             try await executeStructuredDirect(
                 userMessage: userMessage,
                 executionConfiguration: executionConfiguration,
-                context: context
+                context: context,
             )
         }
     }
@@ -103,18 +103,18 @@ extension AgentSessionRuntime {
     private func executeDirect(
         userMessage: UserMessage,
         executionConfiguration: EffectiveExecutionConfiguration,
-        context: TurnRuntimeContext<AssistantMessage>
+        context: TurnRuntimeContext<AssistantMessage>,
     ) async throws {
         let stream = try await context.conversation.send(
             userMessage: userMessage,
             executionConfiguration: executionConfiguration,
-            toolExecutionContext: context.toolExecutionContext
+            toolExecutionContext: context.toolExecutionContext,
         )
         _ = try await eventConsumer.consume(
             stream,
             turnRuntime: context.turnRuntime,
             traceSink: context.traceSink,
-            output: .emit
+            output: .emit,
         ) as AssistantMessage
     }
 
@@ -122,49 +122,49 @@ extension AgentSessionRuntime {
         userMessage: UserMessage,
         executionConfiguration: EffectiveExecutionConfiguration,
         validation: ValidationConfiguration<AssistantMessage>,
-        context: TurnRuntimeContext<AssistantMessage>
+        context: TurnRuntimeContext<AssistantMessage>,
     ) async throws {
         let generationStep: TurnValidator<AssistantMessage>.GenerationStep = { [eventConsumer] attemptMessage in
             let stream = try await context.conversation.send(
                 userMessage: attemptMessage,
                 executionConfiguration: executionConfiguration,
-                toolExecutionContext: context.toolExecutionContext
+                toolExecutionContext: context.toolExecutionContext,
             )
             return try await eventConsumer.consume(
                 stream,
                 turnRuntime: context.turnRuntime,
                 traceSink: context.traceSink,
-                output: .emitTools
+                output: .emitTools,
             ) as AssistantMessage
         }
         try await TurnValidator<AssistantMessage>(
             configuration: validation,
             sessionState: state,
-            consumer: eventConsumer
+            consumer: eventConsumer,
         ).run(
             generationStep: generationStep,
             userMessage: userMessage,
-            context: context
+            context: context,
         )
     }
 
     private func executeStructuredDirect<Result: Codable & Sendable & JSONSchemaProviding>(
         userMessage: UserMessage,
         executionConfiguration: EffectiveExecutionConfiguration,
-        context: TurnRuntimeContext<Result>
+        context: TurnRuntimeContext<Result>,
     ) async throws {
         let stream: AsyncThrowingStream<ConversationEvent<Result>, Error> =
             try await context.conversation.generate(
                 userMessage: userMessage,
                 executionConfiguration: executionConfiguration,
-                toolExecutionContext: context.toolExecutionContext
+                toolExecutionContext: context.toolExecutionContext,
             )
         // The final typed result is emitted into the turn stream by the consumer.
         _ = try await eventConsumer.consume(
             stream,
             turnRuntime: context.turnRuntime,
             traceSink: context.traceSink,
-            output: .emit
+            output: .emit,
         ) as Result
     }
 
@@ -172,42 +172,42 @@ extension AgentSessionRuntime {
         userMessage: UserMessage,
         executionConfiguration: EffectiveExecutionConfiguration,
         validation: ValidationConfiguration<Result>,
-        context: TurnRuntimeContext<Result>
+        context: TurnRuntimeContext<Result>,
     ) async throws {
         let generationStep: TurnValidator<Result>.GenerationStep = { [eventConsumer] attemptMessage in
             let stream: AsyncThrowingStream<ConversationEvent<Result>, Error> =
                 try await context.conversation.generate(
                     userMessage: attemptMessage,
                     executionConfiguration: executionConfiguration,
-                    toolExecutionContext: context.toolExecutionContext
+                    toolExecutionContext: context.toolExecutionContext,
                 )
             return try await eventConsumer.consume(
                 stream,
                 turnRuntime: context.turnRuntime,
                 traceSink: context.traceSink,
-                output: .emitTools
+                output: .emitTools,
             ) as Result
         }
         try await TurnValidator<Result>(
             configuration: validation,
             sessionState: state,
-            consumer: eventConsumer
+            consumer: eventConsumer,
         ).run(
             generationStep: generationStep,
             userMessage: userMessage,
-            context: context
+            context: context,
         )
     }
 }
 
 extension AgentSessionRuntime {
     private func makeTurnTraceSink(
-        invocationID: InvocationID
+        invocationID: InvocationID,
     ) -> TurnTraceSink {
         TurnTraceSink(
             trace: trace,
             approvalGate: approvalGate,
-            invocationID: invocationID
+            invocationID: invocationID,
         )
     }
 

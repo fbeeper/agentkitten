@@ -15,7 +15,7 @@ public actor ToolApprovalGate {
         func updating(approval: PendingApproval) -> Self {
             Self(
                 approval: approval,
-                traceContext: traceContext
+                traceContext: traceContext,
             )
         }
     }
@@ -30,20 +30,20 @@ public actor ToolApprovalGate {
 
     /// Creates a gate that tracks pending approvals until the caller resolves them.
     public init() {
-        self.pending = [:]
+        pending = [:]
     }
 
     /// Marks the tool call as pending before the approval-required event is emitted.
     public func register(
         callID: ToolCallID,
-        traceContext: CustomContextSnapshot? = nil
+        traceContext: CustomContextSnapshot? = nil,
     ) throws {
         guard pending[callID] == nil else {
             throw ToolApprovalResolutionError.duplicatePendingApproval(callID: callID)
         }
         pending[callID] = PendingState(
             approval: .pending,
-            traceContext: traceContext
+            traceContext: traceContext,
         )
     }
 
@@ -83,12 +83,12 @@ public actor ToolApprovalGate {
         switch current.approval {
         case .pending:
             pending[callID] = current.updating(
-                approval: .resolved(.denied(reason: ToolApprovalDecision.cancelledReason))
+                approval: .resolved(.denied(reason: ToolApprovalDecision.cancelledReason)),
             )
         case .waiting(let continuation):
             pending.removeValue(forKey: callID)
             continuation.resume(
-                returning: .denied(reason: ToolApprovalDecision.cancelledReason)
+                returning: .denied(reason: ToolApprovalDecision.cancelledReason),
             )
         case .resolved:
             return
@@ -101,7 +101,7 @@ public actor ToolApprovalGate {
 
     private func resolve(
         callID: ToolCallID,
-        as resolution: ToolApprovalDecision
+        as resolution: ToolApprovalDecision,
     ) throws {
         guard let current = pending[callID] else {
             throw ToolApprovalResolutionError.noPendingApproval(callID: callID)

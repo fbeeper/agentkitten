@@ -24,9 +24,9 @@ public struct ToolRuntime: Sendable {
         executionPolicy: some ToolExecutionPolicy,
         hooks: [AnyToolHook],
         approvalGate: ToolApprovalGate = ToolApprovalGate(),
-        rationaleSchemaDescription: String = ToolRationale.schemaDescription
+        rationaleSchemaDescription: String = ToolRationale.schemaDescription,
     ) {
-        self.toolRegistry = executor.registry
+        toolRegistry = executor.registry
         self.executor = executor
         self.executionPolicy = AnyToolExecutionPolicy(executionPolicy)
         self.hooks = hooks
@@ -45,14 +45,14 @@ public struct ToolRuntime: Sendable {
     public init(
         configuration: ToolDefinition,
         rationaleSchemaDescription: String = ToolRationale.schemaDescription,
-        approvalGate: ToolApprovalGate = ToolApprovalGate()
+        approvalGate: ToolApprovalGate = ToolApprovalGate(),
     ) {
         self.init(
             executor: ToolExecutor(registry: configuration.registry),
             executionPolicy: configuration.executionPolicy,
             hooks: configuration.hooks,
             approvalGate: approvalGate,
-            rationaleSchemaDescription: rationaleSchemaDescription
+            rationaleSchemaDescription: rationaleSchemaDescription,
         )
     }
 
@@ -70,7 +70,7 @@ public struct ToolRuntime: Sendable {
     public func makeTurnRuntime(
         toolStepBudget: ToolStepBudget,
         context: ToolExecutionContext = .empty,
-        toolSelection: ToolSelection = .all
+        toolSelection: ToolSelection = .all,
     ) -> ToolTurnRuntime {
         ToolTurnRuntime(
             executor: executor,
@@ -79,7 +79,7 @@ public struct ToolRuntime: Sendable {
             approvalGate: approvalGate,
             toolStepBudget: toolStepBudget,
             context: context,
-            toolSelection: toolSelection
+            toolSelection: toolSelection,
         )
     }
 }
@@ -105,7 +105,7 @@ public actor ToolTurnRuntime {
         approvalGate: ToolApprovalGate,
         toolStepBudget: ToolStepBudget,
         context: ToolExecutionContext,
-        toolSelection: ToolSelection
+        toolSelection: ToolSelection,
     ) {
         self.executor = executor
         self.executionPolicy = executionPolicy
@@ -120,7 +120,7 @@ public actor ToolTurnRuntime {
     public func invoke(
         _ call: PendingToolCall,
         onApprovalRequired: @escaping @Sendable (PendingToolCall) async -> Void,
-        onHookFired: @escaping @Sendable (ToolHookInvocationInfo) async -> Void = { _ in }
+        onHookFired: @escaping @Sendable (ToolHookInvocationInfo) async -> Void = { _ in },
     ) async -> ToolCallOutcome {
         do {
             guard toolSelection.allows(toolName: call.name) else {
@@ -131,7 +131,7 @@ public actor ToolTurnRuntime {
             }
             let decision = try await resolveExecutionDecision(
                 for: call,
-                onApprovalRequired: onApprovalRequired
+                onApprovalRequired: onApprovalRequired,
             )
             if case .deny(let reason) = decision {
                 return .failure(.denied(reason: reason))
@@ -143,7 +143,7 @@ public actor ToolTurnRuntime {
             return await runAfterHooks(
                 for: preparedCall,
                 outcome: .success(content: content),
-                onHookFired: onHookFired
+                onHookFired: onHookFired,
             )
         } catch {
             return .failure(.execution(message: String(describing: error)))
@@ -152,7 +152,7 @@ public actor ToolTurnRuntime {
 
     private func runBeforeHooks(
         for call: PendingToolCall,
-        onHookFired: @escaping @Sendable (ToolHookInvocationInfo) async -> Void
+        onHookFired: @escaping @Sendable (ToolHookInvocationInfo) async -> Void,
     ) async throws -> PendingToolCall {
         var current = call
         for hook in hooks where hook.phases.contains(.before) {
@@ -172,7 +172,7 @@ public actor ToolTurnRuntime {
     private func runAfterHooks(
         for call: PendingToolCall,
         outcome: ToolCallOutcome,
-        onHookFired: @escaping @Sendable (ToolHookInvocationInfo) async -> Void
+        onHookFired: @escaping @Sendable (ToolHookInvocationInfo) async -> Void,
     ) async -> ToolCallOutcome {
         var current = outcome
         for hook in hooks where hook.phases.contains(.after) {
@@ -203,11 +203,11 @@ public actor ToolTurnRuntime {
     private var hasRemainingStepCapacity: Bool {
         switch toolStepBudget {
         case .disabled:
-            return false
+            false
         case .budget(let remainingSteps):
-            return remainingSteps > 0
+            remainingSteps > 0
         case .unbounded:
-            return true
+            true
         }
     }
 
@@ -224,7 +224,7 @@ public actor ToolTurnRuntime {
 
     private func resolveExecutionDecision(
         for call: PendingToolCall,
-        onApprovalRequired: @escaping @Sendable (PendingToolCall) async -> Void
+        onApprovalRequired: @escaping @Sendable (PendingToolCall) async -> Void,
     ) async throws -> ToolExecutionDecision {
         let decision = await executionPolicy.resolve(call: call, context: context)
         guard case .requiresApproval = decision else {
@@ -233,7 +233,7 @@ public actor ToolTurnRuntime {
 
         try await approvalGate.register(
             callID: call.id,
-            traceContext: context.traceSnapshot
+            traceContext: context.traceSnapshot,
         )
         await onApprovalRequired(call)
 
@@ -252,7 +252,7 @@ public actor ToolTurnRuntime {
                 Task {
                     await self.approvalGate.cancel(callID: call.id)
                 }
-            }
+            },
         )
     }
 }

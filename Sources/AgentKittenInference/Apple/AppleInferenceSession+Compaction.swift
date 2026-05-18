@@ -15,26 +15,25 @@ extension AppleInferenceSession: ContextCompactableSession {
 
     public func applyCompaction(
         summary: String?,
-        preservedRecentTurnCount: Int
+        preservedRecentTurnCount: Int,
     ) async throws -> ContextCompactionResult {
         let usageBefore = try await Self.contextUsage(
             for: Array(languageSession.transcript),
-            model: model
+            model: model,
         )
         let plan = AppleTranscriptCompactionPlan(
             transcript: languageSession.transcript,
-            preservedRecentTurnCount: preservedRecentTurnCount
+            preservedRecentTurnCount: preservedRecentTurnCount,
         )
-        let entries: [FoundationModels.Transcript.Entry]
-        if let summary {
-            entries = Self.summaryEntries(summary) + plan.recentEntries
+        let entries: [FoundationModels.Transcript.Entry] = if let summary {
+            Self.summaryEntries(summary) + plan.recentEntries
         } else {
-            entries = plan.recentEntries
+            plan.recentEntries
         }
         replaceTranscript(FoundationModels.Transcript(entries: entries))
         let usageAfter = (try? await Self.contextUsage(
             for: Array(languageSession.transcript),
-            model: model
+            model: model,
         )) ?? usageBefore
         return .compacted(.init(usageBefore: usageBefore, usageAfter: usageAfter))
     }
@@ -103,11 +102,11 @@ extension AppleInferenceSession {
 
     static func contextUsage(
         for entries: [FoundationModels.Transcript.Entry],
-        model: SystemLanguageModel
+        model: SystemLanguageModel,
     ) async throws -> ContextUsage {
         guard #available(macOS 26.4, iOS 26.4, visionOS 26.4, macCatalyst 26.4, *) else {
             throw InferenceError.unsupportedConfiguration(
-                "Apple context usage requires FoundationModels token counting on OS 26.4 or newer."
+                "Apple context usage requires FoundationModels token counting on OS 26.4 or newer.",
             )
         }
         // FoundationModels.SystemLanguageModel.contextSize ships in the
@@ -116,11 +115,11 @@ extension AppleInferenceSession {
         #if compiler(>=6.3)
         return ContextUsage(
             contextTokens: try await model.tokenCount(for: entries),
-            contextSize: model.contextSize
+            contextSize: model.contextSize,
         )
         #else
         throw InferenceError.unsupportedConfiguration(
-            "Apple context usage requires the Xcode 26.4 SDK (Swift 6.3) or newer."
+            "Apple context usage requires the Xcode 26.4 SDK (Swift 6.3) or newer.",
         )
         #endif
     }

@@ -42,7 +42,7 @@ public struct Agent: Sendable {
         toolBehavior: ToolBehavior = .init(),
         owner: UserID = .local,
         sessionState: SessionStateMode = .disabled,
-        traceRetentionPolicy: TraceRetentionPolicy = .maxTurns(150)
+        traceRetentionPolicy: TraceRetentionPolicy = .maxTurns(150),
     ) {
         switch sessionState {
         case .disabled:
@@ -57,7 +57,7 @@ public struct Agent: Sendable {
             for tool in toolDefinition.registry.all {
                 precondition(
                     !reservedNames.contains(tool.name),
-                    "Tool name '\(tool.name)' is reserved by AgentKitten session-state tooling."
+                    "Tool name '\(tool.name)' is reserved by AgentKitten session-state tooling.",
                 )
             }
         }
@@ -97,7 +97,7 @@ public struct Agent: Sendable {
         toolBehavior: ToolBehavior = .init(),
         owner: UserID = .local,
         sessionState: SessionStateMode = .disabled,
-        traceRetentionPolicy: TraceRetentionPolicy = .maxTurns(150)
+        traceRetentionPolicy: TraceRetentionPolicy = .maxTurns(150),
     ) {
         self.init(
             agentId: agentId,
@@ -107,7 +107,7 @@ public struct Agent: Sendable {
             toolBehavior: toolBehavior,
             owner: owner,
             sessionState: sessionState,
-            traceRetentionPolicy: traceRetentionPolicy
+            traceRetentionPolicy: traceRetentionPolicy,
         )
     }
 
@@ -147,13 +147,13 @@ public struct Agent: Sendable {
         case .readOnly:
             AgentSession.SessionStateAccess.readOnly(SessionState(
                 trace: trace,
-                access: .readOnly
+                access: .readOnly,
             ))
         case .enabled:
             AgentSession.SessionStateAccess.enabled(SessionState(trace: trace))
         }
         let sessionToolDefinition = makeSessionToolDefinition(
-            stateAccess: stateAccess
+            stateAccess: stateAccess,
         )
         let conversationFactory = ConversationAssembler(
             phaseBehaviors: behavior.phaseBehaviors,
@@ -161,7 +161,7 @@ public struct Agent: Sendable {
             baseSystemPrompt: makeSessionSystemPrompt(registry: sessionToolDefinition.registry),
             toolDefinition: sessionToolDefinition,
             rationaleSchemaDescription: toolBehavior.rationaleGuidance.schemaDescription,
-            toolApprovalGate: approvalGate
+            toolApprovalGate: approvalGate,
         )
         return AgentSession(
             sessionID: .generate(),
@@ -172,7 +172,7 @@ public struct Agent: Sendable {
             approvalGate: approvalGate,
             behavior: behavior,
             toolBehavior: toolBehavior,
-            conversationFactory: conversationFactory
+            conversationFactory: conversationFactory,
         )
     }
 
@@ -205,7 +205,7 @@ public struct Agent: Sendable {
     }
 
     private func makeSessionToolDefinition(
-        stateAccess: AgentSession.SessionStateAccess
+        stateAccess: AgentSession.SessionStateAccess,
     ) -> ToolDefinition {
         let sessionToolRegistry = switch stateAccess {
         case .disabled:
@@ -226,7 +226,7 @@ public struct Agent: Sendable {
         }
         if !registry.all.isEmpty {
             let guidance = toolBehavior.guidance.prompt.trimmingCharacters(
-                in: .whitespacesAndNewlines
+                in: .whitespacesAndNewlines,
             )
             if !guidance.isEmpty {
                 sections.append(guidance)
@@ -237,7 +237,7 @@ public struct Agent: Sendable {
             break
         case .readOnly(let configuration):
             let guidance = configuration.promptGuidance.trimmingCharacters(
-                in: .whitespacesAndNewlines
+                in: .whitespacesAndNewlines,
             )
             if !guidance.isEmpty {
                 sections.append(guidance)
@@ -245,7 +245,7 @@ public struct Agent: Sendable {
             sections.append(SessionStateConfiguration.readOnlyPromptGuidance)
         case .enabled(let configuration):
             let guidance = configuration.promptGuidance.trimmingCharacters(
-                in: .whitespacesAndNewlines
+                in: .whitespacesAndNewlines,
             )
             if !guidance.isEmpty {
                 sections.append(guidance)

@@ -25,7 +25,7 @@ public struct InferenceRequestParameters: Sendable {
         toolStepBudget: ToolStepBudget = .budget(20),
         toolSelection: ToolSelection = .all,
         toolExecutionContext: ToolExecutionContext = .empty,
-        inferenceContext: InferenceContext = .empty
+        inferenceContext: InferenceContext = .empty,
     ) {
         self.configuration = configuration
         self.toolStepBudget = toolStepBudget

@@ -17,7 +17,7 @@ public struct ToolCapabilities: Sendable {
     public init(
         filesystemPaths: [String] = [],
         network: Bool = false,
-        toolResultContentKinds: Set<ToolResultContentKind> = [.text]
+        toolResultContentKinds: Set<ToolResultContentKind> = [.text],
     ) {
         self.filesystemPaths = filesystemPaths
         self.network = network

@@ -11,7 +11,7 @@ struct AppleTranscriptCompactionPlan {
 
     init(
         transcript: FoundationModels.Transcript,
-        preservedRecentTurnCount: Int
+        preservedRecentTurnCount: Int,
     ) {
         let entries = Array(transcript)
         let nonInstructions = entries.filter { entry in
@@ -22,7 +22,7 @@ struct AppleTranscriptCompactionPlan {
         }
         let recentStart = Self.recentStartIndex(
             in: nonInstructions,
-            preservedRecentTurnCount: max(0, preservedRecentTurnCount)
+            preservedRecentTurnCount: max(0, preservedRecentTurnCount),
         )
         let oldEntries = Array(nonInstructions[..<recentStart])
         recentEntries = Array(nonInstructions[recentStart...])
@@ -31,7 +31,7 @@ struct AppleTranscriptCompactionPlan {
 
     private static func recentStartIndex(
         in entries: [FoundationModels.Transcript.Entry],
-        preservedRecentTurnCount: Int
+        preservedRecentTurnCount: Int,
     ) -> Int {
         guard preservedRecentTurnCount > 0 else {
             return entries.endIndex

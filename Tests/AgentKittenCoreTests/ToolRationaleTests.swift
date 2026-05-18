@@ -1,13 +1,12 @@
 // SPDX-FileCopyrightText: 2026 AgentKitten Authors
 // SPDX-License-Identifier: Apache-2.0
 
+@testable import AgentKittenCore
 import Foundation
 import Testing
-@testable import AgentKittenCore
 
 @Suite("ToolRationale")
 struct ToolRationaleTests {
-
     // MARK: - extracting(from:)
 
     @Test func extracting_returnsRationaleAndStripsKey() {
@@ -53,7 +52,7 @@ struct ToolRationaleTests {
     @Test func usesReservedKey_trueWhenKeyPresent() {
         let schema = ToolSchema(parameters: .object(
             properties: [ToolRationale.schemaKey: .string(description: nil)],
-            required: []
+            required: [],
         ))
         #expect(schema.usesReservedKey)
     }
@@ -61,7 +60,7 @@ struct ToolRationaleTests {
     @Test func usesReservedKey_falseWhenKeyAbsent() {
         let schema = ToolSchema(parameters: .object(
             properties: ["city": .string(description: nil)],
-            required: ["city"]
+            required: ["city"],
         ))
         #expect(!schema.usesReservedKey)
     }
@@ -78,7 +77,7 @@ struct ToolRationaleTests {
             id: "call-1",
             name: "get_time",
             argumentsJSON: #"{"tz":"UTC"}"#,
-            modelRationale: "Get the current time"
+            modelRationale: "Get the current time",
         )
         let data = try JSONEncoder().encode(original)
         let decoded = try JSONDecoder().decode(PendingToolCall.self, from: data)
@@ -90,7 +89,7 @@ struct ToolRationaleTests {
         let legacy = #"{"id":"call-1","name":"get_time","argumentsJSON":"{\"tz\":\"UTC\"}"}"#
         let decoded = try JSONDecoder().decode(
             PendingToolCall.self,
-            from: Data(legacy.utf8)
+            from: Data(legacy.utf8),
         )
 
         #expect(decoded.id == "call-1")

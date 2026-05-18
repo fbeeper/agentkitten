@@ -71,6 +71,7 @@ struct AnthropicMessage: Encodable {
         case user
         case assistant
     }
+
     let role: Role
     let content: [AnthropicContent]
 }
@@ -148,7 +149,7 @@ private enum AnthropicToolResultBlock: Encodable {
             try container.encode("image", forKey: .type)
             try container.encode(
                 ImageSource(mediaType: mediaType, data: data.base64EncodedString()),
-                forKey: .source
+                forKey: .source,
             )
         }
     }
@@ -250,10 +251,21 @@ indirect enum AnthropicJSONValue: Encodable, Equatable {
 
     private struct StringKey: CodingKey {
         var stringValue: String
-        var intValue: Int? { nil }
-        init(_ string: String) { stringValue = string }
-        init?(stringValue: String) { self.stringValue = stringValue }
-        init?(intValue: Int) { return nil }
+        var intValue: Int? {
+            nil
+        }
+
+        init(_ string: String) {
+            stringValue = string
+        }
+
+        init?(stringValue: String) {
+            self.stringValue = stringValue
+        }
+
+        init?(intValue: Int) {
+            nil
+        }
     }
 }
 

@@ -8,7 +8,14 @@ import Foundation
 struct Playground: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
         abstract: "AgentKitten development playground.",
-        subcommands: [Generate.self, Chat.self, Tools.self, Classify.self, Chicken.self, PII.self, PlanMode.self]
+        subcommands: [
+            Generate.self,
+            Chat.self, Tools.self,
+            Classify.self,
+            Chicken.self,
+            PII.self,
+            PlanMode.self,
+        ],
     )
 }
 
@@ -17,4 +24,5 @@ Task {
     await Playground.main()
     exit(0)
 }
+
 RunLoop.main.run()

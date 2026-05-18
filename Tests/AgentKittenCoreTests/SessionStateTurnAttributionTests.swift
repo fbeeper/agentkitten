@@ -1,26 +1,26 @@
 // SPDX-FileCopyrightText: 2026 AgentKitten Authors
 // SPDX-License-Identifier: Apache-2.0
 
-import Testing
 @testable import AgentKittenCore
+import Testing
 
 @Test func stateMutationsStayAttributedToTheirOwnTurnsAcrossBackToBackTurns() async throws {
     let provider = ScriptedInferenceProvider(responses: [
         .toolCall(
             name: "set_state",
             argumentsJSON: #"{"key":"topic","value":"Swift"}"#,
-            thenRespond: "Saved Swift."
+            thenRespond: "Saved Swift.",
         ),
         .toolCall(
             name: "set_state",
             argumentsJSON: #"{"key":"tone","value":"Direct"}"#,
-            thenRespond: "Saved Direct."
+            thenRespond: "Saved Direct.",
         ),
     ])
     let agent = Agent(
         providerRegistry: ProviderRegistry(default: provider),
         behavior: .test(),
-        sessionState: .enabledWithDefaultGuidance
+        sessionState: .enabledWithDefaultGuidance,
     )
     let session = agent.makeSession()
 

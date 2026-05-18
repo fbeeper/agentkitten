@@ -29,11 +29,11 @@ public enum ToolCallFailure: Sendable, Equatable, Codable {
     public var resultJSON: String {
         switch self {
         case .execution(let message):
-            return Self.errorJSON(message)
+            Self.errorJSON(message)
         case .stepLimitExceeded:
-            return Self.errorJSON(AgentKittenLocalization.string("tools.stepLimitExceededError"))
+            Self.errorJSON(AgentKittenLocalization.string("tools.stepLimitExceededError"))
         case .denied(let reason):
-            return Self.errorJSON(reason)
+            Self.errorJSON(reason)
         }
     }
 

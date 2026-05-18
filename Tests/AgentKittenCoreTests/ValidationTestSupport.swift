@@ -1,9 +1,9 @@
 // SPDX-FileCopyrightText: 2026 AgentKitten Authors
 // SPDX-License-Identifier: Apache-2.0
 
+@testable import AgentKittenCore
 import Foundation
 import Testing
-@testable import AgentKittenCore
 
 struct MinimumLengthValidator: Validator {
     typealias Result = AssistantMessage
@@ -45,7 +45,9 @@ struct ThrowingValidator: Validator {
 struct ValidationTestError: Error, CustomStringConvertible {
     let message: String
 
-    var description: String { message }
+    var description: String {
+        message
+    }
 }
 
 struct OrderedValidator: Validator {

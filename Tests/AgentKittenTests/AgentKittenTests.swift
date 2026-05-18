@@ -1,8 +1,8 @@
 // SPDX-FileCopyrightText: 2026 AgentKitten Authors
 // SPDX-License-Identifier: Apache-2.0
 
-import Testing
 import AgentKitten
+import Testing
 
 @Test func versionMatchesCore() {
     #expect(!AgentKitten.version.isEmpty)
@@ -23,7 +23,7 @@ import AgentKitten
 func agentSessionVisibleFromUmbrellaModule() {
     let agent = Agent(
         providerRegistry: ProviderRegistry(default: InferenceProvider.mock()),
-        behavior: .init(systemPrompt: "Test")
+        behavior: .init(systemPrompt: "Test"),
     )
     let session = agent.makeSession()
 

@@ -1,10 +1,10 @@
 // SPDX-FileCopyrightText: 2026 AgentKitten Authors
 // SPDX-License-Identifier: Apache-2.0
 
-import SwiftSyntax
-import SwiftSyntaxMacros
-import SwiftSyntaxBuilder
 import SwiftDiagnostics
+import SwiftSyntax
+import SwiftSyntaxBuilder
+import SwiftSyntaxMacros
 
 /// Implements the `@Tool("name", description: "desc")` member macro.
 ///
@@ -16,7 +16,7 @@ public struct ToolMacro: MemberMacro {
         of node: AttributeSyntax,
         providingMembersOf declaration: some DeclGroupSyntax,
         conformingTo protocols: [TypeSyntax],
-        in context: some MacroExpansionContext
+        in context: some MacroExpansionContext,
     ) throws -> [DeclSyntax] {
         // 1. Extract @Tool("name", description: "desc") arguments.
         guard let argList = node.arguments?.as(LabeledExprListSyntax.self) else {
@@ -68,7 +68,7 @@ private struct PropertyInfo {
 
 private func extractArgumentsProperties(
     from declaration: some DeclGroupSyntax,
-    in context: some MacroExpansionContext
+    in context: some MacroExpansionContext,
 ) -> [PropertyInfo] {
     // Find `struct Arguments` among the declaration's members.
     let argumentsStruct = declaration.memberBlock.members
@@ -122,7 +122,7 @@ private func unwrapTypeName(_ type: TypeSyntax) -> (name: String, isOptional: Bo
 
 /// Reads the first `@ParameterDescription("...")` attribute on a variable declaration.
 private func extractParameterDescription(
-    from attributes: AttributeListSyntax
+    from attributes: AttributeListSyntax,
 ) -> String? {
     for attr in attributes {
         guard let attrSyntax = attr.as(AttributeSyntax.self),
@@ -143,17 +143,16 @@ private func extractParameterDescription(
 /// or `nil` if no enum with `typeName` exists there.
 private func collectEnumCases(
     named typeName: String,
-    in declaration: some DeclGroupSyntax
+    in declaration: some DeclGroupSyntax,
 ) -> [String]? {
     for member in declaration.memberBlock.members {
         guard let enumDecl = member.decl.as(EnumDeclSyntax.self),
               enumDecl.name.text == typeName else {
             continue
         }
-        let cases = enumDecl.memberBlock.members
+        return enumDecl.memberBlock.members
             .compactMap { $0.decl.as(EnumCaseDeclSyntax.self) }
-            .flatMap { $0.elements.map { $0.name.text } }
-        return cases
+            .flatMap { $0.elements.map(\.name.text) }
     }
     return nil
 }
@@ -162,7 +161,7 @@ private func collectEnumCases(
 private func buildSchemaSource(
     from properties: [PropertyInfo],
     declaration: some DeclGroupSyntax,
-    in context: some MacroExpansionContext
+    in context: some MacroExpansionContext,
 ) -> String {
     if properties.isEmpty {
         return "ToolSchema(parameters: .object(properties: [:], required: []))"
@@ -204,7 +203,7 @@ private func jsonSchemaSource(
     description: String?,
     node: Syntax,
     declaration: some DeclGroupSyntax,
-    in context: some MacroExpansionContext
+    in context: some MacroExpansionContext,
 ) -> String {
     let descArg = description.map { "\"\($0)\"" } ?? "nil"
     switch typeName {
@@ -220,7 +219,7 @@ private func jsonSchemaSource(
         // on the Apple provider. Prefer Int (or Int64) for Apple compatibility.
         context.diagnose(Diagnostic(
             node: node,
-            message: ToolMacroDiagnostic.narrowOrUnsignedInteger(typeName)
+            message: ToolMacroDiagnostic.narrowOrUnsignedInteger(typeName),
         ))
         return ".integer(description: \(descArg))"
     case "Double", "Float", "Float16", "Float80":
@@ -229,7 +228,7 @@ private func jsonSchemaSource(
         return ".boolean(description: \(descArg))"
     default:
         // [T] → array
-        if typeName.hasPrefix("[") && typeName.hasSuffix("]") {
+        if typeName.hasPrefix("["), typeName.hasSuffix("]") {
             let inner = String(typeName.dropFirst().dropLast())
             let itemsSource = jsonSchemaSource(
                 for: inner,
@@ -265,26 +264,32 @@ private enum ToolMacroDiagnostic: DiagnosticMessage {
     var message: String {
         switch self {
         case .unknownType(let name):
-            return "@Tool: unrecognised type '\(name)' — schema falls back to .string; "
-                + "use .enumeration(values:description:) or another JSONSchema case to hand-author the correct schema"
+            """
+            @Tool: unrecognised type '\(name)' — schema falls back to .string; \
+            use .enumeration(values:description:) or another JSONSchema case to hand-author the correct schema
+            """
         case .narrowOrUnsignedInteger(let name):
-            return "@Tool: '\(name)' is a narrow or unsigned integer — "
-                + "the Apple schema bridge represents all integers as Int with no range constraint; "
-                + "the model may generate out-of-range values that fail to decode on the Apple provider. "
-                + "Prefer Int (or Int64) for Apple provider compatibility."
+            """
+            @Tool: '\(name)' is a narrow or unsigned integer — \
+            the Apple schema bridge represents all integers as Int with no range constraint; \
+            the model may generate out-of-range values that fail to decode on the Apple provider. \
+            Prefer Int (or Int64) for Apple provider compatibility.
+            """
         }
     }
 
     var diagnosticID: MessageID {
         switch self {
         case .unknownType:
-            return MessageID(domain: "AgentKittenMacros", id: "unknownParameterType")
+            MessageID(domain: "AgentKittenMacros", id: "unknownParameterType")
         case .narrowOrUnsignedInteger:
-            return MessageID(domain: "AgentKittenMacros", id: "narrowOrUnsignedInteger")
+            MessageID(domain: "AgentKittenMacros", id: "narrowOrUnsignedInteger")
         }
     }
 
-    var severity: DiagnosticSeverity { .warning }
+    var severity: DiagnosticSeverity {
+        .warning
+    }
 }
 
 // MARK: - Error type
@@ -297,11 +302,11 @@ private enum ToolMacroError: Error, CustomStringConvertible {
     var description: String {
         switch self {
         case .missingArguments:
-            return "@Tool requires: @Tool(\"name\", description: \"description\")"
+            "@Tool requires: @Tool(\"name\", description: \"description\")"
         case .invalidName:
-            return "@Tool first argument must be a string literal name"
+            "@Tool first argument must be a string literal name"
         case .invalidDescription:
-            return "@Tool requires description: \"...\" as a string literal"
+            "@Tool requires description: \"...\" as a string literal"
         }
     }
 }

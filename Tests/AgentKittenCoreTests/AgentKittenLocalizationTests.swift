@@ -1,14 +1,13 @@
 // SPDX-FileCopyrightText: 2026 AgentKitten Authors
 // SPDX-License-Identifier: Apache-2.0
 
+@testable import AgentKittenCore
 import Foundation
 import Testing
-@testable import AgentKittenCore
 
 @Suite("AgentKitten Localization", .serialized)
 struct AgentKittenLocalizationTests {
-
-    @Test func overrideBundle_beatsPackagedDefault() async throws {
+    @Test func overrideBundle_beatsPackagedDefault() {
         let saved = AgentKittenLocalization.overrideBundle
         defer { AgentKittenLocalization.overrideBundle = saved }
 
@@ -17,7 +16,7 @@ struct AgentKittenLocalizationTests {
         #expect(result == "TEST BUNDLE TOOL GUIDANCE")
     }
 
-    @Test func overrideBundle_beatsPackagedDefaultForValidationMessage() throws {
+    @Test func overrideBundle_beatsPackagedDefaultForValidationMessage() {
         let saved = AgentKittenLocalization.overrideBundle
         defer { AgentKittenLocalization.overrideBundle = saved }
 
@@ -25,5 +24,4 @@ struct AgentKittenLocalizationTests {
         let result = AgentKittenLocalization.string("validation.validationPassed")
         #expect(result == "VALIDATION FROM TEST BUNDLE")
     }
-
 }

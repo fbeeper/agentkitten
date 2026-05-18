@@ -44,12 +44,12 @@ public struct KeychainAPIKeyProvider: APIKeyProviding {
         guard status == errSecSuccess else {
             if status == errSecItemNotFound {
                 throw APIKeyError.missing(
-                    "Keychain item not found (service: \(service), account: \(account))."
+                    "Keychain item not found (service: \(service), account: \(account)).",
                 )
             }
             throw APIKeyError.underlyingError(
                 "Keychain read failed (service: \(service), account: \(account)).",
-                NSError(domain: NSOSStatusErrorDomain, code: Int(status))
+                NSError(domain: NSOSStatusErrorDomain, code: Int(status)),
             )
         }
         guard
@@ -58,7 +58,7 @@ public struct KeychainAPIKeyProvider: APIKeyProviding {
             !key.isEmpty
         else {
             throw APIKeyError.invalidData(
-                "Keychain data for (service: \(service), account: \(account)) is not valid UTF-8."
+                "Keychain data for (service: \(service), account: \(account)) is not valid UTF-8.",
             )
         }
         return key

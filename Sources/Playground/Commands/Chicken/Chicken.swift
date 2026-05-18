@@ -1,16 +1,16 @@
 // SPDX-FileCopyrightText: 2026 AgentKitten Authors
 // SPDX-License-Identifier: Apache-2.0
 
-import ArgumentParser
-import Darwin
 import AgentKitten
 import AgentKittenCore
+import ArgumentParser
+import Darwin
 
 extension Playground {
     /// Minimal role-playing chat with a reserved chicken wizard.
     struct Chicken: AsyncParsableCommand {
         static let configuration = CommandConfiguration(
-            abstract: "Chat with a reserved chicken wizard."
+            abstract: "Chat with a reserved chicken wizard.",
         )
 
         @Option(name: .long, help: "Inference provider: apple or anthropic.")
@@ -34,8 +34,8 @@ extension Playground {
                         AnyAgentTool(CurrentTimeTool()),
                         AnyAgentTool(ChickenWizardPotionTool(gameState: gameState, brewGuard: brewGuard)),
                     ],
-                    executionPolicy: AnyToolExecutionPolicy(AutoApprovePolicy())
-                )
+                    executionPolicy: AnyToolExecutionPolicy(AutoApprovePolicy()),
+                ),
             )
             try await chat(agent: agent, brewGuard: brewGuard)
         }
@@ -44,8 +44,8 @@ extension Playground {
             print(
                 PlaygroundChatOutputFormatter.sessionHeader(
                     title: "Chicken Wizard Chat",
-                    detailLines: ChickenWizardOutputFormatter.introLines
-                )
+                    detailLines: ChickenWizardOutputFormatter.introLines,
+                ),
             )
 
             let session = agent.makeSession()
@@ -61,8 +61,8 @@ extension Playground {
                 print()
                 print(
                     PlaygroundChatOutputFormatter.assistantHeader(
-                        assistantLabel: ChickenWizardOutputFormatter.assistantLabel
-                    )
+                        assistantLabel: ChickenWizardOutputFormatter.assistantLabel,
+                    ),
                 )
                 fflush(stdout)
                 try await ChickenWizardTurnStreamer.stream(turn)

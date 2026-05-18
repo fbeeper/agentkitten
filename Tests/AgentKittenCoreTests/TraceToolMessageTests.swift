@@ -1,9 +1,9 @@
 // SPDX-FileCopyrightText: 2026 AgentKitten Authors
 // SPDX-License-Identifier: Apache-2.0
 
+@testable import AgentKittenCore
 import Foundation
 import Testing
-@testable import AgentKittenCore
 
 @Suite("AgentTrace Tool Messages")
 struct TraceToolMessageTests {
@@ -15,12 +15,12 @@ struct TraceToolMessageTests {
                     .toolCall(
                         name: "counting_echo",
                         argumentsJSON: #"{"message":"hello"}"#,
-                        thenRespond: "Done."
+                        thenRespond: "Done.",
                     ),
                 ],
             )),
             behavior: .test(),
-            toolDefinition: ToolDefinition(tools: [AnyAgentTool(CountingEchoTool(counter: counter))])
+            toolDefinition: ToolDefinition(tools: [AnyAgentTool(CountingEchoTool(counter: counter))]),
         )
         let session = agent.makeSession()
 
@@ -59,14 +59,14 @@ struct TraceToolMessageTests {
                 .toolCall(
                     name: "counting_echo",
                     argumentsJSON: #"{"message":"first"}"#,
-                    thenRespond: "First done."
+                    thenRespond: "First done.",
                 ),
                 .toolCall(
                     name: "counting_echo",
                     argumentsJSON: #"{"message":"second"}"#,
-                    thenRespond: "Second done."
+                    thenRespond: "Second done.",
                 ),
-            ]
+            ],
         )
         let session = agent.makeSession()
 
@@ -84,12 +84,12 @@ struct TraceToolMessageTests {
         assertToolMessages(
             entries: firstEntries,
             expectedArguments: #"{"message":"first"}"#,
-            expectedAssistantText: "First done."
+            expectedAssistantText: "First done.",
         )
         assertToolMessages(
             entries: secondEntries,
             expectedArguments: #"{"message":"second"}"#,
-            expectedAssistantText: "Second done."
+            expectedAssistantText: "Second done.",
         )
     }
 }
@@ -97,23 +97,23 @@ struct TraceToolMessageTests {
 extension TraceToolMessageTests {
     private func makeCountingEchoAgent(
         counter: ToolCallCounter,
-        responses: [MockResponse]
+        responses: [MockResponse],
     ) -> Agent {
         Agent(
             providerRegistry: ProviderRegistry(
-                default: ScriptedInferenceProvider(responses: responses)
+                default: ScriptedInferenceProvider(responses: responses),
             ),
             behavior: .test(),
             toolDefinition: ToolDefinition(
-                tools: [AnyAgentTool(CountingEchoTool(counter: counter))]
-            )
+                tools: [AnyAgentTool(CountingEchoTool(counter: counter))],
+            ),
         )
     }
 
     private func assertToolMessages(
         entries: [AgentTraceEntry],
         expectedArguments: String,
-        expectedAssistantText: String
+        expectedAssistantText: String,
     ) {
         guard case .message(.toolCall(let call)) = entries[1].kind else {
             Issue.record("Expected tool call entry")
@@ -129,8 +129,8 @@ extension TraceToolMessageTests {
         #expect(
             entries[3].kind
                 == AgentTraceEntry.Kind.message(
-                    .assistant(AssistantMessage(text: expectedAssistantText))
-                )
+                    .assistant(AssistantMessage(text: expectedAssistantText)),
+                ),
         )
     }
 }

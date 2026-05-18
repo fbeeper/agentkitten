@@ -32,6 +32,6 @@ public enum AutomaticCompactionPolicy: Sendable, Equatable, Hashable {
     /// Compact at the beginning of a turn when the trigger is met.
     case enabled(
         trigger: AutomaticCompactionTrigger = .percentOfContextWindow(0.8),
-        options: ContextCompactionOptions = .init()
+        options: ContextCompactionOptions = .init(),
     )
 }

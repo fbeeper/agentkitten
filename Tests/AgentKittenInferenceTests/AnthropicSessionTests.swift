@@ -1,11 +1,11 @@
 // SPDX-FileCopyrightText: 2026 AgentKitten Authors
 // SPDX-License-Identifier: Apache-2.0
 
-import Testing
-import Foundation
-import Synchronization
 @testable import AgentKittenCore
 @testable import AgentKittenInference
+import Foundation
+import Synchronization
+import Testing
 
 // MARK: - Mock HTTP client
 
@@ -24,7 +24,7 @@ final class MockHTTPClient: AnthropicHTTPStreaming, @unchecked Sendable {
     }
 
     init(responses: [[SSEEvent]]) {
-        self.state = Mutex(State(queue: responses))
+        state = Mutex(State(queue: responses))
     }
 
     func stream(request: AnthropicRequest) -> AsyncThrowingStream<SSEEvent, Error> {
@@ -55,7 +55,7 @@ final class CapturingStructuredHTTPClient: AnthropicHTTPStreaming, @unchecked Se
 
     func stream(request: AnthropicRequest) -> AsyncThrowingStream<SSEEvent, Error> {
         capturedRequestState.withLock { $0 = request }
-        let events = self.events
+        let events = events
         return AsyncThrowingStream { continuation in
             for event in events {
                 continuation.yield(event)
@@ -88,7 +88,7 @@ final class SequencedHTTPClient: AnthropicHTTPStreaming, @unchecked Sendable {
 private func makeSession(
     toolExecutionPolicy: some ToolExecutionPolicy = AutoApprovePolicy(),
     maxEmptyToolUseFollowUps: Int = 8,
-    clientFactory: @escaping @Sendable (String) -> any AnthropicHTTPStreaming
+    clientFactory: @escaping @Sendable (String) -> any AnthropicHTTPStreaming,
 ) -> AnthropicInferenceSession {
     AnthropicInferenceSession(
         credentials: MockAPIKeyProvider("test-key"),
@@ -96,7 +96,7 @@ private func makeSession(
         systemPrompt: nil,
         toolRuntime: testToolRuntime(executionPolicy: toolExecutionPolicy),
         maxEmptyToolUseFollowUps: maxEmptyToolUseFollowUps,
-        clientFactory: clientFactory
+        clientFactory: clientFactory,
     )
 }
 
@@ -187,7 +187,7 @@ struct StructuredDecision: Codable, Sendable, JSONSchemaProviding, Equatable {
             properties: [
                 "answer": .string(description: "The structured answer"),
             ],
-            required: ["answer"]
+            required: ["answer"],
         )
     }
 }
@@ -207,7 +207,7 @@ struct InferenceEchoTool: AgentTool {
     var schema: ToolSchema {
         ToolSchema(parameters: .object(
             properties: ["message": .string(description: "Message to echo.")],
-            required: ["message"]
+            required: ["message"],
         ))
     }
 
@@ -227,7 +227,7 @@ private struct InferenceImageTool: RichAgentTool {
     var schema: ToolSchema {
         ToolSchema(parameters: .object(
             properties: ["message": .string(description: "Message to echo.")],
-            required: ["message"]
+            required: ["message"],
         ))
     }
 
@@ -259,8 +259,8 @@ private struct InferenceImageTool: RichAgentTool {
     let session = makeSession { _ in client }
 
     let value: StructuredDecision = try await session.generate(
-            prompt: "Return a structured answer",
-        parameters: InferenceRequestParameters()
+        prompt: "Return a structured answer",
+        parameters: InferenceRequestParameters(),
     )
     #expect(value == StructuredDecision(answer: "structured"))
 
@@ -279,7 +279,7 @@ private struct InferenceImageTool: RichAgentTool {
         .stopReason("end_turn"),
     ])
     let executor = ToolExecutor(
-        registry: ToolRegistry([AnyAgentTool(InferenceEchoTool())])
+        registry: ToolRegistry([AnyAgentTool(InferenceEchoTool())]),
     )
     let session = AnthropicInferenceSession(
         credentials: MockAPIKeyProvider("test-key"),
@@ -287,14 +287,15 @@ private struct InferenceImageTool: RichAgentTool {
         systemPrompt: nil,
         toolRuntime: testToolRuntime(
             registry: executor.registry,
-            executionPolicy: AutoApprovePolicy()
+            executionPolicy: AutoApprovePolicy(),
         ),
-        clientFactory: { _ in SequencedHTTPClient(clients: [client, followUp]) }
+        clientFactory: { _ in SequencedHTTPClient(clients: [client, followUp]) },
     )
 
     let value: StructuredDecision =
         try await session.generate(
-            prompt: "Return a structured answer", parameters: InferenceRequestParameters())
+            prompt: "Return a structured answer", parameters: InferenceRequestParameters(),
+        )
     #expect(value == StructuredDecision(answer: "structured"))
 
     let firstRequest = try #require(client.capturedRequest)
@@ -311,7 +312,7 @@ private struct InferenceImageTool: RichAgentTool {
         .stopReason("end_turn"),
     ])
     let executor = ToolExecutor(
-        registry: ToolRegistry([AnyAgentTool(InferenceEchoTool())])
+        registry: ToolRegistry([AnyAgentTool(InferenceEchoTool())]),
     )
     let session = AnthropicInferenceSession(
         credentials: MockAPIKeyProvider("test-key"),
@@ -319,14 +320,15 @@ private struct InferenceImageTool: RichAgentTool {
         systemPrompt: nil,
         toolRuntime: testToolRuntime(
             registry: executor.registry,
-            executionPolicy: AutoApprovePolicy()
+            executionPolicy: AutoApprovePolicy(),
         ),
-        clientFactory: { _ in SequencedHTTPClient(clients: [client, followUp]) }
+        clientFactory: { _ in SequencedHTTPClient(clients: [client, followUp]) },
     )
 
     let stream: StructuredInferenceStream<StructuredDecision> =
         try await session.generateStream(
-            prompt: "Return a structured answer", parameters: InferenceRequestParameters())
+            prompt: "Return a structured answer", parameters: InferenceRequestParameters(),
+        )
     let observation = try await observeStructuredToolStream(stream)
 
     #expect(observation.sawToolStart)
@@ -341,7 +343,7 @@ private struct StructuredToolStreamObservation {
 }
 
 private func observeStructuredToolStream(
-    _ stream: StructuredInferenceStream<StructuredDecision>
+    _ stream: StructuredInferenceStream<StructuredDecision>,
 ) async throws -> StructuredToolStreamObservation {
     var sawToolStart = false
     var sawToolCompletion = false
@@ -371,7 +373,7 @@ private func observeStructuredToolStream(
     return StructuredToolStreamObservation(
         sawToolStart: sawToolStart,
         sawToolCompletion: sawToolCompletion,
-        value: value
+        value: value,
     )
 }
 
@@ -382,7 +384,7 @@ private func observeStructuredToolStream(
             .text("Screenshot captured."),
             .image(mediaType: "image/png", data: Data([0x89, 0x50, 0x4E, 0x47])),
         ],
-        isError: false
+        isError: false,
     )
     let data = try JSONEncoder().encode(content)
     let object = try #require(JSONSerialization.jsonObject(with: data) as? [String: Any])

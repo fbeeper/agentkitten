@@ -77,29 +77,29 @@ extension AgentTraceEntry {
             case .structuredResult:
                 self = .structuredResult(
                     type: try container.decode(String.self, forKey: .resultType),
-                    json: try container.decode(String.self, forKey: .resultJSON)
+                    json: try container.decode(String.self, forKey: .resultJSON),
                 )
             case .executionPreparation:
                 self = .executionPreparation(
-                    try container.decode(ExecutionPreparationInfo.self, forKey: .executionPreparation)
+                    try container.decode(ExecutionPreparationInfo.self, forKey: .executionPreparation),
                 )
             case .conversationResolved:
                 self = .conversationResolved(
-                    try container.decode(ConversationResolvedInfo.self, forKey: .conversationResolved)
+                    try container.decode(ConversationResolvedInfo.self, forKey: .conversationResolved),
                 )
             case .contextCompaction:
                 self = .contextCompaction(
-                    try container.decode(Self.ContextCompactionInfo.self, forKey: .contextCompaction)
+                    try container.decode(Self.ContextCompactionInfo.self, forKey: .contextCompaction),
                 )
             case .stateMutation:
                 self = .stateMutation(try container.decode(StateMutation.self, forKey: .stateMutation))
             case .toolApprovalRequired:
                 self = .toolApprovalRequired(
-                    try container.decode(ToolApprovalRequiredInfo.self, forKey: .pendingToolCall)
+                    try container.decode(ToolApprovalRequiredInfo.self, forKey: .pendingToolCall),
                 )
             case .toolHookFired:
                 self = .toolHookFired(
-                    try container.decode(ToolHookInvocationInfo.self, forKey: .toolHookFired)
+                    try container.decode(ToolHookInvocationInfo.self, forKey: .toolHookFired),
                 )
             case .validation:
                 self = .validation(try container.decode(ValidationInfo.self, forKey: .validation))
@@ -167,7 +167,7 @@ extension AgentTraceEntry.Kind {
         /// Creates trace metadata for an approval-required tool call.
         public init(
             call: PendingToolCall,
-            context: CustomContextSnapshot? = nil
+            context: CustomContextSnapshot? = nil,
         ) {
             self.call = call
             self.context = context
@@ -201,7 +201,7 @@ extension AgentTraceEntry.Kind {
             provider: ProviderReferenceSnapshot? = nil,
             inferenceConfiguration: InferenceConfigurationSnapshot? = nil,
             inferenceContext: CustomContextSnapshot? = nil,
-            result: ContextCompactionResult
+            result: ContextCompactionResult,
         ) {
             self.mode = mode
             self.provider = provider

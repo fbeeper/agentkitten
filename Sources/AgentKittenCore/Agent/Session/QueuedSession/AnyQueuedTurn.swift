@@ -15,15 +15,17 @@ struct AnyQueuedTurn: Sendable {
         id: InvocationID,
         isCancelled: @Sendable @escaping () async -> Bool,
         markRunning: @Sendable @escaping (Task<Void, Never>) async -> Bool,
-        performWork: @Sendable @escaping () async -> Void
+        performWork: @Sendable @escaping () async -> Void,
     ) {
         self.id = id
-        self._isCancelled = isCancelled
-        self._markRunning = markRunning
-        self._performWork = performWork
+        _isCancelled = isCancelled
+        _markRunning = markRunning
+        _performWork = performWork
     }
 
-    var isCancelled: Bool { get async { await _isCancelled() } }
+    var isCancelled: Bool {
+        get async { await _isCancelled() }
+    }
 
     @discardableResult
     func markRunning(task: Task<Void, Never>) async -> Bool {

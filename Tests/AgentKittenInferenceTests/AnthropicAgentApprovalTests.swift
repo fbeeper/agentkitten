@@ -1,10 +1,10 @@
 // SPDX-FileCopyrightText: 2026 AgentKitten Authors
 // SPDX-License-Identifier: Apache-2.0
 
-import Foundation
-import Testing
 @testable import AgentKittenCore
 @testable import AgentKittenInference
+import Foundation
+import Testing
 
 private struct AgentAnthropicRequiresApprovalPolicy: ToolExecutionPolicy {
     func resolve(call: PendingToolCall, context: ToolExecutionContext) async -> ToolExecutionDecision {
@@ -21,14 +21,14 @@ private struct TestAnthropicInferenceProvider: InferenceProviding {
         systemPrompt: String?,
         toolRuntime: ToolRuntime,
         toolSelection: ToolSelection,
-        inferenceContext: InferenceContext
+        inferenceContext: InferenceContext,
     ) -> AnthropicInferenceSession {
         AnthropicInferenceSession(
             credentials: MockAPIKeyProvider("test-key"),
             defaultModel: "test-model",
             systemPrompt: systemPrompt,
             toolRuntime: toolRuntime,
-            clientFactory: clientFactory
+            clientFactory: clientFactory,
         )
     }
 }
@@ -111,7 +111,7 @@ struct AnthropicAgentApprovalTests {
 }
 
 private func makeAnthropicApprovalSession(
-    clientFactory: @escaping @Sendable (String) -> any AnthropicHTTPStreaming
+    clientFactory: @escaping @Sendable (String) -> any AnthropicHTTPStreaming,
 ) -> AgentSession {
     let provider = TestAnthropicInferenceProvider(clientFactory: clientFactory)
     let agent = Agent(
@@ -119,7 +119,7 @@ private func makeAnthropicApprovalSession(
         behavior: .init(systemPrompt: "Test"),
         toolDefinition: ToolDefinition(
             tools: [AnyAgentTool(InferenceEchoTool())],
-            executionPolicy: AgentAnthropicRequiresApprovalPolicy()
+            executionPolicy: AgentAnthropicRequiresApprovalPolicy(),
         ),
     )
     return agent.makeSession()

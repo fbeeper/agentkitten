@@ -18,9 +18,9 @@ public enum SessionStateError: Error, LocalizedError, Equatable {
     public var errorDescription: String? {
         switch self {
         case .disabled:
-            return "Session state is disabled."
+            "Session state is disabled."
         case .readOnlyMutation:
-            return "Session state is read-only."
+            "Session state is read-only."
         }
     }
 }
@@ -44,10 +44,10 @@ public actor SessionState {
     init(
         trace: AgentTrace,
         contents: [String: SessionStateValue] = [:],
-        access: Access = .readWrite
+        access: Access = .readWrite,
     ) {
         self.trace = trace
-        self.storage = contents
+        storage = contents
         self.access = access
     }
 
@@ -58,12 +58,12 @@ public actor SessionState {
     /// “make an immutable copy”.
     static func readOnly(
         trace: AgentTrace,
-        contents: [String: SessionStateValue]
+        contents: [String: SessionStateValue],
     ) -> SessionState {
         SessionState(
             trace: trace,
             contents: contents,
-            access: .readOnly
+            access: .readOnly,
         )
     }
 
@@ -90,7 +90,7 @@ public actor SessionState {
         recordMutation(
             .set,
             key: key,
-            valueType: "string"
+            valueType: "string",
         )
     }
 
@@ -139,7 +139,7 @@ public actor SessionState {
     private func recordMutation(
         _ operation: AgentTraceEntry.Kind.StateMutation.Operation,
         key: String,
-        valueType: String?
+        valueType: String?,
     ) {
         guard let activeInvocationID else {
             return
@@ -150,7 +150,7 @@ public actor SessionState {
                 key: key,
                 valueType: valueType,
             )),
-            invocationID: activeInvocationID
+            invocationID: activeInvocationID,
         )
     }
 }

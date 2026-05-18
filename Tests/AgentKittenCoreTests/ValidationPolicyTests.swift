@@ -1,8 +1,8 @@
 // SPDX-FileCopyrightText: 2026 AgentKitten Authors
 // SPDX-License-Identifier: Apache-2.0
 
-import Testing
 @testable import AgentKittenCore
+import Testing
 
 @Suite("Validation Policy")
 struct ValidationPolicyTests {
@@ -12,7 +12,7 @@ struct ValidationPolicyTests {
         )
         let agent = Agent(
             providerRegistry: ProviderRegistry(default: provider),
-            behavior: .test()
+            behavior: .test(),
         )
         let session = agent.makeSession()
 
@@ -29,7 +29,7 @@ struct ValidationPolicyTests {
             .validation(.init(
                 result: .fail,
                 message: "Terminal validation failure",
-                validator: "TerminalFailureValidator"
+                validator: "TerminalFailureValidator",
             )),
             .error(.init(description: "rejected(\"Terminal validation failure\")")),
             .turnCompleted(.failed(.init(description: "rejected(\"Terminal validation failure\")"))),
@@ -45,14 +45,14 @@ struct ValidationPolicyTests {
         )
         let agent = Agent(
             providerRegistry: ProviderRegistry(default: provider),
-            behavior: .test()
+            behavior: .test(),
         )
         let session = agent.makeSession()
 
         let turn = try await session.send("Hello", validation: ValidationConfiguration(
             validator: MinimumLengthValidator(minimumLength: 10),
             maxRetries: 1,
-            policy: .permissive
+            policy: .permissive,
         ))
         let events = try await collectEvents(from: turn)
 
@@ -64,18 +64,18 @@ struct ValidationPolicyTests {
             .validation(.init(
                 result: .feedback,
                 message: "Response must be at least 10 characters.",
-                validator: "MinimumLengthValidator(10)"
+                validator: "MinimumLengthValidator(10)",
             )),
             .message(.assistant(AssistantMessage(text: "worse"))),
             .validation(.init(
                 result: .feedback,
                 message: "Response must be at least 10 characters.",
-                validator: "MinimumLengthValidator(10)"
+                validator: "MinimumLengthValidator(10)",
             )),
             .validation(.init(
                 result: .waived,
                 message: "Response must be at least 10 characters.",
-                validator: "MinimumLengthValidator(10)"
+                validator: "MinimumLengthValidator(10)",
             )),
             .turnCompleted(.completed),
         ])
@@ -87,13 +87,13 @@ struct ValidationPolicyTests {
         )
         let agent = Agent(
             providerRegistry: ProviderRegistry(default: provider),
-            behavior: .test()
+            behavior: .test(),
         )
         let session = agent.makeSession()
 
         let turn = try await session.send("Hello", validation: ValidationConfiguration(
             validator: ThrowingValidator(message: "validator unavailable"),
-            policy: .permissive
+            policy: .permissive,
         ))
         let events = try await collectEvents(from: turn)
 
@@ -104,7 +104,7 @@ struct ValidationPolicyTests {
             .validation(.init(
                 result: .waived,
                 message: "validator unavailable",
-                validator: "ThrowingValidator"
+                validator: "ThrowingValidator",
             )),
             .turnCompleted(.completed),
         ])
@@ -119,14 +119,14 @@ struct ValidationPolicyTests {
         )
         let agent = Agent(
             providerRegistry: ProviderRegistry(default: provider),
-            behavior: .test()
+            behavior: .test(),
         )
         let session = agent.makeSession()
 
         let turn = try await session.send("Hello", validation: ValidationConfiguration(
             validator: MinimumLengthValidator(minimumLength: 10),
             maxRetries: 1,
-            policy: .restrictive
+            policy: .restrictive,
         ))
         await #expect(throws: Error.self) {
             _ = try await collectEvents(from: turn)
@@ -138,22 +138,22 @@ struct ValidationPolicyTests {
             .validation(.init(
                 result: .feedback,
                 message: "Response must be at least 10 characters.",
-                validator: "MinimumLengthValidator(10)"
+                validator: "MinimumLengthValidator(10)",
             )),
             .message(.assistant(AssistantMessage(text: "tiny"))),
             .validation(.init(
                 result: .feedback,
                 message: "Response must be at least 10 characters.",
-                validator: "MinimumLengthValidator(10)"
+                validator: "MinimumLengthValidator(10)",
             )),
             .validation(.init(
                 result: .fail,
                 message: "Response must be at least 10 characters.",
-                validator: "MinimumLengthValidator(10)"
+                validator: "MinimumLengthValidator(10)",
             )),
             .error(.init(description: "failed(\"Response must be at least 10 characters.\")")),
             .turnCompleted(.failed(.init(
-                description: "failed(\"Response must be at least 10 characters.\")"
+                description: "failed(\"Response must be at least 10 characters.\")",
             ))),
         ])
     }
@@ -164,7 +164,7 @@ struct ValidationPolicyTests {
         )
         let agent = Agent(
             providerRegistry: ProviderRegistry(default: provider),
-            behavior: .test()
+            behavior: .test(),
         )
         let session = agent.makeSession()
 
@@ -183,21 +183,21 @@ struct ValidationPolicyTests {
             .validation(.init(
                 result: .pass,
                 message: AgentKittenLocalization.string("validation.validationPassed"),
-                validator: "MinimumLengthValidator(4)"
+                validator: "MinimumLengthValidator(4)",
             )),
             .validation(.init(
                 result: .feedback,
                 message: "Response must be at least 20 characters.",
-                validator: "MinimumLengthValidator(20)"
+                validator: "MinimumLengthValidator(20)",
             )),
             .validation(.init(
                 result: .fail,
                 message: "Response must be at least 20 characters.",
-                validator: "MinimumLengthValidator(20)"
+                validator: "MinimumLengthValidator(20)",
             )),
             .error(.init(description: "failed(\"Response must be at least 20 characters.\")")),
             .turnCompleted(.failed(.init(
-                description: "failed(\"Response must be at least 20 characters.\")"
+                description: "failed(\"Response must be at least 20 characters.\")",
             ))),
         ])
     }

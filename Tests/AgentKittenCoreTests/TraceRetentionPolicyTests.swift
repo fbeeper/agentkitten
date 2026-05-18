@@ -1,9 +1,9 @@
 // SPDX-FileCopyrightText: 2026 AgentKitten Authors
 // SPDX-License-Identifier: Apache-2.0
 
+@testable import AgentKittenCore
 import Foundation
 import Testing
-@testable import AgentKittenCore
 
 @Suite("AgentTrace Retention Policy")
 struct TraceRetentionPolicyTests {
@@ -16,7 +16,7 @@ struct TraceRetentionPolicyTests {
                 ],
             )),
             behavior: .test(),
-            traceRetentionPolicy: .maxTurns(1)
+            traceRetentionPolicy: .maxTurns(1),
         )
         let session = agent.makeSession()
 
@@ -43,18 +43,18 @@ struct TraceRetentionPolicyTests {
                     .toolCall(
                         name: "counting_echo",
                         argumentsJSON: #"{"message":"first"}"#,
-                        thenRespond: "First done."
+                        thenRespond: "First done.",
                     ),
                     .toolCall(
                         name: "counting_echo",
                         argumentsJSON: #"{"message":"second"}"#,
-                        thenRespond: "Second done."
+                        thenRespond: "Second done.",
                     ),
                 ],
             )),
             behavior: .test(),
             toolDefinition: ToolDefinition(tools: [AnyAgentTool(CountingEchoTool(counter: ToolCallCounter()))]),
-            traceRetentionPolicy: .maxTurns(1)
+            traceRetentionPolicy: .maxTurns(1),
         )
         let session = agent.makeSession()
 
@@ -86,7 +86,7 @@ struct TraceRetentionPolicyTests {
         #expect(result.isError == false)
         #expect(
             entries[3].kind
-                == AgentTraceEntry.Kind.message(.assistant(AssistantMessage(text: "Second done.")))
+                == AgentTraceEntry.Kind.message(.assistant(AssistantMessage(text: "Second done."))),
         )
         #expect(entries[4].kind == AgentTraceEntry.Kind.turnCompleted(.completed))
     }
@@ -112,7 +112,7 @@ private func makeRetentionPolicySession(limit: Int) -> AgentSession {
             responses: [.success("Ignored")],
         )),
         behavior: .test(),
-        traceRetentionPolicy: .maxTurns(limit)
+        traceRetentionPolicy: .maxTurns(limit),
     )
     return agent.makeSession()
 }

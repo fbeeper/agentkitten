@@ -55,7 +55,7 @@ public enum AgentKittenLocalization {
             key,
             overrideBundle: overrideBundle,
             packagedBundle: packagedBundle,
-            arguments: arguments
+            arguments: arguments,
         )
     }
 
@@ -78,7 +78,7 @@ public enum AgentKittenLocalization {
         _ key: String,
         overrideBundle: Bundle?,
         packagedBundle: Bundle,
-        arguments: [CVarArg]
+        arguments: [CVarArg],
     ) -> String {
         let overrideLocale = state.withLock { $0.overrideLocale }
         if let overrideBundle {

@@ -1,8 +1,8 @@
 // SPDX-FileCopyrightText: 2026 AgentKitten Authors
 // SPDX-License-Identifier: Apache-2.0
 
-import Foundation
 @testable import AgentKittenCore
+import Foundation
 
 private enum StructuredResultEncodingError: Error {
     case invalidUTF8
@@ -10,28 +10,28 @@ private enum StructuredResultEncodingError: Error {
 
 func rawTraceEntries(
     for invocationID: InvocationID,
-    on trace: AgentTrace
+    on trace: AgentTrace,
 ) async -> [AgentTraceEntry] {
     await trace.snapshot().filter { $0.invocationID == invocationID }
 }
 
 func rawTraceEntries(
     for invocationID: InvocationID,
-    on session: AgentSession
+    on session: AgentSession,
 ) async -> [AgentTraceEntry] {
     await rawTraceEntries(for: invocationID, on: session.trace)
 }
 
 func rawTraceEntries(
     for invocationID: InvocationID,
-    on session: AgentQueuedSession
+    on session: AgentQueuedSession,
 ) async -> [AgentTraceEntry] {
     await rawTraceEntries(for: invocationID, on: session.trace)
 }
 
 func directTurnEntries(
     for invocationID: InvocationID,
-    on trace: AgentTrace
+    on trace: AgentTrace,
 ) async -> [AgentTraceEntry] {
     await rawTraceEntries(for: invocationID, on: trace).filter {
         switch $0.kind {
@@ -45,7 +45,7 @@ func directTurnEntries(
 
 func directTurnEntries(
     for invocationID: InvocationID,
-    on session: AgentSession
+    on session: AgentSession,
 ) async -> [AgentTraceEntry] {
     await directTurnEntries(for: invocationID, on: session.trace)
 }
@@ -54,16 +54,16 @@ func directTurnEntryKinds(in entries: [AgentTraceEntry]) -> [AgentTraceEntry.Kin
     entries.compactMap {
         switch $0.kind {
         case .executionPreparation, .conversationResolved, .contextCompaction:
-            return nil
+            nil
         default:
-            return $0.kind
+            $0.kind
         }
     }
 }
 
 func executionPreparationEntry(
     for invocationID: InvocationID,
-    on session: AgentSession
+    on session: AgentSession,
 ) async -> AgentTraceEntry.Kind.ExecutionPreparationInfo? {
     let entries = await rawTraceEntries(for: invocationID, on: session)
     for entry in entries {
@@ -76,7 +76,7 @@ func executionPreparationEntry(
 
 func conversationResolvedEntry(
     for invocationID: InvocationID,
-    on session: AgentSession
+    on session: AgentSession,
 ) async -> AgentTraceEntry.Kind.ConversationResolvedInfo? {
     let entries = await rawTraceEntries(for: invocationID, on: session)
     for entry in entries {
@@ -88,13 +88,13 @@ func conversationResolvedEntry(
 }
 
 func structuredResultTypeLabel<Result>(
-    for _: Result.Type
+    for _: Result.Type,
 ) -> String {
     String(describing: Result.self)
 }
 
 func structuredResultJSON<Result: Encodable>(
-    for result: Result
+    for result: Result,
 ) throws -> String {
     let encoder = JSONEncoder()
     encoder.outputFormatting = [.sortedKeys]
@@ -141,7 +141,7 @@ struct HangingInferenceProvider: InferenceProviding {
         systemPrompt: String?,
         toolRuntime: ToolRuntime,
         toolSelection: ToolSelection,
-        inferenceContext: InferenceContext
+        inferenceContext: InferenceContext,
     ) -> HangingInferenceSession {
         HangingInferenceSession(state: state)
     }
@@ -182,7 +182,7 @@ actor HangingInferenceSession: InferenceSession, StructuredInferenceSession {
 
     func generateStream<T: Codable & Sendable & JSONSchemaProviding>(
         prompt: String,
-        parameters: InferenceRequestParameters
+        parameters: InferenceRequestParameters,
     ) async throws(StructuredGenerationError) -> StructuredInferenceStream<T> {
         throw .generationFailed(InferenceError.invalidResponse("structured generation not supported"))
     }

@@ -1,8 +1,8 @@
 // SPDX-FileCopyrightText: 2026 AgentKitten Authors
 // SPDX-License-Identifier: Apache-2.0
 
-import Testing
 @testable import AgentKittenCore
+import Testing
 
 @Test func mockSession_allowsFollowUpRunAfterFirstStreamFullyTerminates() async throws {
     let provider = MockInferenceProvider(responses: ["First", "Second"])
@@ -10,7 +10,7 @@ import Testing
         systemPrompt: nil,
         toolRuntime: testToolRuntime(),
         toolSelection: .all,
-        inferenceContext: .empty
+        inferenceContext: .empty,
     )
     let message = UserMessage(text: "Hi")
 
@@ -38,7 +38,7 @@ import Testing
         systemPrompt: nil,
         toolRuntime: testToolRuntime(),
         toolSelection: .all,
-        inferenceContext: .empty
+        inferenceContext: .empty,
     )
 
     do {
@@ -67,22 +67,22 @@ import Testing
         structuredResponses: [
             #"{"label":"first"}"#,
             #"{"label":"second"}"#,
-        ]
+        ],
     )
     let session = provider.makeSession(
         systemPrompt: nil,
         toolRuntime: testToolRuntime(),
         toolSelection: .all,
-        inferenceContext: .empty
+        inferenceContext: .empty,
     )
 
     let first: MockStructuredValue = try await session.generate(
         prompt: "Return the first label",
-        parameters: InferenceRequestParameters()
+        parameters: InferenceRequestParameters(),
     )
     let second: MockStructuredValue = try await session.generate(
         prompt: "Return the second label",
-        parameters: InferenceRequestParameters()
+        parameters: InferenceRequestParameters(),
     )
 
     #expect(first == MockStructuredValue(label: "first"))

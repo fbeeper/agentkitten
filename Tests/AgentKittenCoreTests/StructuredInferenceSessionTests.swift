@@ -1,8 +1,8 @@
 // SPDX-FileCopyrightText: 2026 AgentKitten Authors
 // SPDX-License-Identifier: Apache-2.0
 
-import Testing
 @testable import AgentKittenCore
+import Testing
 
 // MARK: - Test fixture
 
@@ -16,7 +16,7 @@ private struct TaskClassification: Codable, Sendable, JSONSchemaProviding {
                 "complexity": .string(description: "low, medium, or high"),
                 "estimatedSteps": .integer(description: "Estimated number of steps"),
             ],
-            required: ["complexity", "estimatedSteps"]
+            required: ["complexity", "estimatedSteps"],
         )
     }
 }
@@ -61,7 +61,7 @@ struct StructuredInferenceSessionTests {
         do {
             let _: TaskClassification = try await session.generate(
                 prompt: "test",
-                parameters: InferenceRequestParameters()
+                parameters: InferenceRequestParameters(),
             )
             Issue.record("Expected StructuredGenerationError.generationFailed")
         } catch StructuredGenerationError.generationFailed {
@@ -78,7 +78,7 @@ struct StructuredInferenceSessionTests {
         let session: MockInferenceSession = provider.makeSession(
             systemPrompt: nil,
             toolRuntime: testToolRuntime(),
-            toolSelection: .all
+            toolSelection: .all,
         )
         _ = session
     }
@@ -90,7 +90,7 @@ struct StructuredInferenceSessionTests {
         let session: MockInferenceSession = provider.makeSession(
             systemPrompt: nil,
             toolRuntime: testToolRuntime(),
-            toolSelection: .all
+            toolSelection: .all,
         )
         _ = session
     }
@@ -100,7 +100,7 @@ struct StructuredInferenceSessionTests {
         let session: MockInferenceSession = provider.makeSession(
             systemPrompt: "You are a classifier.",
             toolRuntime: testToolRuntime(),
-            toolSelection: .all
+            toolSelection: .all,
         )
         _ = session
     }

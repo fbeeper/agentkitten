@@ -15,12 +15,12 @@ package struct ContextCompactor: Sendable {
     package func compact(
         _ session: some ContextCompactableSession,
         options: ContextCompactionOptions,
-        summaryGenerator: ContextCompactionSummaryGenerator
+        summaryGenerator: ContextCompactionSummaryGenerator,
     ) async -> ContextCompactionResult {
         do {
             return try await options.makeStrategy().compact(
                 session,
-                summaryGenerator: summaryGenerator
+                summaryGenerator: summaryGenerator,
             )
         } catch let error as InferenceError {
             return .skipped(.inferenceError(error))
@@ -48,11 +48,11 @@ private struct CustomContextCompactionStrategy: ContextCompactionStrategy {
 
     func compact(
         _ session: any ContextCompactableSession,
-        summaryGenerator: ContextCompactionSummaryGenerator
+        summaryGenerator: ContextCompactionSummaryGenerator,
     ) async throws -> ContextCompactionResult {
         try await strategy.compact(
             session,
-            summaryGenerator: summaryGenerator
+            summaryGenerator: summaryGenerator,
         )
     }
 }
@@ -62,12 +62,12 @@ package struct TruncationContextCompactionStrategy: ContextCompactionStrategy, S
 
     package func compact(
         _ session: any ContextCompactableSession,
-        summaryGenerator: ContextCompactionSummaryGenerator
+        summaryGenerator: ContextCompactionSummaryGenerator,
     ) async throws -> ContextCompactionResult {
         _ = summaryGenerator
         return try await session.applyCompaction(
             summary: nil,
-            preservedRecentTurnCount: options.preservedRecentTurnCount
+            preservedRecentTurnCount: options.preservedRecentTurnCount,
         )
     }
 }
@@ -77,25 +77,24 @@ package struct SummarizationContextCompactionStrategy: ContextCompactionStrategy
 
     package func compact(
         _ session: any ContextCompactableSession,
-        summaryGenerator: ContextCompactionSummaryGenerator
+        summaryGenerator: ContextCompactionSummaryGenerator,
     ) async throws -> ContextCompactionResult {
         let allEntries = await session.compactionEntries()
         let older = olderEntries(
             from: allEntries,
-            preservedRecentTurnCount: options.preservedRecentTurnCount
+            preservedRecentTurnCount: options.preservedRecentTurnCount,
         )
-        let summary: String?
-        if older.isEmpty {
-            summary = nil
+        let summary: String? = if older.isEmpty {
+            nil
         } else {
-            summary = try await summarize(
+            try await summarize(
                 entries: older,
-                requestSummary: summaryGenerator
+                requestSummary: summaryGenerator,
             )
         }
         return try await session.applyCompaction(
             summary: summary,
-            preservedRecentTurnCount: options.preservedRecentTurnCount
+            preservedRecentTurnCount: options.preservedRecentTurnCount,
         )
     }
 
@@ -104,7 +103,7 @@ package struct SummarizationContextCompactionStrategy: ContextCompactionStrategy
     /// Internal (not private) only to allow direct testing in ContextCompactorTests.
     func summarize(
         entries: [RenderedSessionEntry],
-        requestSummary: ContextCompactionSummaryGenerator
+        requestSummary: ContextCompactionSummaryGenerator,
     ) async throws -> String {
         precondition(!entries.isEmpty, "summarize must not be called with an empty entry list")
         let prompt = options.buildPrompt(for: .entries(entries.map(\.rendered)))
@@ -117,12 +116,12 @@ package struct SummarizationContextCompactionStrategy: ContextCompactionStrategy
             let parts = try split(entries)
             let olderSummary = try await summarize(
                 entries: parts.older,
-                requestSummary: requestSummary
+                requestSummary: requestSummary,
             )
             return try await fold(
                 summary: olderSummary,
                 entries: parts.newer,
-                requestSummary: requestSummary
+                requestSummary: requestSummary,
             )
         }
     }
@@ -130,14 +129,14 @@ package struct SummarizationContextCompactionStrategy: ContextCompactionStrategy
     private func fold(
         summary: String,
         entries: [RenderedSessionEntry],
-        requestSummary: ContextCompactionSummaryGenerator
+        requestSummary: ContextCompactionSummaryGenerator,
     ) async throws -> String {
         guard !entries.isEmpty else {
             return summary
         }
 
         let prompt = options.buildPrompt(
-            for: .summaryAndEntries(summary: summary, entries: entries.map(\.rendered))
+            for: .summaryAndEntries(summary: summary, entries: entries.map(\.rendered)),
         )
         do {
             return try await requestSummary(prompt)
@@ -149,35 +148,35 @@ package struct SummarizationContextCompactionStrategy: ContextCompactionStrategy
             let foldedOlder = try await fold(
                 summary: summary,
                 entries: parts.older,
-                requestSummary: requestSummary
+                requestSummary: requestSummary,
             )
             return try await fold(
                 summary: foldedOlder,
                 entries: parts.newer,
-                requestSummary: requestSummary
+                requestSummary: requestSummary,
             )
         }
     }
 
     private func split(
-        _ entries: [RenderedSessionEntry]
+        _ entries: [RenderedSessionEntry],
     ) throws -> (older: [RenderedSessionEntry], newer: [RenderedSessionEntry]) {
         let groups = makeGroups(entries)
         guard groups.count > 1 else {
             throw InferenceError.contextWindowExceeded(.init(
-                message: "Cannot split compaction input: all entries form a single turn group."
+                message: "Cannot split compaction input: all entries form a single turn group.",
             ))
         }
         let midpoint = max(1, groups.count / 2)
         return (
             Array(groups[..<midpoint].joined()),
-            Array(groups[midpoint...].joined())
+            Array(groups[midpoint...].joined()),
         )
     }
 
     private func olderEntries(
         from entries: [RenderedSessionEntry],
-        preservedRecentTurnCount: Int
+        preservedRecentTurnCount: Int,
     ) -> [RenderedSessionEntry] {
         let groups = makeGroups(entries)
         let keepCount = min(max(0, preservedRecentTurnCount), groups.count)
@@ -193,7 +192,7 @@ package struct SummarizationContextCompactionStrategy: ContextCompactionStrategy
     /// primitive that lets splitting and preservation operate on whole turns rather than
     /// individual entries, preventing tool-call/result pairs from being torn apart.
     private func makeGroups(
-        _ entries: [RenderedSessionEntry]
+        _ entries: [RenderedSessionEntry],
     ) -> [[RenderedSessionEntry]] {
         var groups: [[RenderedSessionEntry]] = []
         var pending: [RenderedSessionEntry] = []

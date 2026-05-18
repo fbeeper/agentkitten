@@ -1,10 +1,10 @@
 // SPDX-FileCopyrightText: 2026 AgentKitten Authors
 // SPDX-License-Identifier: Apache-2.0
 
-import Testing
-import Foundation
 @testable import AgentKittenCore
 @testable import AgentKittenInference
+import Foundation
+import Testing
 
 // MARK: - AnthropicToolBridge injection
 
@@ -15,7 +15,7 @@ struct AnthropicToolBridgeRationaleTests {
     @Test func anthropicTool_injectsRationaleInProperties() {
         let converted = AnthropicToolBridge.anthropicTool(
             from: tool,
-            rationaleDescription: ToolRationale.schemaDescription
+            rationaleDescription: ToolRationale.schemaDescription,
         )
 
         guard case .object(let dict) = converted.inputSchema,
@@ -30,7 +30,7 @@ struct AnthropicToolBridgeRationaleTests {
     @Test func anthropicTool_addsRationaleToRequired() {
         let converted = AnthropicToolBridge.anthropicTool(
             from: tool,
-            rationaleDescription: ToolRationale.schemaDescription
+            rationaleDescription: ToolRationale.schemaDescription,
         )
 
         guard case .object(let dict) = converted.inputSchema,
@@ -46,7 +46,7 @@ struct AnthropicToolBridgeRationaleTests {
         let custom = "Custom rationale description"
         let converted = AnthropicToolBridge.anthropicTool(
             from: tool,
-            rationaleDescription: custom
+            rationaleDescription: custom,
         )
 
         guard case .object(let dict) = converted.inputSchema,
@@ -63,7 +63,7 @@ struct AnthropicToolBridgeRationaleTests {
     @Test func anthropicTool_preservesExistingRequiredFields() {
         let converted = AnthropicToolBridge.anthropicTool(
             from: tool,
-            rationaleDescription: ToolRationale.schemaDescription
+            rationaleDescription: ToolRationale.schemaDescription,
         )
 
         guard case .object(let dict) = converted.inputSchema,
@@ -83,14 +83,14 @@ struct AnthropicToolBridgeRationaleTests {
 struct AnthropicSessionRationaleTests {
     private func makeSession(
         toolRuntime: ToolRuntime,
-        client: some AnthropicHTTPStreaming
+        client: some AnthropicHTTPStreaming,
     ) -> AnthropicInferenceSession {
         AnthropicInferenceSession(
             credentials: MockAPIKeyProvider("test-key"),
             defaultModel: "test-model",
             systemPrompt: nil,
             toolRuntime: toolRuntime,
-            clientFactory: { _ in client }
+            clientFactory: { _ in client },
         )
     }
 
@@ -102,7 +102,7 @@ struct AnthropicSessionRationaleTests {
         ])
         let runtime = testToolRuntime(
             registry: ToolRegistry([AnyAgentTool(InferenceEchoTool())]),
-            executionPolicy: RequiresApprovalPolicy()
+            executionPolicy: RequiresApprovalPolicy(),
         )
         let session = makeSession(toolRuntime: runtime, client: mock)
 
@@ -127,7 +127,7 @@ struct AnthropicSessionRationaleTests {
         ])
         let session = makeSession(
             toolRuntime: testToolRuntime(registry: ToolRegistry([AnyAgentTool(InferenceEchoTool())])),
-            client: mock
+            client: mock,
         )
 
         var requestedArgsJSON: String?
@@ -149,7 +149,7 @@ struct AnthropicSessionRationaleTests {
         ])
         let runtime = testToolRuntime(
             registry: ToolRegistry([AnyAgentTool(InferenceEchoTool())]),
-            executionPolicy: RequiresApprovalPolicy()
+            executionPolicy: RequiresApprovalPolicy(),
         )
         let session = makeSession(toolRuntime: runtime, client: mock)
 

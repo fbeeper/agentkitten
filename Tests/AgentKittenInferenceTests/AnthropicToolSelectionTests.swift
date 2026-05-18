@@ -1,9 +1,9 @@
 // SPDX-FileCopyrightText: 2026 AgentKitten Authors
 // SPDX-License-Identifier: Apache-2.0
 
-import Testing
 @testable import AgentKittenCore
 @testable import AgentKittenInference
+import Testing
 
 @Test func anthropicSession_filtersRequestToolsByName() async throws {
     let client = CapturingStructuredHTTPClient(events: [
@@ -18,7 +18,7 @@ import Testing
 
     for try await _ in try await session.run(
         UserMessage(text: "Hi"),
-        parameters: InferenceRequestParameters(toolSelection: .including(["echo"]))
+        parameters: InferenceRequestParameters(toolSelection: .including(["echo"])),
     ) {}
 
     let request = try #require(client.capturedRequest)
@@ -35,7 +35,7 @@ import Testing
 
     for try await _ in try await session.run(
         UserMessage(text: "Hi"),
-        parameters: InferenceRequestParameters(toolSelection: .including(["weather"]))
+        parameters: InferenceRequestParameters(toolSelection: .including(["weather"])),
     ) {}
 
     let request = try #require(client.capturedRequest)
@@ -44,14 +44,14 @@ import Testing
 
 private func makeAnthropicToolSelectionSession(
     registry: ToolRegistry,
-    client: some AnthropicHTTPStreaming
+    client: some AnthropicHTTPStreaming,
 ) -> AnthropicInferenceSession {
     AnthropicInferenceSession(
         credentials: MockAPIKeyProvider("test-key"),
         defaultModel: "test-model",
         systemPrompt: nil,
         toolRuntime: testToolRuntime(registry: registry),
-        clientFactory: { _ in client }
+        clientFactory: { _ in client },
     )
 }
 
@@ -70,7 +70,7 @@ struct InferenceWeatherTool: AgentTool {
     var schema: ToolSchema {
         ToolSchema(parameters: .object(
             properties: ["city": .string(description: "City name.")],
-            required: ["city"]
+            required: ["city"],
         ))
     }
 

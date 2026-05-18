@@ -78,9 +78,10 @@ public actor AgentSession: ToolApproving {
     let operationGate = SingleFlightOperationGate<InferenceSessionOperationKind> {
         AgentSessionError.concurrentOperationInProgress(active: $0)
     }
-    // Internal setter: mutate only via setAutomaticCompactionPolicy(_:).
+
+    /// Internal setter: mutate only via setAutomaticCompactionPolicy(_:).
     public internal(set) var automaticCompactionPolicy: AutomaticCompactionPolicy
-    // Internal for conversation-preparation helpers in the split AgentSession extension file.
+    /// Internal for conversation-preparation helpers in the split AgentSession extension file.
     var conversationProvider: ConversationProvider
 
     init(
@@ -92,7 +93,7 @@ public actor AgentSession: ToolApproving {
         approvalGate: ToolApprovalGate,
         behavior: AgentBehavior,
         toolBehavior: ToolBehavior,
-        conversationFactory: ConversationAssembler
+        conversationFactory: ConversationAssembler,
     ) {
         self.sessionID = sessionID
         self.agentID = agentID
@@ -100,18 +101,18 @@ public actor AgentSession: ToolApproving {
         self.trace = trace
         self.state = state
         self.approvalGate = approvalGate
-        self.agentEnvironment = ExecutionEnvironment(behavior: behavior, toolBehavior: toolBehavior)
-        self.automaticCompactionPolicy = behavior.defaultAutomaticCompactionPolicy
-        self.conversationProvider = ConversationProvider(
+        agentEnvironment = ExecutionEnvironment(behavior: behavior, toolBehavior: toolBehavior)
+        automaticCompactionPolicy = behavior.defaultAutomaticCompactionPolicy
+        conversationProvider = ConversationProvider(
             owner: ownerID,
-            factory: conversationFactory
+            factory: conversationFactory,
         )
-        self.runtime = AgentSessionRuntime(
+        runtime = AgentSessionRuntime(
             agentID: agentID,
             sessionID: sessionID,
             trace: trace,
             approvalGate: approvalGate,
-            state: state
+            state: state,
         )
     }
 
@@ -145,13 +146,13 @@ public actor AgentSession: ToolApproving {
     public func send(
         _ text: String,
         userID: UserID? = nil,
-        validation: ValidationConfiguration<AssistantMessage> = .disabled
+        validation: ValidationConfiguration<AssistantMessage> = .disabled,
     ) async throws -> Turn<AssistantMessage> {
         try await send(
             text,
             userID: userID,
             turnOverrides: .init(),
-            validation: validation
+            validation: validation,
         )
     }
 
@@ -167,17 +168,17 @@ public actor AgentSession: ToolApproving {
         _ text: String,
         userID: UserID? = nil,
         turnOverrides: TurnOverrides,
-        validation: ValidationConfiguration<AssistantMessage> = .disabled
+        validation: ValidationConfiguration<AssistantMessage> = .disabled,
     ) async throws -> Turn<AssistantMessage> {
         let turn = makeAssistantTurn(
             text,
             userID: userID,
-            turnOverrides: turnOverrides
+            turnOverrides: turnOverrides,
         )
         try await startAssistantTurn(
             turn,
             validation: validation,
-            operation: .run
+            operation: .run,
         )
         return turn
     }
@@ -192,13 +193,13 @@ public actor AgentSession: ToolApproving {
     public func generate<Result: Codable & Sendable & JSONSchemaProviding>(
         _ prompt: String,
         userID: UserID? = nil,
-        validation: ValidationConfiguration<Result> = .disabled
+        validation: ValidationConfiguration<Result> = .disabled,
     ) async throws -> Turn<Result> {
         try await generate(
             prompt,
             userID: userID,
             turnOverrides: .init(),
-            validation: validation
+            validation: validation,
         )
     }
 
@@ -214,17 +215,17 @@ public actor AgentSession: ToolApproving {
         _ prompt: String,
         userID: UserID? = nil,
         turnOverrides: TurnOverrides,
-        validation: ValidationConfiguration<Result> = .disabled
+        validation: ValidationConfiguration<Result> = .disabled,
     ) async throws -> Turn<Result> {
         let turn: Turn<Result> = makeStructuredTurn(
             prompt,
             userID: userID,
-            turnOverrides: turnOverrides
+            turnOverrides: turnOverrides,
         )
         try await startStructuredTurn(
             turn,
             validation: validation,
-            operation: .generate
+            operation: .generate,
         )
         return turn
     }
@@ -237,7 +238,7 @@ public actor AgentSession: ToolApproving {
     private func performTurn<Result: Sendable>(
         _ turnRuntime: TurnRuntime<Result>,
         lease: SingleFlightOperationGate<InferenceSessionOperationKind>.Lease,
-        executePreparedTurn: @Sendable (UserMessage, AnyConversation) async throws -> Void
+        executePreparedTurn: @Sendable (UserMessage, AnyConversation) async throws -> Void,
     ) async {
         let userMessage = userMessage(for: turnRuntime)
         await state.beginTurn(invocationID: turnRuntime.id)
@@ -245,7 +246,7 @@ public actor AgentSession: ToolApproving {
             let conversation = try await conversation(
                 executionEnvironment: turnRuntime.executionEnvironment,
                 turnOverrides: turnRuntime.requestedTurnOverrides,
-                invocationID: turnRuntime.id
+                invocationID: turnRuntime.id,
             )
             record(kind: .turnStarted(userMessage), invocationID: turnRuntime.id)
             try await executePreparedTurn(userMessage, conversation)
@@ -274,7 +275,6 @@ public actor AgentSession: ToolApproving {
             ?? turnRuntime.text
         return UserMessage(text: composedText, sender: turnRuntime.sender)
     }
-
 }
 
 // MARK: - Turn startup
@@ -283,7 +283,7 @@ extension AgentSession {
     func makeAssistantTurn(
         _ text: String,
         userID: UserID?,
-        turnOverrides: TurnOverrides
+        turnOverrides: TurnOverrides,
     ) -> Turn<AssistantMessage> {
         let userID = userID ?? ownerID
         assert(userID == ownerID, "Message sender \(userID) does not match session owner \(ownerID).")
@@ -293,14 +293,14 @@ extension AgentSession {
             text: text,
             sender: userID,
             requestedTurnOverrides: turnOverrides,
-            executionEnvironment: turnEnvironment
+            executionEnvironment: turnEnvironment,
         )
     }
 
     func makeStructuredTurn<Result: Codable & Sendable & JSONSchemaProviding>(
         _ prompt: String,
         userID: UserID?,
-        turnOverrides: TurnOverrides
+        turnOverrides: TurnOverrides,
     ) -> Turn<Result> {
         let userID = userID ?? ownerID
         assert(userID == ownerID, "Message sender \(userID) does not match session owner \(ownerID).")
@@ -310,7 +310,7 @@ extension AgentSession {
             text: prompt,
             sender: userID,
             requestedTurnOverrides: turnOverrides,
-            executionEnvironment: turnEnvironment
+            executionEnvironment: turnEnvironment,
         )
     }
 
@@ -318,7 +318,7 @@ extension AgentSession {
     func startAssistantTurn(
         _ turn: Turn<AssistantMessage>,
         validation: ValidationConfiguration<AssistantMessage>,
-        operation: InferenceSessionOperationKind
+        operation: InferenceSessionOperationKind,
     ) async throws -> Task<Void, Never> {
         let lease = try operationGate.begin(operation)
         let turnRuntime = turn.runtime
@@ -328,7 +328,7 @@ extension AgentSession {
                     userMessage: userMessage,
                     turnRuntime: turnRuntime,
                     validation: validation,
-                    conversation: conversation
+                    conversation: conversation,
                 )
             }
         }
@@ -349,7 +349,7 @@ extension AgentSession {
     func startStructuredTurn<Result: Codable & Sendable & JSONSchemaProviding>(
         _ turn: Turn<Result>,
         validation: ValidationConfiguration<Result>,
-        operation: InferenceSessionOperationKind
+        operation: InferenceSessionOperationKind,
     ) async throws -> Task<Void, Never> {
         let lease = try operationGate.begin(operation)
         let turnRuntime = turn.runtime
@@ -359,7 +359,7 @@ extension AgentSession {
                     userMessage: userMessage,
                     turnRuntime: turnRuntime,
                     validation: validation,
-                    conversation: conversation
+                    conversation: conversation,
                 )
             }
         }

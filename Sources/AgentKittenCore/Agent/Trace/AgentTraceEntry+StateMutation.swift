@@ -21,7 +21,7 @@ extension AgentTraceEntry.Kind {
         public init(
             operation: Operation,
             key: String,
-            valueType: String?
+            valueType: String?,
         ) {
             self.operation = operation
             self.key = key

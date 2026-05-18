@@ -1,8 +1,8 @@
 // SPDX-FileCopyrightText: 2026 AgentKitten Authors
 // SPDX-License-Identifier: Apache-2.0
 
-import Testing
 @testable import AgentKittenCore
+import Testing
 
 @Test func clearContext_clearsStateByDefaultAndReplacesConversation() async throws {
     let provider = ScriptedInferenceProvider(
@@ -10,15 +10,15 @@ import Testing
             .toolCall(
                 name: "set_state",
                 argumentsJSON: #"{"key":"topic","value":"Swift"}"#,
-                thenRespond: "Saved."
+                thenRespond: "Saved.",
             ),
             .success("Second"),
-        ]
+        ],
     )
     let agent = Agent(
         providerRegistry: ProviderRegistry(default: provider),
         behavior: .test(),
-        sessionState: .enabledWithDefaultGuidance
+        sessionState: .enabledWithDefaultGuidance,
     )
     let session = agent.makeSession()
 
@@ -50,15 +50,15 @@ import Testing
             .toolCall(
                 name: "set_state",
                 argumentsJSON: #"{"key":"topic","value":"Swift"}"#,
-                thenRespond: "Saved."
+                thenRespond: "Saved.",
             ),
             .success("Second"),
-        ]
+        ],
     )
     let agent = Agent(
         providerRegistry: ProviderRegistry(default: provider),
         behavior: .test(),
-        sessionState: .enabledWithDefaultGuidance
+        sessionState: .enabledWithDefaultGuidance,
     )
     let session = agent.makeSession()
 
@@ -83,11 +83,11 @@ import Testing
         responses: [
             .success("First"),
             .success("Second"),
-        ]
+        ],
     )
     let agent = Agent(
         providerRegistry: ProviderRegistry(default: provider),
-        behavior: .test()
+        behavior: .test(),
     )
     let session = agent.makeSession()
 
@@ -112,12 +112,12 @@ import Testing
         responses: [
             .success("First"),
             .success("Second"),
-        ]
+        ],
     )
     let agent = Agent(
         providerRegistry: ProviderRegistry(default: provider),
         behavior: .test(),
-        sessionState: .readOnlyWithDefaultGuidance
+        sessionState: .readOnlyWithDefaultGuidance,
     )
     let session = agent.makeSession()
 

@@ -1,13 +1,13 @@
 // SPDX-FileCopyrightText: 2026 AgentKitten Authors
 // SPDX-License-Identifier: Apache-2.0
 
-import Foundation
 import AgentKittenCore
+import Foundation
 
 extension AnthropicInferenceSession: StructuredInferenceSession {
     public func generateStream<T: Codable & Sendable & JSONSchemaProviding>(
         prompt: String,
-        parameters: InferenceRequestParameters
+        parameters: InferenceRequestParameters,
     ) async throws
         -> StructuredInferenceStream<T> {
         let lease = try operationGate.begin(.generate)
@@ -20,7 +20,7 @@ extension AnthropicInferenceSession: StructuredInferenceSession {
                         let toolTurnRuntime = toolRuntime.makeTurnRuntime(
                             toolStepBudget: parameters.toolStepBudget,
                             context: parameters.toolExecutionContext,
-                            toolSelection: parameters.toolSelection
+                            toolSelection: parameters.toolSelection,
                         )
                         let client = clientFactory(key)
                         var turnHistory = [AnthropicMessage(role: .user, content: [.text(prompt)])]
@@ -30,7 +30,7 @@ extension AnthropicInferenceSession: StructuredInferenceSession {
                             parameters: parameters,
                             toolTurnRuntime: toolTurnRuntime,
                             turnHistory: &turnHistory,
-                            continuation: continuation
+                            continuation: continuation,
                         )
                         let value = try decodeStructuredValue(T.self, from: outcome.text)
                         continuation.yield(.result(value, finishReason(from: outcome.stopReason)))
@@ -57,7 +57,7 @@ extension AnthropicInferenceSession: StructuredInferenceSession {
         parameters: InferenceRequestParameters,
         toolTurnRuntime: ToolTurnRuntime,
         turnHistory: inout [AnthropicMessage],
-        continuation: StructuredInferenceStream<T>.Continuation
+        continuation: StructuredInferenceStream<T>.Continuation,
     ) async throws -> (stopReason: String, text: String) {
         var stopReason = "end_turn"
         var accumulated = ""
@@ -69,11 +69,11 @@ extension AnthropicInferenceSession: StructuredInferenceSession {
                 parameters: parameters,
                 toolTurnRuntime: toolTurnRuntime,
                 turnHistory: &turnHistory,
-                continuation: continuation
+                continuation: continuation,
             )
             stopReason = stopReasonAfterRequest(
                 stopReason: outcome.stopReason,
-                toolUseResponsesSeen: &toolUseResponsesSeen
+                toolUseResponsesSeen: &toolUseResponsesSeen,
             )
             accumulated = outcome.text
         } while stopReason == "tool_use"
@@ -87,7 +87,7 @@ extension AnthropicInferenceSession: StructuredInferenceSession {
         parameters: InferenceRequestParameters,
         toolTurnRuntime: ToolTurnRuntime,
         turnHistory: inout [AnthropicMessage],
-        continuation: StructuredInferenceStream<T>.Continuation
+        continuation: StructuredInferenceStream<T>.Continuation,
     ) async throws -> (stopReason: String, text: String) {
         let effectiveTools: [AnthropicTool]?
         let selectedTools = tools.filter {
@@ -102,7 +102,7 @@ extension AnthropicInferenceSession: StructuredInferenceSession {
             messages: turnHistory,
             tools: effectiveTools,
             stream: true,
-            temperature: 0
+            temperature: 0,
         )
         var textAccumulated = ""
         var pendingCalls: [PendingSSEToolCall] = []
@@ -132,7 +132,7 @@ extension AnthropicInferenceSession: StructuredInferenceSession {
             pendingCalls,
             toolTurnRuntime: toolTurnRuntime,
             turnHistory: &turnHistory,
-            continuation: continuation
+            continuation: continuation,
         )
         return (stopReason, textAccumulated)
     }
@@ -141,7 +141,7 @@ extension AnthropicInferenceSession: StructuredInferenceSession {
         _ calls: [PendingSSEToolCall],
         toolTurnRuntime: ToolTurnRuntime,
         turnHistory: inout [AnthropicMessage],
-        continuation: StructuredInferenceStream<T>.Continuation
+        continuation: StructuredInferenceStream<T>.Continuation,
     ) async throws {
         guard !calls.isEmpty else { return }
         var toolResultContents: [AnthropicContent] = []
@@ -149,7 +149,7 @@ extension AnthropicInferenceSession: StructuredInferenceSession {
             let result = try await executeStructuredSingleTool(
                 call,
                 toolTurnRuntime: toolTurnRuntime,
-                continuation: continuation
+                continuation: continuation,
             )
             toolResultContents.append(result)
         }
@@ -159,7 +159,7 @@ extension AnthropicInferenceSession: StructuredInferenceSession {
     private func executeStructuredSingleTool<T: Sendable>(
         _ call: PendingSSEToolCall,
         toolTurnRuntime: ToolTurnRuntime,
-        continuation: StructuredInferenceStream<T>.Continuation
+        continuation: StructuredInferenceStream<T>.Continuation,
     ) async throws -> AnthropicContent {
         let callID: ToolCallID = call.id
         let (rationale, argsJSON) = ToolRationale.extracting(from: call.argsJSON)
@@ -169,14 +169,14 @@ extension AnthropicInferenceSession: StructuredInferenceSession {
             pending,
             onApprovalRequired: { pendingCall in
                 continuation.yield(.toolApprovalRequired(call: pendingCall))
-            }
+            },
         )
         switch outcome {
         case .success(let content):
             continuation.yield(.toolCallCompleted(
                 id: callID,
                 name: call.name,
-                outcome: .success(content: content)
+                outcome: .success(content: content),
             ))
             return .toolResult(toolUseID: callID, content: content, isError: false)
         case .failure(let failure):
@@ -187,7 +187,7 @@ extension AnthropicInferenceSession: StructuredInferenceSession {
 
     private func decodeStructuredValue<T: Decodable>(
         _ type: T.Type,
-        from json: String
+        from json: String,
     ) throws(StructuredGenerationError) -> T {
         do {
             return try JSONDecoder().decode(T.self, from: Data(json.utf8))
@@ -207,7 +207,8 @@ extension AnthropicInferenceSession: StructuredInferenceSession {
 
     private func buildStructuredSystemPrompt(schemaJSON: String) -> String {
         let instruction = AgentKittenInferenceLocalization.formattedString(
-            "structuredOutput.anthropicInstructionFormat", schemaJSON)
+            "structuredOutput.anthropicInstructionFormat", schemaJSON,
+        )
         if let systemPrompt, !systemPrompt.isEmpty {
             return "\(systemPrompt)\n\n\(instruction)"
         }

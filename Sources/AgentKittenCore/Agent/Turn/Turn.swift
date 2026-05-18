@@ -49,16 +49,19 @@ public actor Turn<Result: Sendable> {
     nonisolated var text: String {
         runtime.text
     }
+
     /// The user who authored this turn; read by `Conversation.processWork()` without actor crossing.
     nonisolated var sender: UserID {
         runtime.sender
     }
+
     /// The original per-turn override request.
     nonisolated var requestedTurnOverrides: TurnOverrides {
         runtime.requestedTurnOverrides
     }
+
     /// The resolved execution environment for this turn.
-    internal nonisolated var executionEnvironment: ExecutionEnvironment {
+    nonisolated var executionEnvironment: ExecutionEnvironment {
         runtime.executionEnvironment
     }
 
@@ -119,6 +122,7 @@ public actor Turn<Result: Sendable> {
         case running(Task<Void, Never>)
         case cancelled
     }
+
     private var state: State = .queued
 
     // MARK: - Init
@@ -128,14 +132,14 @@ public actor Turn<Result: Sendable> {
         text: String,
         sender: UserID,
         requestedTurnOverrides: TurnOverrides,
-        executionEnvironment: ExecutionEnvironment
+        executionEnvironment: ExecutionEnvironment,
     ) {
-        self.runtime = TurnRuntime(
+        runtime = TurnRuntime(
             id: id,
             text: text,
             sender: sender,
             requestedTurnOverrides: requestedTurnOverrides,
-            executionEnvironment: executionEnvironment
+            executionEnvironment: executionEnvironment,
         )
     }
 

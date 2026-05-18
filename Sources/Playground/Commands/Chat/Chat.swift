@@ -1,9 +1,9 @@
 // SPDX-FileCopyrightText: 2026 AgentKitten Authors
 // SPDX-License-Identifier: Apache-2.0
 
+import AgentKitten
 import ArgumentParser
 import Darwin
-import AgentKitten
 
 extension Playground {
     /// Multi-turn conversation that exercises the Agent layer.
@@ -11,7 +11,7 @@ extension Playground {
     /// Reads prompts from stdin one line at a time. Ctrl-D exits.
     struct Chat: AsyncParsableCommand {
         static let configuration = CommandConfiguration(
-            abstract: "Multi-turn chat via Agent. Ctrl-D to exit."
+            abstract: "Multi-turn chat via Agent. Ctrl-D to exit.",
         )
 
         @Option(name: .long, help: "System prompt for the agent.")
@@ -34,19 +34,19 @@ extension Playground {
 
         @Option(
             name: .long,
-            help: "Minimum accepted assistant response length. Responses shorter than this are retried."
+            help: "Minimum accepted assistant response length. Responses shorter than this are retried.",
         )
         var minResponseLength: Int = 0
 
         @Option(
             name: .long,
-            help: "Judge criteria used to validate assistant responses with a judge agent."
+            help: "Judge criteria used to validate assistant responses with a judge agent.",
         )
         var judgeCriteria: String = ""
 
         @Option(
             name: .long,
-            help: "Inference provider for the judge agent. Defaults to --provider."
+            help: "Inference provider for the judge agent. Defaults to --provider.",
         )
         var judgeProvider: ProviderOption?
 
@@ -66,20 +66,20 @@ extension Playground {
             try await chat(
                 agent: agent,
                 judgeCriteria: judgeCriteria,
-                judgeProvider: effectiveJudgeProvider
+                judgeProvider: effectiveJudgeProvider,
             )
         }
 
         private func chat(
             agent: Agent,
             judgeCriteria: String,
-            judgeProvider: ProviderOption
+            judgeProvider: ProviderOption,
         ) async throws {
             let session = agent.makeSession()
             let memory = PlaygroundToolApprovalMemory()
             let validation = try makeValidationConfiguration(
                 judgeCriteria: judgeCriteria,
-                judgeProvider: judgeProvider
+                judgeProvider: judgeProvider,
             )
             // readLine() blocks the current thread. Acceptable in a single-turn
             // CLI playground — no concurrent work needs the thread while waiting.
@@ -107,7 +107,7 @@ extension Playground {
                         session: session,
                         toolPolicy: toolPolicy,
                         memory: memory,
-                        verboseTools: verboseTools
+                        verboseTools: verboseTools,
                     )
                 } catch {
                     print(PlaygroundChatOutputFormatter.turnError(error))
@@ -115,7 +115,7 @@ extension Playground {
                 if trace {
                     await PlaygroundTracePrinter.printTurnTrace(
                         trace: session.trace,
-                        invocationID: turn.id
+                        invocationID: turn.id,
                     )
                 }
                 if showUsage {
@@ -195,19 +195,19 @@ extension Playground {
 
         private func makeValidationConfiguration(
             judgeCriteria: String,
-            judgeProvider: ProviderOption
+            judgeProvider: ProviderOption,
         ) throws -> ValidationConfiguration<AssistantMessage>? {
             let trimmedJudgeCriteria = judgeCriteria.trimmingCharacters(
-                in: .whitespacesAndNewlines
+                in: .whitespacesAndNewlines,
             )
 
             guard !trimmedJudgeCriteria.isEmpty else {
                 if minResponseLength > 0 {
                     return ValidationConfiguration(
                         validator: MinimumResponseLengthValidator(
-                            minimumLength: minResponseLength
+                            minimumLength: minResponseLength,
                         ),
-                        maxRetries: 2
+                        maxRetries: 2,
                     )
                 }
                 return nil
@@ -217,19 +217,19 @@ extension Playground {
             if minResponseLength > 0 {
                 validation = ValidationConfiguration(
                     validator: MinimumResponseLengthValidator(
-                        minimumLength: minResponseLength
+                        minimumLength: minResponseLength,
                     ),
                     maxRetries: 2,
-                    policy: .permissive
+                    policy: .permissive,
                 )
             }
 
             let judge = JudgeValidator<AssistantMessage>(
                 prompt: .criteria(trimmedJudgeCriteria),
                 providerRegistry: try PlaygroundProviderFactory.makeJudgeRegistry(
-                    for: judgeProvider
+                    for: judgeProvider,
                 ),
-                name: "PlaygroundJudge"
+                name: "PlaygroundJudge",
             )
 
             if let validation {
@@ -239,7 +239,7 @@ extension Playground {
             return ValidationConfiguration(
                 validator: judge,
                 maxRetries: 2,
-                policy: .permissive
+                policy: .permissive,
             )
         }
     }
@@ -251,8 +251,8 @@ extension Playground.Chat {
             PlaygroundChatOutputFormatter.sessionHeader(
                 title: "Chat",
                 detailLines: sessionDetailLines(judgeProvider: judgeProvider),
-                instructions: PlaygroundChatOutputFormatter.chatInstructions
-            )
+                instructions: PlaygroundChatOutputFormatter.chatInstructions,
+            ),
         )
     }
 
@@ -282,13 +282,13 @@ extension Playground.Chat {
     private func makeAgent() throws -> Agent {
         let providerConfiguration = try PlaygroundProviderFactory.makeRegistry(
             default: provider,
-            compaction: compactionProvider
+            compaction: compactionProvider,
         )
         return PlaygroundSessionFactory.makeAgent(
             providerRegistry: providerConfiguration.registry,
             behavior: makeBehavior(compactionProvider: providerConfiguration.compactionProvider),
             toolDefinition: makeToolDefinition(),
-            sessionState: sessionState ? .enabledWithDefaultGuidance : .disabled
+            sessionState: sessionState ? .enabledWithDefaultGuidance : .disabled,
         )
     }
 
@@ -300,7 +300,7 @@ extension Playground.Chat {
         return AgentBehavior(
             systemPrompt: system,
             phaseBehaviors: phaseBehaviors,
-            defaultAutomaticCompactionPolicy: compaction ? .enabled() : .disabled
+            defaultAutomaticCompactionPolicy: compaction ? .enabled() : .disabled,
         )
     }
 
@@ -310,7 +310,7 @@ extension Playground.Chat {
                 AnyAgentTool(CurrentTimeTool()),
                 AnyAgentTool(ConvertTemperatureTool()),
             ],
-            executionPolicy: PlaygroundToolApprovalPrompt.configuredPolicy(for: toolPolicy)
+            executionPolicy: PlaygroundToolApprovalPrompt.configuredPolicy(for: toolPolicy),
         )
     }
 }

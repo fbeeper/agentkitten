@@ -1,8 +1,8 @@
 // SPDX-FileCopyrightText: 2026 AgentKitten Authors
 // SPDX-License-Identifier: Apache-2.0
 
-import Foundation
 import AgentKittenCore
+import Foundation
 
 enum ChickenWizardTurnPolicy {
     static func allowsBrewing(for userMessage: String) -> Bool {
@@ -92,7 +92,7 @@ actor ChickenWizardGameState {
     private var inventory: [String: Int]
 
     init() {
-        self.inventory = Self.starterIngredients
+        inventory = Self.starterIngredients
     }
 
     init(inventory: [String: Int]) {
@@ -102,7 +102,7 @@ actor ChickenWizardGameState {
     func inspectPantry() -> ChickenWizardPotionToolOutput {
         let missing = Self.missingIngredients(
             required: Self.recipe,
-            available: inventory
+            available: inventory,
         )
         return ChickenWizardPotionToolOutput(
             action: ChickenWizardPotionTool.Action.inspect.rawValue,
@@ -115,14 +115,14 @@ actor ChickenWizardGameState {
             brewed: false,
             message: missing.isEmpty
                 ? "The potion can be brewed with the ingredients on hand."
-                : "The pantry is missing ingredients for the potion."
+                : "The pantry is missing ingredients for the potion.",
         )
     }
 
     func brewPotion() -> ChickenWizardPotionToolOutput {
         let missing = Self.missingIngredients(
             required: Self.recipe,
-            available: inventory
+            available: inventory,
         )
         guard missing.isEmpty else {
             return ChickenWizardPotionToolOutput(
@@ -134,7 +134,7 @@ actor ChickenWizardGameState {
                 consumedIngredients: [],
                 brewable: false,
                 brewed: false,
-                message: "Brewing failed because required ingredients are missing."
+                message: "Brewing failed because required ingredients are missing.",
             )
         }
 
@@ -155,13 +155,13 @@ actor ChickenWizardGameState {
             consumedIngredients: Self.stacks(from: Self.recipe),
             brewable: true,
             brewed: true,
-            message: "The chicken wizard brewed the potion and consumed the required ingredients."
+            message: "The chicken wizard brewed the potion and consumed the required ingredients.",
         )
     }
 
     private static func missingIngredients(
         required: [String: Int],
-        available: [String: Int]
+        available: [String: Int],
     ) -> [String: Int] {
         var missing: [String: Int] = [:]
         for (name, requiredQuantity) in required {
@@ -214,7 +214,7 @@ struct ChickenWizardPotionTool: AgentTool {
                         Action.inspect.rawValue,
                         Action.brew.rawValue,
                     ],
-                    description: "Use inspect to check ingredients and brew to make the potion."
+                    description: "Use inspect to check ingredients and brew to make the potion.",
                 ),
             ],
             required: ["action"],
@@ -237,7 +237,7 @@ struct ChickenWizardPotionTool: AgentTool {
                     consumedIngredients: [],
                     brewable: pantry.brewable,
                     brewed: false,
-                    message: "Brewing requires a direct and polite request in the current turn."
+                    message: "Brewing requires a direct and polite request in the current turn.",
                 )
             }
             return await gameState.brewPotion()

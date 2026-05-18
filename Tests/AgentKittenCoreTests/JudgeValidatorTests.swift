@@ -1,9 +1,9 @@
 // SPDX-FileCopyrightText: 2026 AgentKitten Authors
 // SPDX-License-Identifier: Apache-2.0
 
+@testable import AgentKittenCore
 import Foundation
 import Testing
-@testable import AgentKittenCore
 
 private struct JudgeLabel: Codable, Sendable, JSONSchemaProviding, Equatable {
     let name: String
@@ -15,7 +15,7 @@ private struct JudgeLabel: Codable, Sendable, JSONSchemaProviding, Equatable {
                 "name": .string(description: "The label name"),
                 "score": .number(description: "The confidence score"),
             ],
-            required: ["name", "score"]
+            required: ["name", "score"],
         )
     }
 }
@@ -31,7 +31,7 @@ struct JudgeValidatorTests {
         )
         let agent = Agent(
             providerRegistry: ProviderRegistry(default: outerProvider),
-            behavior: .test("Answer the user.")
+            behavior: .test("Answer the user."),
         )
         let session = agent.makeSession()
 
@@ -41,9 +41,9 @@ struct JudgeValidatorTests {
                 validator: JudgeValidator<AssistantMessage>(
                     prompt: .criteria("The response must be acceptable."),
                     providerRegistry: ProviderRegistry(default: judgeProvider),
-                    name: "Policy Judge"
-                )
-            )
+                    name: "Policy Judge",
+                ),
+            ),
         )
         let events = try await collectEvents(from: turn)
 
@@ -51,7 +51,7 @@ struct JudgeValidatorTests {
         #expect(await judgeProvider.script.structuredSessionUseCount() == 1)
         #expect(
             await judgeProvider.script.latestPrompt()?
-                .contains("The response must be acceptable.") == true
+                .contains("The response must be acceptable.") == true,
         )
         #expect(directTurnEntryKinds(in: await directTurnEntries(for: turn.id, on: session)) == [
             .turnStarted(UserMessage(text: "Hi")),
@@ -59,7 +59,7 @@ struct JudgeValidatorTests {
             .validation(.init(
                 result: .pass,
                 message: AgentKittenLocalization.string("validation.validationPassed"),
-                validator: "Policy Judge"
+                validator: "Policy Judge",
             )),
             .turnCompleted(.completed),
         ])
@@ -80,7 +80,7 @@ struct JudgeValidatorTests {
         )
         let agent = Agent(
             providerRegistry: ProviderRegistry(default: outerProvider),
-            behavior: .test("Answer the user.")
+            behavior: .test("Answer the user."),
         )
         let session = agent.makeSession()
 
@@ -89,10 +89,10 @@ struct JudgeValidatorTests {
             validation: ValidationConfiguration(
                 validator: JudgeValidator<AssistantMessage>(
                     prompt: .criteria("The response must be detailed."),
-                    providerRegistry: ProviderRegistry(default: judgeProvider)
+                    providerRegistry: ProviderRegistry(default: judgeProvider),
                 ),
-                maxRetries: 1
-            )
+                maxRetries: 1,
+            ),
         )
         let events = try await collectEvents(from: turn)
 
@@ -111,7 +111,7 @@ struct JudgeValidatorTests {
         )
         let agent = Agent(
             providerRegistry: ProviderRegistry(default: outerProvider),
-            behavior: .test("Answer the user.")
+            behavior: .test("Answer the user."),
         )
         let session = agent.makeSession()
 
@@ -121,9 +121,9 @@ struct JudgeValidatorTests {
                 validator: JudgeValidator<AssistantMessage>(
                     prompt: .criteria("The response must be acceptable."),
                     providerRegistry: ProviderRegistry(default: judgeProvider),
-                    name: "Rejecting Judge"
-                )
-            )
+                    name: "Rejecting Judge",
+                ),
+            ),
         )
         await #expect(throws: Error.self) {
             _ = try await collectEvents(from: turn)
@@ -135,11 +135,11 @@ struct JudgeValidatorTests {
             .validation(.init(
                 result: .fail,
                 message: "The response is unacceptable.",
-                validator: "Rejecting Judge"
+                validator: "Rejecting Judge",
             )),
             .error(.init(description: "rejected(\"The response is unacceptable.\")")),
             .turnCompleted(.failed(.init(
-                description: "rejected(\"The response is unacceptable.\")"
+                description: "rejected(\"The response is unacceptable.\")",
             ))),
         ])
     }
@@ -153,7 +153,7 @@ struct JudgeValidatorTests {
         )
         let agent = Agent(
             providerRegistry: ProviderRegistry(default: outerProvider),
-            behavior: .test("Answer the user.")
+            behavior: .test("Answer the user."),
         )
         let session = agent.makeSession()
 
@@ -163,10 +163,10 @@ struct JudgeValidatorTests {
                 validator: JudgeValidator<AssistantMessage>(
                     prompt: .criteria("The response must be acceptable."),
                     providerRegistry: ProviderRegistry(default: judgeProvider),
-                    name: "Offline Judge"
+                    name: "Offline Judge",
                 ),
-                policy: .permissive
-            )
+                policy: .permissive,
+            ),
         )
         let events = try await collectEvents(from: turn)
 
@@ -175,7 +175,7 @@ struct JudgeValidatorTests {
         let info = try requiredValidationInfo(
             in: kinds,
             validator: "Offline Judge",
-            result: .waived
+            result: .waived,
         )
         #expect(info.message.contains("generationFailed"))
         #expect(info.message.contains("invalidResponse"))
@@ -192,13 +192,13 @@ struct JudgeValidatorTests {
                 .toolCall(
                     name: CountingEchoTool.name,
                     argumentsJSON: #"{"message":"hi"}"#,
-                    thenRespond: #"{"verdict":"pass"}"#
+                    thenRespond: #"{"verdict":"pass"}"#,
                 ),
             ],
         )
         let agent = Agent(
             providerRegistry: ProviderRegistry(default: outerProvider),
-            behavior: .test("Answer the user.")
+            behavior: .test("Answer the user."),
         )
         let session = agent.makeSession()
 
@@ -207,9 +207,9 @@ struct JudgeValidatorTests {
             validation: ValidationConfiguration(
                 validator: JudgeValidator<AssistantMessage>(
                     prompt: .criteria("The response must be acceptable."),
-                    providerRegistry: ProviderRegistry(default: judgeProvider)
-                )
-            )
+                    providerRegistry: ProviderRegistry(default: judgeProvider),
+                ),
+            ),
         )
         await #expect(throws: Error.self) {
             _ = try await collectEvents(from: turn)
@@ -228,13 +228,13 @@ struct JudgeValidatorTests {
                 .toolCall(
                     name: CountingEchoTool.name,
                     argumentsJSON: #"{"message":"hi"}"#,
-                    thenRespond: #"{"verdict":"pass"}"#
+                    thenRespond: #"{"verdict":"pass"}"#,
                 ),
             ],
         )
         let agent = Agent(
             providerRegistry: ProviderRegistry(default: outerProvider),
-            behavior: .test("Answer the user.")
+            behavior: .test("Answer the user."),
         )
         let session = agent.makeSession()
 
@@ -245,10 +245,10 @@ struct JudgeValidatorTests {
                     prompt: .criteria("The response must be acceptable."),
                     providerRegistry: ProviderRegistry(default: judgeProvider),
                     toolDefinition: ToolDefinition(
-                        tools: [AnyAgentTool(CountingEchoTool(counter: counter))]
-                    )
-                )
-            )
+                        tools: [AnyAgentTool(CountingEchoTool(counter: counter))],
+                    ),
+                ),
+            ),
         )
         let events = try await collectEvents(from: turn)
 
@@ -256,14 +256,13 @@ struct JudgeValidatorTests {
         #expect(await counter.value() == 1)
         #expect(
             await judgeProvider.script.latestStructuredUserPrompt()?
-                .contains("Candidate result:") == true
+                .contains("Candidate result:") == true,
         )
     }
 }
 
 @Suite("Judge Validator State Access")
 struct JudgeValidatorStateAccessTests {
-
     @Test func judgeValidator_validatesStructuredResults() async throws {
         let resultJSON = #"{"name":"urgent","score":0.9}"#
         let judgeProvider = ScriptedInferenceProvider(
@@ -271,9 +270,9 @@ struct JudgeValidatorStateAccessTests {
         )
         let agent = Agent(
             providerRegistry: ProviderRegistry(default: ScriptedInferenceProvider(
-                structuredResponses: [.success(resultJSON)]
+                structuredResponses: [.success(resultJSON)],
             )),
-            behavior: .test("Classify.")
+            behavior: .test("Classify."),
         )
         let session = agent.makeSession()
 
@@ -283,16 +282,16 @@ struct JudgeValidatorStateAccessTests {
                 validator: JudgeValidator<JudgeLabel>(
                     prompt: .criteria("The label must be valid."),
                     providerRegistry: ProviderRegistry(default: judgeProvider),
-                    name: "Structured Judge"
-                )
-            )
+                    name: "Structured Judge",
+                ),
+            ),
         )
         let result = try await firstStructuredResult(from: turn)
 
         #expect(result == JudgeLabel(name: "urgent", score: 0.9))
         #expect(
             await judgeProvider.script.latestStructuredUserPrompt()?
-                .contains(#"{"name":"urgent","score":0.9}"#) == true
+                .contains(#"{"name":"urgent","score":0.9}"#) == true,
         )
     }
 
@@ -302,7 +301,7 @@ struct JudgeValidatorStateAccessTests {
                 .toolCall(
                     name: "set_state",
                     argumentsJSON: #"{"key":"topic","value":"Swift"}"#,
-                    thenRespond: "Saved."
+                    thenRespond: "Saved.",
                 ),
                 .success("Candidate response"),
             ],
@@ -312,14 +311,14 @@ struct JudgeValidatorStateAccessTests {
                 .toolCall(
                     name: "get_state",
                     argumentsJSON: #"{"key":"topic"}"#,
-                    thenRespond: #"{"verdict":"pass"}"#
+                    thenRespond: #"{"verdict":"pass"}"#,
                 ),
             ],
         )
         let agent = Agent(
             providerRegistry: ProviderRegistry(default: outerProvider),
             behavior: .test("Answer the user."),
-            sessionState: .enabledWithDefaultGuidance
+            sessionState: .enabledWithDefaultGuidance,
         )
         let session = agent.makeSession()
 
@@ -333,9 +332,9 @@ struct JudgeValidatorStateAccessTests {
                 validator: JudgeValidator<AssistantMessage>(
                     prompt: .criteria("Check the saved topic before approving the response."),
                     providerRegistry: ProviderRegistry(default: judgeProvider),
-                    sessionStateAccess: .readOnlyTools
-                )
-            )
+                    sessionStateAccess: .readOnlyTools,
+                ),
+            ),
         )
         let events = try await collectEvents(from: turn)
 
@@ -343,13 +342,13 @@ struct JudgeValidatorStateAccessTests {
         #expect(await session.state.value(forKey: "topic") == "Swift")
         #expect(
             await judgeProvider.script.latestPrompt()?
-                .contains("Session state is read-only in this session.") == true
+                .contains("Session state is read-only in this session.") == true,
         )
     }
 }
 
 private func firstStructuredResult<T: Sendable>(
-    from turn: Turn<T>
+    from turn: Turn<T>,
 ) async throws -> T {
     for try await event in turn.events {
         if case .result(let result) = event.kind {
@@ -367,13 +366,13 @@ private enum JudgeValidatorTestError: Error {
 private func requiredValidationInfo(
     in kinds: [AgentTraceEntry.Kind],
     validator: String,
-    result: AgentTraceEntry.Kind.ValidationInfo.Result
+    result: AgentTraceEntry.Kind.ValidationInfo.Result,
 ) throws -> AgentTraceEntry.Kind.ValidationInfo {
     for kind in kinds {
         guard case .validation(let info) = kind else {
             continue
         }
-        if info.validator == validator && info.result == result {
+        if info.validator == validator, info.result == result {
             return info
         }
     }

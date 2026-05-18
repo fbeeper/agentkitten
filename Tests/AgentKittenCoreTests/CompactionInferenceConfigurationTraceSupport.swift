@@ -16,7 +16,7 @@ struct AnotherSentinelContextKey: ExecutionConfigurationKey {
 }
 
 func firstManualContextCompaction(
-    on session: AgentSession
+    on session: AgentSession,
 ) async -> AgentTraceEntry.Kind.ContextCompactionInfo? {
     for entry in await session.trace.snapshot() {
         if case .contextCompaction(let info) = entry.kind, info.mode == .manual {

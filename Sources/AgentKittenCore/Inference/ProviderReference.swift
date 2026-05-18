@@ -3,19 +3,15 @@
 
 /// A provider selection reference carried by conversation configuration.
 public struct ProviderReference: Sendable, Equatable, Hashable {
-    // Keep the enum private so the public API stays `.default` / `.ofType(...)`
-    // instead of exposing raw `ObjectIdentifier` construction. That makes the
-    // type-key storage an implementation detail rather than part of the ABI.
+    /// Keep the enum private so the public API stays `.default` / `.ofType(...)`
+    /// instead of exposing raw `ObjectIdentifier` construction. That makes the
+    /// type-key storage an implementation detail rather than part of the ABI.
     private enum Storage: Sendable, Equatable, Hashable {
         case `default`
         case providerType(ObjectIdentifier, String)
     }
 
     private let storage: Storage
-
-    private init(storage: Storage) {
-        self.storage = storage
-    }
 
     /// Use the agent's default provider.
     public static let `default` = Self(storage: .default)
@@ -27,11 +23,11 @@ public struct ProviderReference: Sendable, Equatable, Hashable {
     /// Haiku vs. Anthropic Sonnet can still use wrapper types, while
     /// conversation-level inference settings belong on configuration types.
     public static func ofType<Provider: InferenceProviding>(
-        _ type: Provider.Type
+        _ type: Provider.Type,
     ) -> Self {
         Self(storage: .providerType(
             ObjectIdentifier(type),
-            String(describing: type)
+            String(describing: type),
         ))
     }
 

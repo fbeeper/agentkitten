@@ -35,14 +35,13 @@ struct ConvertTemperatureTool: AgentTool {
     }
 
     func execute(arguments: Arguments) async throws -> Output {
-        let result: Double
-        switch (arguments.from, arguments.toUnit) {
+        let result: Double = switch (arguments.from, arguments.toUnit) {
         case (.celsius, .fahrenheit):
-            result = arguments.value * 9 / 5 + 32
+            arguments.value * 9 / 5 + 32
         case (.fahrenheit, .celsius):
-            result = (arguments.value - 32) * 5 / 9
+            (arguments.value - 32) * 5 / 9
         default:
-            result = arguments.value
+            arguments.value
         }
         let unitLabel = arguments.toUnit == .celsius ? "C" : "F"
         let formatted = String(format: "%.1f°%@", result, unitLabel)

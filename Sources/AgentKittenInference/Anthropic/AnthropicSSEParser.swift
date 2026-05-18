@@ -52,7 +52,7 @@ private struct ParserState {
 
     mutating func consume(
         line: String,
-        continuation: AsyncThrowingStream<SSEEvent, Error>.Continuation
+        continuation: AsyncThrowingStream<SSEEvent, Error>.Continuation,
     ) {
         if line.hasPrefix("event:") {
             // Dispatch any buffered data from the previous event before starting a new one.
@@ -74,7 +74,7 @@ private struct ParserState {
     }
 
     private mutating func dispatch(
-        continuation: AsyncThrowingStream<SSEEvent, Error>.Continuation
+        continuation: AsyncThrowingStream<SSEEvent, Error>.Continuation,
     ) {
         let payload = dataLines.joined()
         guard
@@ -128,7 +128,7 @@ private struct ParserState {
 
     private mutating func handleBlockDelta(
         json: [String: Any],
-        continuation: AsyncThrowingStream<SSEEvent, Error>.Continuation
+        continuation: AsyncThrowingStream<SSEEvent, Error>.Continuation,
     ) {
         guard
             let index = json["index"] as? Int,
@@ -153,7 +153,7 @@ private struct ParserState {
 
     private mutating func handleBlockStop(
         json: [String: Any],
-        continuation: AsyncThrowingStream<SSEEvent, Error>.Continuation
+        continuation: AsyncThrowingStream<SSEEvent, Error>.Continuation,
     ) {
         guard let index = json["index"] as? Int else { return }
         if let id = toolIDs[index], let name = toolNames[index], let args = toolArgs[index] {
@@ -167,7 +167,7 @@ private struct ParserState {
 
     private func handleMessageDelta(
         json: [String: Any],
-        continuation: AsyncThrowingStream<SSEEvent, Error>.Continuation
+        continuation: AsyncThrowingStream<SSEEvent, Error>.Continuation,
     ) {
         if let delta = json["delta"] as? [String: Any], let reason = delta["stop_reason"] as? String {
             continuation.yield(.stopReason(reason))
@@ -178,7 +178,7 @@ private struct ParserState {
 
     private func handleError(
         json: [String: Any],
-        continuation: AsyncThrowingStream<SSEEvent, Error>.Continuation
+        continuation: AsyncThrowingStream<SSEEvent, Error>.Continuation,
     ) {
         let message = (json["error"] as? [String: Any])?["message"] as? String
         continuation.yield(.error(message ?? "Unknown Anthropic API error."))

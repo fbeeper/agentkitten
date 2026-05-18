@@ -22,7 +22,7 @@ struct ConversationEventConsumer {
         _ stream: S,
         turnRuntime: TurnRuntime<Result>,
         traceSink: TurnTraceSink,
-        output: Output = .emit
+        output: Output = .emit,
     ) async throws -> Result where S.Element == ConversationEvent<Result> {
         var result: Result?
         var eventSink = TurnEventSink<Result>(
@@ -56,7 +56,7 @@ struct ConversationEventConsumer {
     func emitResult<Result: Sendable>(
         _ result: Result,
         timestamp: Date,
-        on turnRuntime: TurnRuntime<Result>
+        on turnRuntime: TurnRuntime<Result>,
     ) {
         var eventSink = TurnEventSink<Result>(
             continuation: turnRuntime.continuation,
@@ -66,7 +66,7 @@ struct ConversationEventConsumer {
         )
         eventSink.emitResult(
             result,
-            timestamp: timestamp
+            timestamp: timestamp,
         )
     }
 }

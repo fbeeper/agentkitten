@@ -1,9 +1,9 @@
 // SPDX-FileCopyrightText: 2026 AgentKitten Authors
 // SPDX-License-Identifier: Apache-2.0
 
-import Testing
-import Foundation
 @testable import AgentKittenCore
+import Foundation
+import Testing
 
 private struct PolicyEchoTool: AgentTool {
     struct Arguments: Codable, Sendable {
@@ -20,7 +20,7 @@ private struct PolicyEchoTool: AgentTool {
     var schema: ToolSchema {
         ToolSchema(parameters: .object(
             properties: ["message": .string(description: "The message to echo.")],
-            required: ["message"]
+            required: ["message"],
         ))
     }
 
@@ -80,7 +80,7 @@ private struct ContextReadingPolicy: ToolExecutionPolicy {
         let hiddenReason = context[HiddenPolicyReasonKey.self]
         await recorder.record(
             approvalReason: approvalReason,
-            hiddenReason: hiddenReason
+            hiddenReason: hiddenReason,
         )
         return .deny(reason: approvalReason ?? "missing approval reason")
     }
@@ -115,7 +115,7 @@ private struct SpyWriteFileTool: AgentTool {
     var schema: ToolSchema {
         ToolSchema(parameters: .object(
             properties: ["path": .string(description: "The file path.")],
-            required: ["path"]
+            required: ["path"],
         ))
     }
 
@@ -132,7 +132,7 @@ private struct MultiToolProvider: InferenceProviding {
         systemPrompt: String?,
         toolRuntime: ToolRuntime,
         toolSelection: ToolSelection,
-        inferenceContext: InferenceContext
+        inferenceContext: InferenceContext,
     ) -> MultiToolSession {
         MultiToolSession(toolRuntime: toolRuntime)
     }
@@ -148,7 +148,7 @@ private actor MultiToolSession: InferenceSession, StructuredInferenceSession {
     func run(_ message: UserMessage, parameters: InferenceRequestParameters) async throws -> InferenceStream {
         let toolTurnRuntime = toolRuntime.makeTurnRuntime(
             toolStepBudget: parameters.toolStepBudget,
-            context: parameters.toolExecutionContext
+            context: parameters.toolExecutionContext,
         )
         let calls = [
             PendingToolCall(id: "call-1", name: "write_file", argumentsJSON: #"{"path":"/tmp/file.txt"}"#),
@@ -160,7 +160,7 @@ private actor MultiToolSession: InferenceSession, StructuredInferenceSession {
                 await Self.emitOutcome(
                     for: call,
                     toolTurnRuntime: toolTurnRuntime,
-                    continuation: continuation
+                    continuation: continuation,
                 )
             }
             continuation.yield(.result("Done.", .endTurn))
@@ -172,7 +172,7 @@ private actor MultiToolSession: InferenceSession, StructuredInferenceSession {
 
     func generateStream<T: Codable & Sendable & JSONSchemaProviding>(
         prompt: String,
-        parameters: InferenceRequestParameters
+        parameters: InferenceRequestParameters,
     ) async throws(StructuredGenerationError) -> StructuredInferenceStream<T> {
         throw .generationFailed(InferenceError.invalidResponse("structured generation not supported"))
     }
@@ -182,45 +182,45 @@ extension MultiToolSession {
     private static func emitOutcome(
         for call: PendingToolCall,
         toolTurnRuntime: ToolTurnRuntime,
-        continuation: InferenceStream.Continuation
+        continuation: InferenceStream.Continuation,
     ) async {
         continuation.yield(
             .toolCallRequested(
                 id: call.id,
                 name: call.name,
-                argumentsJSON: call.argumentsJSON
-            )
+                argumentsJSON: call.argumentsJSON,
+            ),
         )
         let outcome = await toolTurnRuntime.invoke(
             call,
             onApprovalRequired: { pendingCall in
                 continuation.yield(.toolApprovalRequired(call: pendingCall))
-            }
+            },
         )
         continuation.yield(
             .toolCallCompleted(
                 id: call.id,
                 name: call.name,
-                outcome: outcome
-            )
+                outcome: outcome,
+            ),
         )
     }
 }
 
-@Test func testDenyAllPolicyProducesDeniedToolFailureAndSkipsExecution() async throws {
+@Test func denyAllPolicyProducesDeniedToolFailureAndSkipsExecution() async throws {
     let recorder = SpyRecorder()
     let agent = Agent(
         providerRegistry: ProviderRegistry(default: ScriptedInferenceProvider(responses: [
             .toolCall(
                 name: "write_file",
                 argumentsJSON: #"{"path":"/tmp/file.txt"}"#,
-                thenRespond: "Done."
+                thenRespond: "Done.",
             ),
         ])),
         behavior: .test(),
         toolDefinition: ToolDefinition(
             tools: [AnyAgentTool(SpyWriteFileTool(recorder: recorder))],
-            executionPolicy: DenyAllPolicy(reason: "blocked")
+            executionPolicy: DenyAllPolicy(reason: "blocked"),
         ),
     )
     let session = agent.makeSession()
@@ -240,7 +240,7 @@ extension MultiToolSession {
     #expect(await recorder.callCount() == 0)
 }
 
-@Test func testDenyNamedPolicyAllowsOtherToolsInSameTurn() async throws {
+@Test func denyNamedPolicyAllowsOtherToolsInSameTurn() async throws {
     let recorder = SpyRecorder()
     let agent = Agent(
         providerRegistry: ProviderRegistry(default: MultiToolProvider()),
@@ -250,7 +250,7 @@ extension MultiToolSession {
                 AnyAgentTool(SpyWriteFileTool(recorder: recorder)),
                 AnyAgentTool(PolicyEchoTool()),
             ],
-            executionPolicy: DenyNamedPolicy(deniedName: "write_file", reason: "blocked")
+            executionPolicy: DenyNamedPolicy(deniedName: "write_file", reason: "blocked"),
         ),
     )
     let session = agent.makeSession()
@@ -277,7 +277,7 @@ extension MultiToolSession {
     #expect(await recorder.callCount() == 0)
 }
 
-@Test func testToolApprovalContextSurfacesOnlyToolApprovalDomainProperties() async throws {
+@Test func toolApprovalContextSurfacesOnlyToolApprovalDomainProperties() async throws {
     let policyRecorder = PolicyContextRecorder()
     let toolRecorder = SpyRecorder()
     let agent = Agent(
@@ -285,13 +285,13 @@ extension MultiToolSession {
             .toolCall(
                 name: "write_file",
                 argumentsJSON: #"{"path":"/tmp/file.txt"}"#,
-                thenRespond: "Done."
+                thenRespond: "Done.",
             ),
         ])),
         behavior: .test(),
         toolDefinition: ToolDefinition(
             tools: [AnyAgentTool(SpyWriteFileTool(recorder: toolRecorder))],
-            executionPolicy: ContextReadingPolicy(recorder: policyRecorder)
+            executionPolicy: ContextReadingPolicy(recorder: policyRecorder),
         ),
     )
     let session = agent.makeSession()
@@ -315,12 +315,12 @@ extension MultiToolSession {
     #expect(await toolRecorder.callCount() == 0)
 }
 
-@Test func testDeniedFailureResultJSONContainsReason() {
+@Test func deniedFailureResultJSONContainsReason() {
     let resultJSON = ToolCallFailure.denied(reason: "blocked by policy").resultJSON
     #expect(resultJSON.contains("blocked by policy"))
 }
 
-@Test func testDeniedFailureCodableRoundTrips() throws {
+@Test func deniedFailureCodableRoundTrips() throws {
     let original = ToolCallFailure.denied(reason: "blocked")
     let data = try JSONEncoder().encode(original)
     let decoded = try JSONDecoder().decode(ToolCallFailure.self, from: data)

@@ -1,9 +1,9 @@
 // SPDX-FileCopyrightText: 2026 AgentKitten Authors
 // SPDX-License-Identifier: Apache-2.0
 
+@testable import AgentKittenCore
 import Foundation
 import Testing
-@testable import AgentKittenCore
 
 @Test func toolSelection_allowsExpectedToolNames() {
     #expect(ToolSelection.all.allows(toolName: "echo"))
@@ -34,7 +34,7 @@ import Testing
     #expect(ToolSelection.excluding(["write_file", "echo"]).traceSnapshot == .excluding(["echo", "write_file"]))
 }
 
-@Test func toolRegistry_filtersToolsBySelection() async {
+@Test func toolRegistry_filtersToolsBySelection() {
     let registry = ToolRegistry([
         AnyAgentTool(CountingEchoTool(counter: ToolCallCounter())),
         AnyAgentTool(SelectionOtherTool()),

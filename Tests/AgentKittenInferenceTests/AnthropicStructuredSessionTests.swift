@@ -1,10 +1,10 @@
 // SPDX-FileCopyrightText: 2026 AgentKitten Authors
 // SPDX-License-Identifier: Apache-2.0
 
-import Testing
-import Foundation
 @testable import AgentKittenCore
 @testable import AgentKittenInference
+import Foundation
+import Testing
 
 // MARK: - Test fixture
 
@@ -18,7 +18,7 @@ private struct Sentiment: Codable, Sendable, JSONSchemaProviding, Equatable {
                 "label": .string(description: "positive, negative, or neutral"),
                 "confidence": .number(description: "0.0 to 1.0"),
             ],
-            required: ["label", "confidence"]
+            required: ["label", "confidence"],
         )
     }
 }
@@ -41,7 +41,7 @@ private final class CapturingHTTPClient: AnthropicHTTPStreaming, @unchecked Send
 
     func stream(request: AnthropicRequest) -> AsyncThrowingStream<SSEEvent, Error> {
         lock.withLock { _capturedRequest = request }
-        let events = self.events
+        let events = events
         return AsyncThrowingStream { continuation in
             for event in events {
                 continuation.yield(event)
@@ -56,7 +56,7 @@ private struct ThrowingHTTPClient: AnthropicHTTPStreaming {
     let error: any Error
 
     func stream(request: AnthropicRequest) -> AsyncThrowingStream<SSEEvent, Error> {
-        let error = self.error
+        let error = error
         return AsyncThrowingStream { continuation in
             continuation.finish(throwing: error)
         }
@@ -69,14 +69,14 @@ private func makeSession(
     systemPrompt: String? = nil,
     registry: ToolRegistry = ToolRegistry(),
     toolExecutionPolicy: some ToolExecutionPolicy = AutoApprovePolicy(),
-    client: some AnthropicHTTPStreaming
+    client: some AnthropicHTTPStreaming,
 ) -> AnthropicInferenceSession {
     AnthropicInferenceSession(
         credentials: MockAPIKeyProvider("test-key"),
         defaultModel: "test-model",
         systemPrompt: systemPrompt,
         toolRuntime: testToolRuntime(registry: registry, executionPolicy: toolExecutionPolicy),
-        clientFactory: { _ in client }
+        clientFactory: { _ in client },
     )
 }
 
@@ -84,7 +84,6 @@ private func makeSession(
 
 @Suite("Anthropic Structured Generation", .serialized)
 struct AnthropicStructuredSessionTests {
-
     // MARK: Successful decode
 
     @Test func generate_decodesValidJSON() async throws {
@@ -97,7 +96,7 @@ struct AnthropicStructuredSessionTests {
 
         let result: Sentiment = try await session.generate(
             prompt: "Classify this.",
-            parameters: InferenceRequestParameters()
+            parameters: InferenceRequestParameters(),
         )
         #expect(result.label == "positive")
         #expect(result.confidence == 0.95)
@@ -114,7 +113,7 @@ struct AnthropicStructuredSessionTests {
 
         let result: Sentiment = try await session.generate(
             prompt: "Classify this.",
-            parameters: InferenceRequestParameters()
+            parameters: InferenceRequestParameters(),
         )
         #expect(result.label == "negative")
         #expect(result.confidence == 0.3)
@@ -130,7 +129,7 @@ struct AnthropicStructuredSessionTests {
 
         let result: [Sentiment] = try await session.generate(
             prompt: "Classify these items.",
-            parameters: InferenceRequestParameters()
+            parameters: InferenceRequestParameters(),
         )
         #expect(result == [
             Sentiment(label: "positive", confidence: 0.95),
@@ -149,8 +148,8 @@ struct AnthropicStructuredSessionTests {
 
         do {
             let _: Sentiment = try await session.generate(
-            prompt: "Classify this.",
-                parameters: InferenceRequestParameters()
+                prompt: "Classify this.",
+                parameters: InferenceRequestParameters(),
             )
             Issue.record("Expected StructuredGenerationError.decodingFailed")
         } catch StructuredGenerationError.decodingFailed {
@@ -166,8 +165,8 @@ struct AnthropicStructuredSessionTests {
 
         do {
             let _: Sentiment = try await session.generate(
-            prompt: "Classify this.",
-                parameters: InferenceRequestParameters()
+                prompt: "Classify this.",
+                parameters: InferenceRequestParameters(),
             )
             Issue.record("Expected InferenceError.streamInterrupted")
         } catch InferenceError.streamInterrupted {
@@ -185,8 +184,8 @@ struct AnthropicStructuredSessionTests {
 
         do {
             let _: Sentiment = try await session.generate(
-            prompt: "Classify this.",
-                parameters: InferenceRequestParameters()
+                prompt: "Classify this.",
+                parameters: InferenceRequestParameters(),
             )
             Issue.record("Expected InferenceError.invalidResponse")
         } catch InferenceError.invalidResponse(let message) {
@@ -206,7 +205,8 @@ struct AnthropicStructuredSessionTests {
         ])
         let session = makeSession(systemPrompt: "You are a classifier.", client: client)
         let _: Sentiment = try await session.generate(
-            prompt: "test", parameters: InferenceRequestParameters())
+            prompt: "test", parameters: InferenceRequestParameters(),
+        )
 
         let request = try #require(client.capturedRequest)
         let system = try #require(request.system)
@@ -215,8 +215,8 @@ struct AnthropicStructuredSessionTests {
         #expect(
             system.contains(
                 "When the root schema is an object, start with { and end with }; " +
-                    "when it is an array, start with [ and end with ]."
-            )
+                    "when it is an array, start with [ and end with ].",
+            ),
         )
         #expect(system.contains("label"))
         #expect(system.contains("confidence"))
@@ -229,7 +229,8 @@ struct AnthropicStructuredSessionTests {
         ])
         let session = makeSession(client: client)
         let _: Sentiment = try await session.generate(
-            prompt: "test", parameters: InferenceRequestParameters())
+            prompt: "test", parameters: InferenceRequestParameters(),
+        )
 
         let request = try #require(client.capturedRequest)
         #expect(request.tools == nil)
@@ -242,7 +243,8 @@ struct AnthropicStructuredSessionTests {
         ])
         let session = makeSession(client: client)
         let _: Sentiment = try await session.generate(
-            prompt: "test", parameters: InferenceRequestParameters())
+            prompt: "test", parameters: InferenceRequestParameters(),
+        )
 
         let request = try #require(client.capturedRequest)
         #expect(request.temperature == 0)
@@ -257,7 +259,7 @@ struct AnthropicStructuredSessionTests {
         let session = makeSession(registry: registry, client: client)
         let _: Sentiment = try await session.generate(
             prompt: "test",
-            parameters: InferenceRequestParameters(toolSelection: .all)
+            parameters: InferenceRequestParameters(toolSelection: .all),
         )
 
         let request = try #require(client.capturedRequest)
@@ -273,7 +275,7 @@ struct AnthropicStructuredSessionTests {
         let session = makeSession(registry: registry, client: client)
         let _: Sentiment = try await session.generate(
             prompt: "test",
-            parameters: InferenceRequestParameters(toolSelection: .disabled)
+            parameters: InferenceRequestParameters(toolSelection: .disabled),
         )
 
         let request = try #require(client.capturedRequest)
@@ -286,7 +288,7 @@ struct AnthropicStructuredSessionTests {
         AgentKittenInferenceLocalization.overrideBundle = Bundle.module
 
         let result = AgentKittenInferenceLocalization.formattedString(
-            "structuredOutput.anthropicInstructionFormat", "{}"
+            "structuredOutput.anthropicInstructionFormat", "{}",
         )
         #expect(result.contains("CUSTOM TEST SCHEMA:"))
         #expect(result.contains("RETURN RAW JSON VALUE."))
@@ -306,7 +308,7 @@ struct AnthropicStructuredSessionTests {
         let session = makeSession(registry: registry, client: client)
         let _: Sentiment = try await session.generate(
             prompt: "test",
-            parameters: InferenceRequestParameters(toolSelection: .excluding(["weather"]))
+            parameters: InferenceRequestParameters(toolSelection: .excluding(["weather"])),
         )
 
         let request = try #require(client.capturedRequest)

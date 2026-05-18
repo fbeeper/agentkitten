@@ -20,7 +20,7 @@ extension AgentSession {
     /// - Returns: The compaction result. If there is no active provider conversation,
     ///   the result is ``ContextCompactionResult/skipped(_:)``.
     public func compactContext(
-        _ options: ContextCompactionOptions = .init()
+        _ options: ContextCompactionOptions = .init(),
     ) async throws -> ContextCompactionResult {
         let lease = try operationGate.begin(InferenceSessionOperationKind.compactContext)
         defer {
@@ -28,28 +28,28 @@ extension AgentSession {
         }
         return try await performManualContextCompaction(
             options,
-            invocationID: InvocationID.generate()
+            invocationID: InvocationID.generate(),
         )
     }
 
     private func performManualContextCompaction(
         _ options: ContextCompactionOptions,
-        invocationID: InvocationID
+        invocationID: InvocationID,
     ) async throws -> ContextCompactionResult {
-        let result: ContextCompactionResult
-        if let compacted = try await conversationProvider.compactActiveConversation(
-            options: options
-        ) {
-            result = compacted
+        let result: ContextCompactionResult = if let compacted = try await conversationProvider
+            .compactActiveConversation(
+                options: options,
+            ) {
+            compacted
         } else {
-            result = .skipped(.noActiveConversation)
+            .skipped(.noActiveConversation)
         }
         record(
             kind: .contextCompaction(conversationProvider.compactionTraceInfo(
                 mode: .manual,
-                result: result
+                result: result,
             )),
-            invocationID: invocationID
+            invocationID: invocationID,
         )
         return result
     }

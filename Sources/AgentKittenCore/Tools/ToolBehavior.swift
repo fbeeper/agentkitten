@@ -18,7 +18,9 @@ public struct ToolBehavior: Sendable {
         /// Use the provided custom tool guidance text.
         case custom(String)
 
-        static var defaultPrompt: String { AgentKittenLocalization.string("tools.guidancePrompt") }
+        static var defaultPrompt: String {
+            AgentKittenLocalization.string("tools.guidancePrompt")
+        }
 
         var prompt: String {
             switch self {
@@ -69,7 +71,7 @@ public struct ToolBehavior: Sendable {
         defaultStepBudget: ToolStepBudget = .budget(20),
         defaultSelection: ToolSelection = .all,
         guidance: Guidance = .default,
-        rationaleGuidance: RationaleGuidance = .default
+        rationaleGuidance: RationaleGuidance = .default,
     ) {
         self.defaultStepBudget = defaultStepBudget
         self.defaultSelection = defaultSelection

@@ -23,7 +23,7 @@ struct InferenceDigester: Sendable {
                     chunk,
                     continuation: continuation,
                     conversationID: conversationID,
-                    state: &state
+                    state: &state,
                 )
 
             case .toolCallRequested(let id, let name, let argumentsJSON):
@@ -62,7 +62,7 @@ struct InferenceDigester: Sendable {
                 emitResult(
                     AssistantMessage(text: fullText),
                     continuation: continuation,
-                    conversationID: conversationID
+                    conversationID: conversationID,
                 )
             }
         }
@@ -73,7 +73,7 @@ struct InferenceDigester: Sendable {
     func digestStructured<S: AsyncSequence & Sendable, T: Sendable>(
         stream: S,
         continuation: AsyncThrowingStream<ConversationEvent<T>, Error>.Continuation,
-        conversationID: ConversationID
+        conversationID: ConversationID,
     ) async throws where S.Element == InferenceEvent<T> {
         var state = GenerationState()
         try await consumeInferenceEvents(stream: stream) { event in
@@ -83,7 +83,7 @@ struct InferenceDigester: Sendable {
                     chunk,
                     continuation: continuation,
                     conversationID: conversationID,
-                    state: &state
+                    state: &state,
                 )
 
             case .toolCallRequested(let id, let name, let argumentsJSON):
@@ -121,7 +121,7 @@ struct InferenceDigester: Sendable {
                 emitResult(
                     structured,
                     continuation: continuation,
-                    conversationID: conversationID
+                    conversationID: conversationID,
                 )
             }
         }
@@ -133,13 +133,13 @@ struct InferenceDigester: Sendable {
         _ chunk: String,
         continuation: AsyncThrowingStream<ConversationEvent<T>, Error>.Continuation,
         conversationID: ConversationID,
-        state: inout GenerationState
+        state: inout GenerationState,
     ) {
         state.fullText += chunk
         yieldEvent(
             kind: .textDelta(chunk),
             continuation: continuation,
-            conversationID: conversationID
+            conversationID: conversationID,
         )
     }
 
@@ -201,12 +201,12 @@ struct InferenceDigester: Sendable {
     private func emitResult<T: Sendable>(
         _ result: T,
         continuation: AsyncThrowingStream<ConversationEvent<T>, Error>.Continuation,
-        conversationID: ConversationID
+        conversationID: ConversationID,
     ) {
         yieldEvent(
             kind: .result(result),
             continuation: continuation,
-            conversationID: conversationID
+            conversationID: conversationID,
         )
     }
 
@@ -214,7 +214,7 @@ struct InferenceDigester: Sendable {
         _ info: ToolHookInvocationInfo,
         continuation: AsyncThrowingStream<ConversationEvent<T>, Error>.Continuation,
         conversationID: ConversationID,
-        state: GenerationState
+        state: GenerationState,
     ) {
         yieldEvent(
             kind: .toolHookFired(info),
@@ -226,7 +226,7 @@ struct InferenceDigester: Sendable {
 
     private func consumeInferenceEvents<S: AsyncSequence & Sendable, T: Sendable>(
         stream: S,
-        handleEvent: (InferenceEvent<T>) async throws -> Void
+        handleEvent: (InferenceEvent<T>) async throws -> Void,
     ) async throws where S.Element == InferenceEvent<T> {
         // Future: per-tool step counters (e.g. cap web-search independently of time-lookup).
         var sawResult = false

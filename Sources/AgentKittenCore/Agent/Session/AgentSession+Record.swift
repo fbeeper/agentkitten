@@ -6,11 +6,11 @@ import Foundation
 extension AgentSession {
     func record(
         kind: AgentTraceEntry.Kind,
-        invocationID: InvocationID
+        invocationID: InvocationID,
     ) {
         trace.append(
             kind: kind,
-            invocationID: invocationID
+            invocationID: invocationID,
         )
     }
 }

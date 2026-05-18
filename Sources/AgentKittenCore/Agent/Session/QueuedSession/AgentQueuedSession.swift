@@ -29,11 +29,11 @@ public actor AgentQueuedSession: ToolApproving {
     private var queue = TurnQueue()
 
     init(session: AgentSession) {
-        self.sessionID = session.sessionID
-        self.agentID = session.agentID
-        self.ownerID = session.ownerID
-        self.trace = session.trace
-        self.state = session.state
+        sessionID = session.sessionID
+        agentID = session.agentID
+        ownerID = session.ownerID
+        trace = session.trace
+        state = session.state
         self.session = session
     }
 
@@ -61,13 +61,13 @@ public actor AgentQueuedSession: ToolApproving {
     public func send(
         _ text: String,
         userID: UserID? = nil,
-        validation: ValidationConfiguration<AssistantMessage> = .disabled
+        validation: ValidationConfiguration<AssistantMessage> = .disabled,
     ) async -> Turn<AssistantMessage> {
         await send(
             text,
             userID: userID,
             turnOverrides: .init(),
-            validation: validation
+            validation: validation,
         )
     }
 
@@ -76,12 +76,12 @@ public actor AgentQueuedSession: ToolApproving {
         _ text: String,
         userID: UserID? = nil,
         turnOverrides: TurnOverrides,
-        validation: ValidationConfiguration<AssistantMessage> = .disabled
+        validation: ValidationConfiguration<AssistantMessage> = .disabled,
     ) async -> Turn<AssistantMessage> {
         let turn = await session.makeAssistantTurn(
             text,
             userID: userID,
-            turnOverrides: turnOverrides
+            turnOverrides: turnOverrides,
         )
         enqueue(
             AnyQueuedTurn(
@@ -93,14 +93,14 @@ public actor AgentQueuedSession: ToolApproving {
                 markRunning: { _ in true },
                 performWork: { [weak self, weak turn] in
                     guard let self else { return }
-                    if let task = await self.startQueuedAssistantTurn(
+                    if let task = await startQueuedAssistantTurn(
                         turn,
-                        validation: validation
+                        validation: validation,
                     ) {
                         _ = await task.value
                     }
-                }
-            )
+                },
+            ),
         )
         return turn
     }
@@ -109,13 +109,13 @@ public actor AgentQueuedSession: ToolApproving {
     public func generate<Result: Codable & Sendable & JSONSchemaProviding>(
         _ prompt: String,
         userID: UserID? = nil,
-        validation: ValidationConfiguration<Result> = .disabled
+        validation: ValidationConfiguration<Result> = .disabled,
     ) async -> Turn<Result> {
         await generate(
             prompt,
             userID: userID,
             turnOverrides: .init(),
-            validation: validation
+            validation: validation,
         )
     }
 
@@ -124,12 +124,12 @@ public actor AgentQueuedSession: ToolApproving {
         _ prompt: String,
         userID: UserID? = nil,
         turnOverrides: TurnOverrides,
-        validation: ValidationConfiguration<Result> = .disabled
+        validation: ValidationConfiguration<Result> = .disabled,
     ) async -> Turn<Result> {
         let turn: Turn<Result> = await session.makeStructuredTurn(
             prompt,
             userID: userID,
-            turnOverrides: turnOverrides
+            turnOverrides: turnOverrides,
         )
         enqueue(
             AnyQueuedTurn(
@@ -141,21 +141,21 @@ public actor AgentQueuedSession: ToolApproving {
                 markRunning: { _ in true },
                 performWork: { [weak self, weak turn] in
                     guard let self else { return }
-                    if let task = await self.startQueuedStructuredTurn(
+                    if let task = await startQueuedStructuredTurn(
                         turn,
-                        validation: validation
+                        validation: validation,
                     ) {
                         _ = await task.value
                     }
-                }
-            )
+                },
+            ),
         )
         return turn
     }
 
     /// Queues a context clear.
     public func clearContext(
-        state statePolicy: AgentSession.StateClearPolicy = .clear
+        state statePolicy: AgentSession.StateClearPolicy = .clear,
     ) async throws {
         try await withCheckedThrowingContinuation { continuation in
             enqueue(
@@ -169,20 +169,20 @@ public actor AgentQueuedSession: ToolApproving {
                             return
                         }
                         do {
-                            try await self.session.clearContext(state: statePolicy)
+                            try await session.clearContext(state: statePolicy)
                             continuation.resume()
                         } catch {
                             continuation.resume(throwing: error)
                         }
-                    }
-                )
+                    },
+                ),
             )
         }
     }
 
     /// Queues a manual context compaction.
     public func compactContext(
-        _ options: ContextCompactionOptions = .init()
+        _ options: ContextCompactionOptions = .init(),
     ) async throws -> ContextCompactionResult {
         try await withCheckedThrowingContinuation { continuation in
             enqueue(
@@ -196,13 +196,13 @@ public actor AgentQueuedSession: ToolApproving {
                             return
                         }
                         do {
-                            let result = try await self.session.compactContext(options)
+                            let result = try await session.compactContext(options)
                             continuation.resume(returning: result)
                         } catch {
                             continuation.resume(throwing: error)
                         }
-                    }
-                )
+                    },
+                ),
             )
         }
     }
@@ -221,13 +221,13 @@ public actor AgentQueuedSession: ToolApproving {
                             return
                         }
                         do {
-                            let usage = try await self.session.contextUsage()
+                            let usage = try await session.contextUsage()
                             continuation.resume(returning: usage)
                         } catch {
                             continuation.resume(throwing: error)
                         }
-                    }
-                )
+                    },
+                ),
             )
         }
     }
@@ -255,13 +255,12 @@ public actor AgentQueuedSession: ToolApproving {
         }
         queue.setProcessorTask(nil)
     }
-
 }
 
 extension AgentQueuedSession {
     private func startQueuedAssistantTurn(
         _ turn: Turn<AssistantMessage>?,
-        validation: ValidationConfiguration<AssistantMessage>
+        validation: ValidationConfiguration<AssistantMessage>,
     ) async -> Task<Void, Never>? {
         guard let turn else {
             return nil
@@ -270,7 +269,7 @@ extension AgentQueuedSession {
             return try await session.startAssistantTurn(
                 turn,
                 validation: validation,
-                operation: .run
+                operation: .run,
             )
         } catch is CancellationError {
             turn.continuation.finish()
@@ -283,7 +282,7 @@ extension AgentQueuedSession {
 
     private func startQueuedStructuredTurn<Result: Codable & Sendable & JSONSchemaProviding>(
         _ turn: Turn<Result>?,
-        validation: ValidationConfiguration<Result>
+        validation: ValidationConfiguration<Result>,
     ) async -> Task<Void, Never>? {
         guard let turn else {
             return nil
@@ -292,7 +291,7 @@ extension AgentQueuedSession {
             return try await session.startStructuredTurn(
                 turn,
                 validation: validation,
-                operation: .generate
+                operation: .generate,
             )
         } catch is CancellationError {
             turn.continuation.finish()

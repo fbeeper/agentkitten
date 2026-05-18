@@ -6,8 +6,8 @@ struct AnyValidator<Result: Sendable>: Validator {
     private let validateBody: @Sendable (ValidationContext<Result>) async throws -> ValidationResult
 
     init<V: Validator>(_ validator: V) where V.Result == Result {
-        self.traceName = validator.traceName
-        self.validateBody = validator.validate
+        traceName = validator.traceName
+        validateBody = validator.validate
     }
 
     func validate(_ context: ValidationContext<Result>) async throws -> ValidationResult {

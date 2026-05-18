@@ -11,7 +11,7 @@ struct TurnTraceSink {
     init(
         trace: AgentTrace,
         approvalGate: ToolApprovalGate,
-        invocationID: InvocationID
+        invocationID: InvocationID,
     ) {
         self.trace = trace
         self.approvalGate = approvalGate
@@ -19,16 +19,16 @@ struct TurnTraceSink {
     }
 
     func record(
-        kind: AgentTraceEntry.Kind
+        kind: AgentTraceEntry.Kind,
     ) {
         trace.append(
             kind: kind,
-            invocationID: invocationID
+            invocationID: invocationID,
         )
     }
 
     func record<Result: Sendable & Encodable>(
-        _ event: ConversationEvent<Result>
+        _ event: ConversationEvent<Result>,
     ) async {
         switch event.kind {
         case .textDelta:
@@ -41,7 +41,7 @@ struct TurnTraceSink {
                     id: id,
                     name: name,
                     argumentsJSON: argumentsJSON,
-                )))
+                ))),
             )
         case .toolApprovalRequired(let call):
             let context = await approvalGate.traceContext(callID: call.id)
@@ -70,7 +70,7 @@ struct TurnTraceSink {
     }
 
     private func record<Result: Sendable & Encodable>(
-        result: Result
+        result: Result,
     ) async {
         if let message = result as? AssistantMessage {
             record(kind: .message(.assistant(message)))
@@ -84,7 +84,7 @@ struct TurnTraceSink {
             let jsonData = try encoder.encode(result)
             guard let json = String(data: jsonData, encoding: .utf8) else {
                 record(
-                    kind: .error(.init(description: "Failed to decode structured result JSON as UTF-8"))
+                    kind: .error(.init(description: "Failed to decode structured result JSON as UTF-8")),
                 )
                 return
             }
@@ -92,8 +92,8 @@ struct TurnTraceSink {
             record(
                 kind: .structuredResult(
                     type: String(describing: Result.self),
-                    json: json
-                )
+                    json: json,
+                ),
             )
         } catch {
             record(kind: .error(.init(error)))

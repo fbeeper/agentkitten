@@ -1,9 +1,9 @@
 // SPDX-FileCopyrightText: 2026 AgentKitten Authors
 // SPDX-License-Identifier: Apache-2.0
 
+@testable import AgentKittenCore
 import Foundation
 import Testing
-@testable import AgentKittenCore
 
 @Suite("Session State")
 struct SessionStateTests {
@@ -11,7 +11,7 @@ struct SessionStateTests {
         let trace = AgentTrace(retentionPolicy: .maxTurns(10))
         let state = SessionState.readOnly(
             trace: trace,
-            contents: ["topic": "Swift"]
+            contents: ["topic": "Swift"],
         )
 
         #expect(await state.value(forKey: "topic") == "Swift")
@@ -34,7 +34,7 @@ struct SessionStateTests {
             contents: [
                 "language": "Swift",
                 "topic": "Agents",
-            ]
+            ],
         )
 
         let removedKeys = try await state.clear()
@@ -48,7 +48,7 @@ struct SessionStateTests {
             .toolCall(
                 name: "get_state",
                 argumentsJSON: #"{"key":"topic"}"#,
-                thenRespond: "No state available."
+                thenRespond: "No state available.",
             ),
         ])
         let agent = Agent(
@@ -73,7 +73,7 @@ struct SessionStateTests {
                     return true
                 }
                 return false
-            }
+            },
         )
     }
 
@@ -82,18 +82,18 @@ struct SessionStateTests {
             .toolCall(
                 name: "set_state",
                 argumentsJSON: #"{"key":"topic","value":"Swift"}"#,
-                thenRespond: "Saved."
+                thenRespond: "Saved.",
             ),
             .toolCall(
                 name: "get_state",
                 argumentsJSON: #"{"key":"topic"}"#,
-                thenRespond: "Loaded."
+                thenRespond: "Loaded.",
             ),
         ])
         let agent = Agent(
             providerRegistry: ProviderRegistry(default: provider),
             behavior: .test("Base prompt"),
-            sessionState: .enabledWithDefaultGuidance
+            sessionState: .enabledWithDefaultGuidance,
         )
         let session = agent.makeSession()
 
@@ -144,18 +144,18 @@ struct SessionStateTests {
             .toolCall(
                 name: "list_state_keys",
                 argumentsJSON: "{}",
-                thenRespond: "Listed."
+                thenRespond: "Listed.",
             ),
             .toolCall(
                 name: "set_state",
                 argumentsJSON: #"{"key":"topic","value":"Swift"}"#,
-                thenRespond: "Attempted."
+                thenRespond: "Attempted.",
             ),
         ])
         let agent = Agent(
             providerRegistry: ProviderRegistry(default: provider),
             behavior: .test(),
-            sessionState: .readOnlyWithDefaultGuidance
+            sessionState: .readOnlyWithDefaultGuidance,
         )
         let session = agent.makeSession()
 
@@ -182,12 +182,12 @@ struct SessionStateTests {
                     return true
                 }
                 return false
-            }
+            },
         )
 
         let latestPrompt = await provider.script.latestPrompt()
         #expect(
-            latestPrompt?.contains("Session state is read-only in this session.") == true
+            latestPrompt?.contains("Session state is read-only in this session.") == true,
         )
     }
 
@@ -196,18 +196,18 @@ struct SessionStateTests {
             .toolCall(
                 name: "set_state",
                 argumentsJSON: #"{"key":"topic","value":"Swift"}"#,
-                thenRespond: "Saved."
+                thenRespond: "Saved.",
             ),
             .toolCall(
                 name: "get_state",
                 argumentsJSON: #"{"key":"topic"}"#,
-                thenRespond: "Missing."
+                thenRespond: "Missing.",
             ),
         ])
         let agent = Agent(
             providerRegistry: ProviderRegistry(default: provider),
             behavior: .test(),
-            sessionState: .enabledWithDefaultGuidance
+            sessionState: .enabledWithDefaultGuidance,
         )
         let firstSession = agent.makeSession()
         let secondSession = agent.makeSession()
@@ -232,13 +232,13 @@ struct SessionStateTests {
             .toolCall(
                 name: "set_state",
                 argumentsJSON: #"{"key":"tone","value":"concise"}"#,
-                thenRespond: "Saved."
+                thenRespond: "Saved.",
             ),
         ])
         let agent = Agent(
             providerRegistry: ProviderRegistry(default: provider),
             behavior: .test(),
-            sessionState: .enabledWithDefaultGuidance
+            sessionState: .enabledWithDefaultGuidance,
         )
         let session = agent.makeSession()
 
@@ -250,7 +250,7 @@ struct SessionStateTests {
 
     private func requireToolResult(
         named name: String,
-        in entries: [AgentTraceEntry]
+        in entries: [AgentTraceEntry],
     ) throws -> ToolResultMessage {
         let entry = try #require(entries.first { entry in
             guard case .message(.toolResult(let result)) = entry.kind else {
@@ -271,7 +271,6 @@ struct SessionStateTests {
         }
         return (try? JSONSerialization.jsonObject(with: data)) as? [String: Any]
     }
-
 }
 
 private enum SessionStateTestError: Error {

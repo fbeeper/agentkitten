@@ -1,35 +1,35 @@
 // SPDX-FileCopyrightText: 2026 AgentKitten Authors
 // SPDX-License-Identifier: Apache-2.0
 
-import Testing
 @testable import AgentKittenCore
+import Testing
 
 // MARK: - Helpers
 
 private func makeConversation(
     responses: [String] = ["Hello"],
-    structuredResponses: [String] = []
+    structuredResponses: [String] = [],
 ) -> Conversation<MockInferenceProvider> {
     let provider = MockInferenceProvider(
         responses: responses,
-        structuredResponses: structuredResponses
+        structuredResponses: structuredResponses,
     )
     return Conversation(
         owner: .local,
         provider: provider,
         systemPrompt: "Test",
         executionConfiguration: EffectiveExecutionConfiguration(),
-        toolRuntime: testToolRuntime()
+        toolRuntime: testToolRuntime(),
     )
 }
 
 private func sendStream(
-    _ conversation: Conversation<MockInferenceProvider>
+    _ conversation: Conversation<MockInferenceProvider>,
 ) async throws -> AsyncThrowingStream<ConversationEvent<AssistantMessage>, Error> {
     try await conversation.send(
         userMessage: UserMessage(text: "Hi"),
         executionConfiguration: EffectiveExecutionConfiguration(),
-        toolExecutionContext: .empty
+        toolExecutionContext: .empty,
     )
 }
 
@@ -105,7 +105,7 @@ private func sendStream(
     await #expect(throws: InferenceError.concurrentOperationInProgress(active: .run)) {
         _ = try await conversation.compactContext(
             options: ContextCompactionOptions(),
-            summaryGenerator: { _ in "summary" }
+            summaryGenerator: { _ in "summary" },
         )
     }
 

@@ -1,10 +1,10 @@
 // SPDX-FileCopyrightText: 2026 AgentKitten Authors
 // SPDX-License-Identifier: Apache-2.0
 
-import Testing
-import Foundation
 @testable import AgentKittenCore
 @testable import AgentKittenInference
+import Foundation
+import Testing
 
 private struct AnthropicDenyAllPolicy: ToolExecutionPolicy {
     let reason: String
@@ -29,7 +29,7 @@ private struct AnthropicRequiresApprovalPolicy: ToolExecutionPolicy {
         [.textDelta("Done"), .stopReason("end_turn")],
     ])
     let executor = ToolExecutor(
-        registry: ToolRegistry([AnyAgentTool(InferenceEchoTool())])
+        registry: ToolRegistry([AnyAgentTool(InferenceEchoTool())]),
     )
     let session = AnthropicInferenceSession(
         credentials: MockAPIKeyProvider("test-key"),
@@ -37,15 +37,15 @@ private struct AnthropicRequiresApprovalPolicy: ToolExecutionPolicy {
         systemPrompt: nil,
         toolRuntime: testToolRuntime(
             registry: executor.registry,
-            executionPolicy: AnthropicDenyAllPolicy(reason: "blocked")
+            executionPolicy: AnthropicDenyAllPolicy(reason: "blocked"),
         ),
-        clientFactory: { _ in mock }
+        clientFactory: { _ in mock },
     )
 
     var outcome: ToolCallOutcome?
     for try await event in try await session.run(
         UserMessage(text: "Hi"),
-        parameters: InferenceRequestParameters(toolStepBudget: .budget(1))
+        parameters: InferenceRequestParameters(toolStepBudget: .budget(1)),
     ) {
         if case .toolCallCompleted(let id, _, let completed) = event, id == "call-1" {
             outcome = completed
@@ -65,7 +65,7 @@ private struct AnthropicRequiresApprovalPolicy: ToolExecutionPolicy {
         .stopReason("end_turn"),
     ])
     let executor = ToolExecutor(
-        registry: ToolRegistry([AnyAgentTool(InferenceEchoTool())])
+        registry: ToolRegistry([AnyAgentTool(InferenceEchoTool())]),
     )
     let session = AnthropicInferenceSession(
         credentials: MockAPIKeyProvider("test-key"),
@@ -73,15 +73,15 @@ private struct AnthropicRequiresApprovalPolicy: ToolExecutionPolicy {
         systemPrompt: nil,
         toolRuntime: testToolRuntime(
             registry: executor.registry,
-            executionPolicy: AnthropicDenyAllPolicy(reason: "blocked")
+            executionPolicy: AnthropicDenyAllPolicy(reason: "blocked"),
         ),
-        clientFactory: { _ in SequencedHTTPClient(clients: [client, followUp]) }
+        clientFactory: { _ in SequencedHTTPClient(clients: [client, followUp]) },
     )
 
     let stream: StructuredInferenceStream<StructuredDecision> =
         try await session.generateStream(
             prompt: "Return a structured answer",
-            parameters: InferenceRequestParameters(toolStepBudget: .budget(1))
+            parameters: InferenceRequestParameters(toolStepBudget: .budget(1)),
         )
 
     var outcome: ToolCallOutcome?
@@ -104,7 +104,7 @@ private struct AnthropicRequiresApprovalPolicy: ToolExecutionPolicy {
         .stopReason("end_turn"),
     ])
     let executor = ToolExecutor(
-        registry: ToolRegistry([AnyAgentTool(InferenceEchoTool())])
+        registry: ToolRegistry([AnyAgentTool(InferenceEchoTool())]),
     )
     let session = AnthropicInferenceSession(
         credentials: MockAPIKeyProvider("test-key"),
@@ -112,14 +112,14 @@ private struct AnthropicRequiresApprovalPolicy: ToolExecutionPolicy {
         systemPrompt: nil,
         toolRuntime: testToolRuntime(
             registry: executor.registry,
-            executionPolicy: AnthropicDenyAllPolicy(reason: "blocked")
+            executionPolicy: AnthropicDenyAllPolicy(reason: "blocked"),
         ),
-        clientFactory: { _ in SequencedHTTPClient(clients: [first, followUp]) }
+        clientFactory: { _ in SequencedHTTPClient(clients: [first, followUp]) },
     )
 
     for try await _ in try await session.run(
         UserMessage(text: "Hi"),
-        parameters: InferenceRequestParameters(toolStepBudget: .budget(1))
+        parameters: InferenceRequestParameters(toolStepBudget: .budget(1)),
     ) {}
 
     let request = try #require(followUp.capturedRequest)
@@ -137,7 +137,7 @@ private struct AnthropicRequiresApprovalPolicy: ToolExecutionPolicy {
     #expect(blocks[0]["type"] as? String == "text")
     #expect(
         blocks[0]["text"] as? String
-            == ToolCallFailure.denied(reason: "blocked").resultJSON
+            == ToolCallFailure.denied(reason: "blocked").resultJSON,
     )
 }
 
@@ -157,18 +157,18 @@ private struct AnthropicRequiresApprovalPolicy: ToolExecutionPolicy {
         toolRuntime: ToolRuntime(
             configuration: ToolDefinition(
                 tools: [AnyAgentTool(InferenceEchoTool())],
-                executionPolicy: AnthropicRequiresApprovalPolicy()
+                executionPolicy: AnthropicRequiresApprovalPolicy(),
             ),
-            approvalGate: gate
+            approvalGate: gate,
         ),
-        clientFactory: { _ in mock }
+        clientFactory: { _ in mock },
     )
 
     var sawApproval = false
     var outcome: ToolCallOutcome?
     for try await event in try await session.run(
         UserMessage(text: "Hi"),
-        parameters: InferenceRequestParameters(toolStepBudget: .budget(1))
+        parameters: InferenceRequestParameters(toolStepBudget: .budget(1)),
     ) {
         switch event {
         case .toolApprovalRequired(let call):

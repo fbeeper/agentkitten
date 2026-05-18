@@ -23,7 +23,7 @@ public struct ToolRegistry: Sendable {
         for agentTool in tools {
             precondition(
                 dict[agentTool.name] == nil,
-                "Duplicate tool name '\(agentTool.name)' — each tool must have a unique name."
+                "Duplicate tool name '\(agentTool.name)' — each tool must have a unique name.",
             )
             dict[agentTool.name] = agentTool
         }
@@ -34,7 +34,9 @@ public struct ToolRegistry: Sendable {
     ///
     /// The model reads these descriptions to decide which tool to call. After
     /// the model returns a tool name, use ``lookup(name:)`` to dispatch.
-    public var all: [AnyAgentTool] { Array(tools.values) }
+    public var all: [AnyAgentTool] {
+        Array(tools.values)
+    }
 
     /// Returns registered tools allowed by `selection`.
     public func tools(matching selection: ToolSelection) -> [AnyAgentTool] {
@@ -49,7 +51,9 @@ public struct ToolRegistry: Sendable {
     /// Returns the tool registered under `name`, or `nil` if not found.
     ///
     /// Used at dispatch time after the model has selected a tool by name.
-    public func lookup(name: String) -> AnyAgentTool? { tools[name] }
+    public func lookup(name: String) -> AnyAgentTool? {
+        tools[name]
+    }
 
     /// Returns a new registry with additional tools appended.
     ///
@@ -61,7 +65,7 @@ public struct ToolRegistry: Sendable {
         for agentTool in tools {
             precondition(
                 self.tools[agentTool.name] == nil,
-                "Duplicate tool name '\(agentTool.name)' — each tool must have a unique name."
+                "Duplicate tool name '\(agentTool.name)' — each tool must have a unique name.",
             )
         }
         return ToolRegistry(all + tools)

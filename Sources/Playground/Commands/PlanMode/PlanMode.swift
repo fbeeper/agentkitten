@@ -1,10 +1,10 @@
 // SPDX-FileCopyrightText: 2026 AgentKitten Authors
 // SPDX-License-Identifier: Apache-2.0
 
-import ArgumentParser
-import Darwin
 import AgentKitten
 import AgentKittenCore
+import ArgumentParser
+import Darwin
 
 extension Playground {
     /// Demonstrates per-turn tool selection via a plan/code mode workflow.
@@ -15,7 +15,7 @@ extension Playground {
     /// Modes can also be switched manually with `/plan` or `/code`.
     struct PlanMode: AsyncParsableCommand {
         static let configuration = CommandConfiguration(
-            abstract: "Plan/code mode demo: read-only tools in plan, write tools in code."
+            abstract: "Plan/code mode demo: read-only tools in plan, write tools in code.",
         )
 
         @Option(name: .long, help: "Inference provider: apple or anthropic.")
@@ -40,8 +40,8 @@ extension Playground {
                         AnyAgentTool(WriteScratchpadTool(store: scratchpad)),
                         AnyAgentTool(ProposePlanTool(state: modeState)),
                     ],
-                    executionPolicy: PlanModeExecutionPolicy(state: modeState)
-                )
+                    executionPolicy: PlanModeExecutionPolicy(state: modeState),
+                ),
             )
             print(
                 PlaygroundChatOutputFormatter.sessionHeader(
@@ -53,8 +53,8 @@ extension Playground {
                         "Starting in PLAN mode — the model can read but not write.",
                         "Use /plan or /code to switch modes manually.",
                     ],
-                    instructions: "Type a message and press Enter. Use /show, /plan, /code. Ctrl-D to exit."
-                )
+                    instructions: "Type a message and press Enter. Use /show, /plan, /code. Ctrl-D to exit.",
+                ),
             )
             try await chat(agent: agent, scratchpad: scratchpad, state: modeState)
             print()
@@ -72,7 +72,7 @@ extension Playground {
                     fflush(stdout)
                     let turn = try await session.send(
                         Self.planApprovedPrompt(plan: plan),
-                        turnOverrides: Self.codeOverrides
+                        turnOverrides: Self.codeOverrides,
                     )
                     do {
                         try await streamTurn(turn, suppressText: true)
@@ -131,7 +131,7 @@ extension Playground {
 
         private func streamTurn(
             _ turn: Turn<AssistantMessage>,
-            suppressText: Bool = false
+            suppressText: Bool = false,
         ) async throws {
             var streamedText = false
             for try await event in turn.events {
@@ -144,7 +144,7 @@ extension Playground {
                     print(chunk, terminator: "")
                     fflush(stdout)
                 case .result(let assistant):
-                    if !streamedText && !suppressText {
+                    if !streamedText, !suppressText {
                         print(assistant.text, terminator: "")
                     }
                     print()
@@ -181,24 +181,24 @@ extension Playground {
             case .plan:
                 TurnOverrides(
                     toolSelection: .including(["read_scratchpad", "propose_plan"]),
-                    turnNote: Self.planModeNote
+                    turnNote: planModeNote,
                 )
             case .code:
                 TurnOverrides(
                     toolSelection: .including(["read_scratchpad", "write_scratchpad"]),
-                    turnNote: Self.codeModeNote
+                    turnNote: codeModeNote,
                 )
             }
         }
 
         private static let codeOverrides = TurnOverrides(
-            toolSelection: .including(["read_scratchpad", "write_scratchpad"])
+            toolSelection: .including(["read_scratchpad", "write_scratchpad"]),
         )
 
         private static func planApprovedPrompt(plan: String) -> String {
             "[CODE MODE] Execute this plan.\n\n\(plan)\n\n" +
-            "Get straight to the work. " +
-            "Only narrate what changed if it helps the user understand the result."
+                "Get straight to the work. " +
+                "Only narrate what changed if it helps the user understand the result."
         }
 
         private static func userPrompt(mode: PlanModeState.Mode) -> String {
@@ -207,26 +207,25 @@ extension Playground {
         }
 
         private static let systemPrompt = """
-            You are a coding assistant working on a shared scratchpad file of Swift \
-            source code. You operate in two modes indicated by [PLAN MODE] and \
-            [CODE MODE] markers, each carrying specific instructions for that mode. \
-            Never mention the mode system, tool names, or per-turn instructions to the user.
-            """
+        You are a coding assistant working on a shared scratchpad file of Swift \
+        source code. You operate in two modes indicated by [PLAN MODE] and \
+        [CODE MODE] markers, each carrying specific instructions for that mode. \
+        Never mention the mode system, tool names, or per-turn instructions to the user.
+        """
 
         private static let planModeNote = """
-            [PLAN MODE]
-            Only call propose_plan when the user explicitly asks for a change to the \
-            scratchpad. For greetings, questions, or discussion, just respond in text.
-            When a change is requested, always read the scratchpad first, then call \
-            propose_plan with a specific plan: numbered steps, exact signatures or \
-            snippets for each change, and the expected final state.
-            Do not write to the scratchpad. \
-            Call propose_plan at most once; make no further tool calls after it returns.
-            """
+        [PLAN MODE]
+        Only call propose_plan when the user explicitly asks for a change to the \
+        scratchpad. For greetings, questions, or discussion, just respond in text.
+        When a change is requested, always read the scratchpad first, then call \
+        propose_plan with a specific plan: numbered steps, exact signatures or \
+        snippets for each change, and the expected final state.
+        Do not write to the scratchpad. \
+        Call propose_plan at most once; make no further tool calls after it returns.
+        """
 
         private static let codeModeNote =
             "[CODE MODE] Read the scratchpad first, then execute the user's request. " +
             "Confirm what changed after writing."
-
     }
 }

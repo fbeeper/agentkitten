@@ -1,8 +1,8 @@
 // SPDX-FileCopyrightText: 2026 AgentKitten Authors
 // SPDX-License-Identifier: Apache-2.0
 
-import Foundation
 import AgentKittenCore
+import Foundation
 
 /// A per-conversation session connected to Anthropic's Messages API.
 ///
@@ -41,19 +41,19 @@ public actor AnthropicInferenceSession: InferenceSession {
         toolRuntime: ToolRuntime,
         initialHistory: [AnthropicMessage] = [],
         maxEmptyToolUseFollowUps: Int = 8,
-        clientFactory: @escaping @Sendable (String) -> any AnthropicHTTPStreaming = { AnthropicHTTPClient(apiKey: $0) }
+        clientFactory: @escaping @Sendable (String) -> any AnthropicHTTPStreaming = { AnthropicHTTPClient(apiKey: $0) },
     ) {
         self.credentials = credentials
         self.defaultModel = defaultModel
         self.systemPrompt = systemPrompt
         self.toolRuntime = toolRuntime
         let rationaleDescription = toolRuntime.rationaleSchemaDescription
-        self.tools = toolRuntime.allTools.map {
+        tools = toolRuntime.allTools.map {
             AnthropicToolBridge.anthropicTool(from: $0, rationaleDescription: rationaleDescription)
         }
-        self.history = initialHistory
+        history = initialHistory
         self.maxEmptyToolUseFollowUps = maxEmptyToolUseFollowUps
-        self.currentModel = defaultModel
+        currentModel = defaultModel
         self.clientFactory = clientFactory
     }
 
@@ -84,7 +84,7 @@ public actor AnthropicInferenceSession: InferenceSession {
                 userMessage: userMessage,
                 apiKey: key,
                 parameters: parameters,
-                continuation: continuation
+                continuation: continuation,
             )
         }
         // Unstructured Task: onTermination is a @Sendable sync callback; cannot await.
@@ -110,12 +110,12 @@ public actor AnthropicInferenceSession: InferenceSession {
         userMessage: AnthropicMessage,
         apiKey: String,
         parameters: InferenceRequestParameters,
-        continuation: InferenceStream.Continuation
+        continuation: InferenceStream.Continuation,
     ) async {
         let toolTurnRuntime = toolRuntime.makeTurnRuntime(
             toolStepBudget: parameters.toolStepBudget,
             context: parameters.toolExecutionContext,
-            toolSelection: parameters.toolSelection
+            toolSelection: parameters.toolSelection,
         )
         let client = clientFactory(apiKey)
         // Snapshot history + the new user message into a local buffer.
@@ -132,11 +132,11 @@ public actor AnthropicInferenceSession: InferenceSession {
                     parameters: parameters,
                     toolTurnRuntime: toolTurnRuntime,
                     turnHistory: &turnHistory,
-                    continuation: continuation
+                    continuation: continuation,
                 )
                 stopReason = stopReasonAfterRequest(
                     stopReason: stopReason,
-                    toolUseResponsesSeen: &toolUseResponsesSeen
+                    toolUseResponsesSeen: &toolUseResponsesSeen,
                 )
             } while stopReason == "tool_use"
 
@@ -144,8 +144,8 @@ public actor AnthropicInferenceSession: InferenceSession {
             continuation.yield(
                 .result(
                     extractAssistantText(from: turnHistory),
-                    finishReason(from: stopReason)
-                )
+                    finishReason(from: stopReason),
+                ),
             )
             continuation.finish()
         } catch is CancellationError {
@@ -161,7 +161,7 @@ public actor AnthropicInferenceSession: InferenceSession {
         parameters: InferenceRequestParameters,
         toolTurnRuntime: ToolTurnRuntime,
         turnHistory: inout [AnthropicMessage],
-        continuation: InferenceStream.Continuation
+        continuation: InferenceStream.Continuation,
     ) async throws -> String {
         let request = buildRequest(from: turnHistory, parameters: parameters)
         var textAccumulated = ""
@@ -193,7 +193,7 @@ public actor AnthropicInferenceSession: InferenceSession {
             pendingCalls,
             toolTurnRuntime: toolTurnRuntime,
             turnHistory: &turnHistory,
-            continuation: continuation
+            continuation: continuation,
         )
         return stopReason
     }
@@ -201,7 +201,7 @@ public actor AnthropicInferenceSession: InferenceSession {
     func appendAssistantTurn(
         text: String,
         toolCalls: [PendingSSEToolCall],
-        to turnHistory: inout [AnthropicMessage]
+        to turnHistory: inout [AnthropicMessage],
     ) {
         var content: [AnthropicContent] = []
         if !text.isEmpty {
@@ -210,12 +210,11 @@ public actor AnthropicInferenceSession: InferenceSession {
         for call in toolCalls {
             // Parse argsJSON once here; fall back to an empty object so history
             // re-encoding never throws if the model emitted malformed JSON.
-            let inputValue: AnthropicJSONValue
-            if let data = call.argsJSON.data(using: .utf8),
-               let raw = try? JSONSerialization.jsonObject(with: data) {
-                inputValue = AnthropicJSONValue(raw)
+            let inputValue: AnthropicJSONValue = if let data = call.argsJSON.data(using: .utf8),
+                                                    let raw = try? JSONSerialization.jsonObject(with: data) {
+                AnthropicJSONValue(raw)
             } else {
-                inputValue = .object([:])
+                .object([:])
             }
             content.append(.toolUse(id: call.id, name: call.name, input: inputValue))
         }
@@ -228,7 +227,7 @@ public actor AnthropicInferenceSession: InferenceSession {
         _ calls: [PendingSSEToolCall],
         toolTurnRuntime: ToolTurnRuntime,
         turnHistory: inout [AnthropicMessage],
-        continuation: InferenceStream.Continuation
+        continuation: InferenceStream.Continuation,
     ) async throws {
         guard !calls.isEmpty else { return }
         var toolResultContents: [AnthropicContent] = []
@@ -242,7 +241,7 @@ public actor AnthropicInferenceSession: InferenceSession {
     private func executeSingleTool(
         _ call: PendingSSEToolCall,
         toolTurnRuntime: ToolTurnRuntime,
-        continuation: InferenceStream.Continuation
+        continuation: InferenceStream.Continuation,
     ) async throws -> AnthropicContent {
         let callID: ToolCallID = call.id
         let (rationale, argsJSON) = ToolRationale.extracting(from: call.argsJSON)
@@ -253,14 +252,14 @@ public actor AnthropicInferenceSession: InferenceSession {
             onApprovalRequired: { pendingCall in
                 continuation.yield(.toolApprovalRequired(call: pendingCall))
             },
-            onHookFired: { continuation.yield(.toolHookFired($0)) }
+            onHookFired: { continuation.yield(.toolHookFired($0)) },
         )
         switch outcome {
         case .success(let content):
             continuation.yield(.toolCallCompleted(
                 id: callID,
                 name: call.name,
-                outcome: .success(content: content)
+                outcome: .success(content: content),
             ))
             return .toolResult(toolUseID: callID, content: content, isError: false)
         case .failure(let failure):
@@ -312,7 +311,7 @@ extension AnthropicInferenceSession {
             model: currentModel,
             system: systemPrompt,
             messages: history,
-            tools: tools.isEmpty ? nil : tools
+            tools: tools.isEmpty ? nil : tools,
         )
         let count = try await clientFactory(key).countTokens(request: request)
         cachedContextTokens = count
@@ -344,7 +343,7 @@ extension AnthropicInferenceSession {
 
     func buildRequest(
         from turnHistory: [AnthropicMessage],
-        parameters: InferenceRequestParameters
+        parameters: InferenceRequestParameters,
     ) -> AnthropicRequest {
         let effectiveTools: [AnthropicTool]?
         let selectedTools = tools.filter {
@@ -360,13 +359,13 @@ extension AnthropicInferenceSession {
             messages: turnHistory,
             tools: effectiveTools,
             stream: true,
-            temperature: parameters.configuration.temperature
+            temperature: parameters.configuration.temperature,
         )
     }
 
     func stopReasonAfterRequest(
         stopReason: String,
-        toolUseResponsesSeen: inout Int
+        toolUseResponsesSeen: inout Int,
     ) -> String {
         guard stopReason == "tool_use" else {
             return stopReason

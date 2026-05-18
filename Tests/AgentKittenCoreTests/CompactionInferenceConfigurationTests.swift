@@ -1,19 +1,19 @@
 // SPDX-FileCopyrightText: 2026 AgentKitten Authors
 // SPDX-License-Identifier: Apache-2.0
 
-import Testing
 @testable import AgentKittenCore
+import Testing
 
 @Test func manualCompaction_usesBasePhaseBehaviorInferenceConfigurationByDefault() async throws {
     let compactionConfig = InferenceConfiguration(temperature: 0.1, maxTokens: 512)
     let behavior = AgentBehavior(
         systemPrompt: "Test",
-        phaseBehaviors: .init(base: .init(inferenceConfiguration: compactionConfig))
+        phaseBehaviors: .init(base: .init(inferenceConfiguration: compactionConfig)),
     )
     let provider = CompactionConfigRecordingProvider()
     let agent = Agent(
         providerRegistry: ProviderRegistry(default: provider),
-        behavior: behavior
+        behavior: behavior,
     )
     let session = agent.makeSession()
 
@@ -35,22 +35,22 @@ import Testing
     var phaseBehaviors = PhaseBehaviorSet(base: .init(inferenceConfiguration: baseConfig))
     phaseBehaviors.set(
         .init(inferenceConfiguration: compactionConfig),
-        for: .compaction
+        for: .compaction,
     )
     let behavior = AgentBehavior(
         systemPrompt: "Test",
-        phaseBehaviors: phaseBehaviors
+        phaseBehaviors: phaseBehaviors,
     )
     let provider = CompactionConfigRecordingProvider()
     let agent = Agent(
         providerRegistry: ProviderRegistry(default: provider),
-        behavior: behavior
+        behavior: behavior,
     )
     let session = agent.makeSession()
 
     let turn = try await session.send(
         "Hello",
-        turnOverrides: TurnOverrides(inferenceConfiguration: InferenceConfiguration(temperature: 0.9))
+        turnOverrides: TurnOverrides(inferenceConfiguration: InferenceConfiguration(temperature: 0.9)),
     )
     _ = try await collectEvents(from: turn)
     _ = try await session.compactContext(.summarize(.init(preservedRecentTurnCount: 0)))
@@ -69,15 +69,15 @@ import Testing
     phaseBehaviors.set(
         .init(
             provider: .ofType(CompactionOverrideProvider.self),
-            inferenceConfiguration: InferenceConfiguration(temperature: 0.4, maxTokens: 111)
+            inferenceConfiguration: InferenceConfiguration(temperature: 0.4, maxTokens: 111),
         ),
-        for: .compaction
+        for: .compaction,
     )
     let behavior = AgentBehavior(systemPrompt: "Test", phaseBehaviors: phaseBehaviors)
     let agent = Agent(
         providerRegistry: ProviderRegistry(default: defaultProvider)
             .registering(CompactionOverrideProvider(base: overrideProvider)),
-        behavior: behavior
+        behavior: behavior,
     )
     let session = agent.makeSession()
 
@@ -93,7 +93,7 @@ import Testing
     #expect(trace.provider == .named(String(describing: CompactionOverrideProvider.self)))
     #expect(trace.inferenceConfiguration == InferenceConfiguration(
         temperature: 0.4,
-        maxTokens: 111
+        maxTokens: 111,
     ).traceSnapshot)
 }
 
@@ -105,7 +105,7 @@ import Testing
     let behavior = AgentBehavior(systemPrompt: "Test", phaseBehaviors: phaseBehaviors)
     let agent = Agent(
         providerRegistry: ProviderRegistry(default: provider),
-        behavior: behavior
+        behavior: behavior,
     )
     let session = agent.makeSession()
 
@@ -128,7 +128,7 @@ import Testing
     let provider = SplittingCompactionProvider()
     let agent = Agent(
         providerRegistry: ProviderRegistry(default: provider),
-        behavior: .test()
+        behavior: .test(),
     )
     let session = agent.makeSession()
 
@@ -161,7 +161,7 @@ struct CompactionConfigRecordingProvider: InferenceProviding {
         systemPrompt: String?,
         toolRuntime: ToolRuntime,
         toolSelection: ToolSelection,
-        inferenceContext: InferenceContext
+        inferenceContext: InferenceContext,
     ) -> CompactionConfigRecordingSession {
         CompactionConfigRecordingSession(state: state, recordsConfiguration: toolSelection == .disabled)
     }
@@ -194,7 +194,7 @@ actor CompactionConfigRecordingSession: InferenceSession, StructuredInferenceSes
 
     func generateStream<T: Codable & Sendable & JSONSchemaProviding>(
         prompt: String,
-        parameters: InferenceRequestParameters
+        parameters: InferenceRequestParameters,
     ) async throws(StructuredGenerationError) -> StructuredInferenceStream<T> {
         throw .generationFailed(InferenceError.invalidResponse("not supported"))
     }
@@ -211,11 +211,11 @@ extension CompactionConfigRecordingSession: ContextCompactableSession {
 
     func applyCompaction(
         summary: String?,
-        preservedRecentTurnCount: Int
+        preservedRecentTurnCount: Int,
     ) async throws -> ContextCompactionResult {
         .compacted(.init(
             usageBefore: ContextUsage(contextTokens: 90, contextSize: 100),
-            usageAfter: ContextUsage(contextTokens: 10, contextSize: 100)
+            usageAfter: ContextUsage(contextTokens: 10, contextSize: 100),
         ))
     }
 }
@@ -239,12 +239,12 @@ private struct ContextRecordingProvider: InferenceProviding {
         systemPrompt: String?,
         toolRuntime: ToolRuntime,
         toolSelection: ToolSelection,
-        inferenceContext: InferenceContext
+        inferenceContext: InferenceContext,
     ) -> ContextRecordingSession {
         ContextRecordingSession(
             state: state,
             isSummarySession: toolSelection == .disabled,
-            inferenceContext: inferenceContext
+            inferenceContext: inferenceContext,
         )
     }
 
@@ -262,13 +262,13 @@ private struct CompactionOverrideProvider: InferenceProviding {
         systemPrompt: String?,
         toolRuntime: ToolRuntime,
         toolSelection: ToolSelection,
-        inferenceContext: InferenceContext
+        inferenceContext: InferenceContext,
     ) -> CompactionConfigRecordingSession {
         base.makeSession(
             systemPrompt: systemPrompt,
             toolRuntime: toolRuntime,
             toolSelection: toolSelection,
-            inferenceContext: inferenceContext
+            inferenceContext: inferenceContext,
         )
     }
 }
@@ -296,7 +296,7 @@ private actor ContextRecordingSession: InferenceSession, StructuredInferenceSess
 
     func generateStream<T: Codable & Sendable & JSONSchemaProviding>(
         prompt: String,
-        parameters: InferenceRequestParameters
+        parameters: InferenceRequestParameters,
     ) async throws(StructuredGenerationError) -> StructuredInferenceStream<T> {
         throw .generationFailed(InferenceError.invalidResponse("not supported"))
     }
@@ -314,7 +314,7 @@ extension ContextRecordingSession: ContextCompactableSession {
     func applyCompaction(summary: String?, preservedRecentTurnCount: Int) async throws -> ContextCompactionResult {
         .compacted(.init(
             usageBefore: ContextUsage(contextTokens: 90, contextSize: 100),
-            usageAfter: ContextUsage(contextTokens: 10, contextSize: 100)
+            usageAfter: ContextUsage(contextTokens: 10, contextSize: 100),
         ))
     }
 }
@@ -339,7 +339,7 @@ private struct SplittingCompactionProvider: InferenceProviding {
         systemPrompt: String?,
         toolRuntime: ToolRuntime,
         toolSelection: ToolSelection,
-        inferenceContext: InferenceContext
+        inferenceContext: InferenceContext,
     ) -> SplittingCompactionSession {
         SplittingCompactionSession(state: state, isSummarySession: toolSelection == .disabled)
     }
@@ -373,7 +373,7 @@ private actor SplittingCompactionSession: InferenceSession, StructuredInferenceS
 
     func generateStream<T: Codable & Sendable & JSONSchemaProviding>(
         prompt: String,
-        parameters: InferenceRequestParameters
+        parameters: InferenceRequestParameters,
     ) async throws(StructuredGenerationError) -> StructuredInferenceStream<T> {
         throw .generationFailed(InferenceError.invalidResponse("not supported"))
     }
@@ -394,7 +394,7 @@ extension SplittingCompactionSession: ContextCompactableSession {
     func applyCompaction(summary: String?, preservedRecentTurnCount: Int) async throws -> ContextCompactionResult {
         .compacted(.init(
             usageBefore: ContextUsage(contextTokens: 90, contextSize: 100),
-            usageAfter: ContextUsage(contextTokens: 10, contextSize: 100)
+            usageAfter: ContextUsage(contextTokens: 10, contextSize: 100),
         ))
     }
 }

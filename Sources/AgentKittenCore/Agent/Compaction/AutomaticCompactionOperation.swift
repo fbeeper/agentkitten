@@ -9,7 +9,7 @@ enum AutomaticCompactionOperation {
 
     static func decision(
         _ conversation: AnyConversation,
-        policy: AutomaticCompactionPolicy
+        policy: AutomaticCompactionPolicy,
     ) async throws -> Decision {
         let trigger: AutomaticCompactionTrigger
         let options: ContextCompactionOptions
@@ -31,7 +31,7 @@ enum AutomaticCompactionOperation {
     static func compactIfNeeded(
         _ conversation: AnyConversation,
         policy: AutomaticCompactionPolicy,
-        summaryGenerator: ContextCompactionSummaryGenerator
+        summaryGenerator: ContextCompactionSummaryGenerator,
     ) async throws -> ContextCompactionResult {
         let decision = try await decision(conversation, policy: policy)
         switch decision {
@@ -40,9 +40,8 @@ enum AutomaticCompactionOperation {
         case .compact(let options):
             return try await conversation.compactContext(
                 options: options,
-                summaryGenerator: summaryGenerator
+                summaryGenerator: summaryGenerator,
             )
         }
     }
-
 }

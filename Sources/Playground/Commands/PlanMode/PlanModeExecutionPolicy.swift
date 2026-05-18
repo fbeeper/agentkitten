@@ -15,7 +15,7 @@ struct PlanModeExecutionPolicy: ToolExecutionPolicy {
         case ("write_scratchpad", .plan):
             return .deny(
                 reason: "write_scratchpad is not available in plan mode. " +
-                    "Call propose_plan with your plan first."
+                    "Call propose_plan with your plan first.",
             )
         case ("propose_plan", .code):
             return .deny(reason: "propose_plan is not available in code mode.")

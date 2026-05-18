@@ -1,8 +1,8 @@
 // SPDX-FileCopyrightText: 2026 AgentKitten Authors
 // SPDX-License-Identifier: Apache-2.0
 
-import Foundation
 import AgentKittenCore
+import Foundation
 
 /// Streams SSE events and counts tokens for Anthropic Messages API requests.
 protocol AnthropicHTTPStreaming: Sendable {
@@ -30,7 +30,7 @@ struct AnthropicHTTPClient: AnthropicHTTPStreaming {
 
     init(apiKey: String) {
         self.apiKey = apiKey
-        self.urlSession = URLSession.shared
+        urlSession = URLSession.shared
     }
 
     /// Streams SSE events from a single Anthropic Messages API request.
@@ -106,7 +106,7 @@ struct AnthropicHTTPClient: AnthropicHTTPStreaming {
             return .invalidResponse(fallbackMessage)
         }
         return .contextWindowExceeded(
-            ContextWindowExceededInfo(provider: Self.providerName, message: message)
+            ContextWindowExceededInfo(provider: Self.providerName, message: message),
         )
     }
 

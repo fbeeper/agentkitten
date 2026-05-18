@@ -44,7 +44,7 @@ public protocol InferenceSession: Actor {
 extension InferenceSession {
     public func contextUsage() async throws -> ContextUsage {
         throw InferenceError.unsupportedConfiguration(
-            "\(Self.self) does not support context usage estimation."
+            "\(Self.self) does not support context usage estimation.",
         )
     }
 }

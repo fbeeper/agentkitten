@@ -1,10 +1,10 @@
 // SPDX-FileCopyrightText: 2026 AgentKitten Authors
 // SPDX-License-Identifier: Apache-2.0
 
-import ArgumentParser
-import Darwin
 import AgentKitten
 import AgentKittenCore
+import ArgumentParser
+import Darwin
 
 extension Playground {
     /// Single-turn inference that exercises the provider/session layer directly.
@@ -12,7 +12,7 @@ extension Playground {
     /// Demonstrates the lower-level API: provider → session → stream.
     struct Generate: AsyncParsableCommand {
         static let configuration = CommandConfiguration(
-            abstract: "Single-turn inference via the provider/session layer."
+            abstract: "Single-turn inference via the provider/session layer.",
         )
 
         @Option(name: .long, help: "The prompt to send to the inference provider.")
@@ -34,19 +34,19 @@ extension Playground {
             fflush(stdout)
 
             let runtime = PlaygroundSessionFactory.makeToolRuntime(
-                policy: PlaygroundToolApprovalPrompt.configuredPolicy(for: toolPolicy)
+                policy: PlaygroundToolApprovalPrompt.configuredPolicy(for: toolPolicy),
             )
             let session = try PlaygroundSessionFactory.makeSession(
                 for: provider,
                 systemPrompt: system,
-                runtime: runtime
+                runtime: runtime,
             )
             try await stream(session: session, gate: runtime.approvalGate)
         }
 
         private func stream<S: InferenceSession>(
             session: S,
-            gate: ToolApprovalGate
+            gate: ToolApprovalGate,
         ) async throws {
             let memory = PlaygroundToolApprovalMemory()
             let events = try await session.run(UserMessage(text: prompt), parameters: InferenceRequestParameters())
@@ -67,7 +67,7 @@ extension Playground {
                         _ = try await PlaygroundToolApprovalPrompt.resolve(
                             call: call,
                             gate: gate,
-                            memory: memory
+                            memory: memory,
                         )
                     } else {
                         print("\n\(PlaygroundToolEventFormatter.approvalRequired(call))", terminator: "")
@@ -83,7 +83,7 @@ extension Playground {
 
         private func printFinishReasonIfNeeded(
             _ reason: FinishReason,
-            receivedText: Bool
+            receivedText: Bool,
         ) {
             guard reason != .endTurn else {
                 return

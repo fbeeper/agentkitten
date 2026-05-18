@@ -9,17 +9,20 @@ public struct AnyToolHook: Sendable {
     public let phases: Set<ToolHookPhase>
 
     private let beforeHandler: @Sendable (PendingToolCall, ToolExecutionContext) async throws -> PendingToolCall
-    private let afterHandler: @Sendable (PendingToolCall, ToolCallOutcome, ToolExecutionContext) async -> ToolCallOutcome
-    // swiftlint:disable:previous line_length
+    private let afterHandler: @Sendable (
+        PendingToolCall,
+        ToolCallOutcome,
+        ToolExecutionContext
+    ) async -> ToolCallOutcome
 
     /// Creates a type-erased wrapper from a concrete ``ToolHook``.
     public init<H: ToolHook>(_ hook: H) {
-        self.name = hook.name
-        self.phases = hook.phases
-        self.beforeHandler = { call, context in
+        name = hook.name
+        phases = hook.phases
+        beforeHandler = { call, context in
             try await hook.beforeExecute(call, context: context)
         }
-        self.afterHandler = { call, outcome, context in
+        afterHandler = { call, outcome, context in
             await hook.afterExecute(call, outcome: outcome, context: context)
         }
     }
@@ -31,7 +34,7 @@ public struct AnyToolHook: Sendable {
     func afterExecute(
         _ call: PendingToolCall,
         outcome: ToolCallOutcome,
-        context: ToolExecutionContext
+        context: ToolExecutionContext,
     ) async -> ToolCallOutcome {
         await afterHandler(call, outcome, context)
     }

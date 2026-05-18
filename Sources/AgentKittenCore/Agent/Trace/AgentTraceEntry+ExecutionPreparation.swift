@@ -212,7 +212,7 @@ extension ConversationIdentity {
     var traceSnapshot: ConversationIdentitySnapshot {
         ConversationIdentitySnapshot(
             conversationID: conversationID.description,
-            inferenceSessionID: inferenceSessionID.description
+            inferenceSessionID: inferenceSessionID.description,
         )
     }
 }
@@ -270,7 +270,7 @@ extension TurnOverrides {
             toolSelection: toolSelection.map(\.traceSnapshot),
             toolStepBudget: toolStepBudget.map(\.traceSnapshot),
             inferenceConfiguration: inferenceConfiguration.map(\.traceSnapshot),
-            provider: provider.map(\.traceSnapshot)
+            provider: provider.map(\.traceSnapshot),
         )
     }
 }

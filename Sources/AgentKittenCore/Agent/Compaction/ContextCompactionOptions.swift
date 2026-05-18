@@ -34,7 +34,7 @@ public enum ContextCompactionOptions: Sendable, Equatable, Hashable {
         public init(
             preservedRecentTurnCount: Int = 2,
             prompt: Prompt = .standard,
-            allowsSplitting: Bool = true
+            allowsSplitting: Bool = true,
         ) {
             self.preservedRecentTurnCount = preservedRecentTurnCount
             self.prompt = prompt
@@ -68,7 +68,7 @@ public struct AnyContextCompactionStrategy: Sendable, Equatable, Hashable {
     public let id: String
     private let body:
         @Sendable (any ContextCompactableSession, ContextCompactionSummaryGenerator)
-            async throws -> ContextCompactionResult
+        async throws -> ContextCompactionResult
 
     /// Creates a custom compaction strategy.
     ///
@@ -80,7 +80,7 @@ public struct AnyContextCompactionStrategy: Sendable, Equatable, Hashable {
         body: @escaping @Sendable (
             any ContextCompactableSession,
             ContextCompactionSummaryGenerator
-        ) async throws -> ContextCompactionResult
+        ) async throws -> ContextCompactionResult,
     ) {
         self.id = id
         self.body = body
@@ -89,7 +89,7 @@ public struct AnyContextCompactionStrategy: Sendable, Equatable, Hashable {
     /// Runs the custom compaction behavior.
     public func compact(
         _ session: any ContextCompactableSession,
-        summaryGenerator: ContextCompactionSummaryGenerator
+        summaryGenerator: ContextCompactionSummaryGenerator,
     ) async throws -> ContextCompactionResult {
         try await body(session, summaryGenerator)
     }
@@ -108,22 +108,22 @@ public struct AnyContextCompactionStrategy: Sendable, Equatable, Hashable {
 
 extension ContextCompactionOptions.SummarizationOptions {
     func buildPrompt(for request: CompactionRequest) -> String {
-        var parts: [String]
-        switch prompt {
+        var parts: [String] = switch prompt {
         case .standard:
-            parts = [
+            [
                 AgentKittenLocalization.string("contextCompaction.summarizeHistory"),
                 AgentKittenLocalization.string("contextCompaction.preserveFacts"),
             ]
         case .appending(let instructions):
-            parts = [
+            [
                 AgentKittenLocalization.string("contextCompaction.summarizeHistory"),
                 AgentKittenLocalization.string("contextCompaction.preserveFacts"),
                 AgentKittenLocalization.formattedString(
-                    "contextCompaction.additionalInstructionsFormat", instructions),
+                    "contextCompaction.additionalInstructionsFormat", instructions,
+                ),
             ]
         case .custom(let override):
-            parts = [override]
+            [override]
         }
 
         switch request {

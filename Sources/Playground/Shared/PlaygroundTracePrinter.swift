@@ -7,7 +7,7 @@ import Foundation
 enum PlaygroundTracePrinter {
     static func printTurnTrace(
         trace: AgentTrace,
-        invocationID: InvocationID
+        invocationID: InvocationID,
     ) async {
         let entries = await trace.snapshot().filter { $0.invocationID == invocationID }
         guard !entries.isEmpty else {
@@ -35,7 +35,7 @@ enum PlaygroundTracePrinter {
     // swiftlint:disable:next cyclomatic_complexity
     private static func format(
         _ entry: AgentTraceEntry,
-        number: Int
+        number: Int,
     ) -> String {
         let prefix = String(format: "%02d", number)
         switch entry.kind {
@@ -79,7 +79,7 @@ enum PlaygroundTracePrinter {
     }
 
     private static func describePreparation(
-        _ info: AgentTraceEntry.Kind.ExecutionPreparationInfo
+        _ info: AgentTraceEntry.Kind.ExecutionPreparationInfo,
     ) -> String {
         var parts: [String] = [
             "provider=\(describeProvider(info.provider))",
@@ -99,42 +99,42 @@ enum PlaygroundTracePrinter {
     private static func describeProvider(_ provider: ProviderReferenceSnapshot) -> String {
         switch provider {
         case .default:
-            return "default"
+            "default"
         case .named(let name):
-            return name
+            name
         }
     }
 
     private static func describeSelection(
-        _ selection: ToolSelectionSnapshot
+        _ selection: ToolSelectionSnapshot,
     ) -> String {
         switch selection {
         case .all:
-            return "all"
+            "all"
         case .disabled:
-            return "disabled"
+            "disabled"
         case .including(let names):
-            return "including(\(names.joined(separator: ",")))"
+            "including(\(names.joined(separator: ",")))"
         case .excluding(let names):
-            return "excluding(\(names.joined(separator: ",")))"
+            "excluding(\(names.joined(separator: ",")))"
         }
     }
 
     private static func describeBudget(
-        _ budget: ToolStepBudgetSnapshot
+        _ budget: ToolStepBudgetSnapshot,
     ) -> String {
         switch budget {
         case .disabled:
-            return "disabled"
+            "disabled"
         case .budget(let count):
-            return "budget(\(count))"
+            "budget(\(count))"
         case .unbounded:
-            return "unbounded"
+            "unbounded"
         }
     }
 
     private static func describeOverrides(
-        _ overrides: TurnOverridesSnapshot
+        _ overrides: TurnOverridesSnapshot,
     ) -> String {
         var parts: [String] = []
         if let sel = overrides.toolSelection {
@@ -155,26 +155,26 @@ enum PlaygroundTracePrinter {
     private static func describe(_ message: AgentMessage) -> String {
         switch message {
         case .assistant(let assistant):
-            return "assistant \"\(trim(assistant.text))\""
+            "assistant \"\(trim(assistant.text))\""
         case .user(let user):
-            return "user \"\(trim(user.text))\""
+            "user \"\(trim(user.text))\""
         case .system(let system):
-            return "system \"\(trim(system.text))\""
+            "system \"\(trim(system.text))\""
         case .toolCall(let call):
-            return "toolCall(name: \(call.name), id: \(call.id))"
+            "toolCall(name: \(call.name), id: \(call.id))"
         case .toolResult(let result):
-            return "toolResult(name: \(result.name), id: \(result.callID), isError: \(result.isError))"
+            "toolResult(name: \(result.name), id: \(result.callID), isError: \(result.isError))"
         }
     }
 
     private static func describe(_ outcome: AgentTraceEntry.Kind.TurnOutcome) -> String {
         switch outcome {
         case .completed:
-            return "completed"
+            "completed"
         case .cancelled:
-            return "cancelled"
+            "cancelled"
         case .failed(let error):
-            return "failed(\(error.description))"
+            "failed(\(error.description))"
         }
     }
 
@@ -191,35 +191,35 @@ enum PlaygroundTracePrinter {
     private static func describe(_ result: ContextCompactionResult) -> String {
         switch result {
         case .compacted(let compacted):
-            return """
+            """
             compacted tokens=\(compacted.usageBefore.contextTokens)->\(compacted.usageAfter.contextTokens)
             """
         case .skipped(let reason):
-            return "skipped reason=\(describe(reason))"
+            "skipped reason=\(describe(reason))"
         }
     }
 
     private static func describe(_ reason: ContextCompactionResult.SkipReason) -> String {
         switch reason {
         case .disabled:
-            return "disabled"
+            "disabled"
         case .sessionReleased:
-            return "sessionReleased"
+            "sessionReleased"
         case .noActiveConversation:
-            return "noActiveConversation"
+            "noActiveConversation"
         case .conversationReplaced:
-            return "conversationReplaced"
+            "conversationReplaced"
         case .triggerNotMet(let usage):
-            return "triggerNotMet(tokens=\(usage.contextTokens))"
+            "triggerNotMet(tokens=\(usage.contextTokens))"
         case .inferenceError(let error):
-            return "inferenceError(\(error))"
+            "inferenceError(\(error))"
         case .failed(let message):
-            return "failed(\(message))"
+            "failed(\(message))"
         }
     }
 
     private static func describeCompaction(
-        _ info: AgentTraceEntry.Kind.ContextCompactionInfo
+        _ info: AgentTraceEntry.Kind.ContextCompactionInfo,
     ) -> String {
         var parts: [String] = []
         if let provider = info.provider {
@@ -242,7 +242,7 @@ enum PlaygroundTracePrinter {
     }
 
     private static func describeApproval(
-        _ info: AgentTraceEntry.Kind.ToolApprovalRequiredInfo
+        _ info: AgentTraceEntry.Kind.ToolApprovalRequiredInfo,
     ) -> String {
         var parts = ["tool \(info.call.name) (\(info.call.id))"]
         if let context = info.context {

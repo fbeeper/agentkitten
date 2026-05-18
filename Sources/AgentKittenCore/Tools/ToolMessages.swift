@@ -23,12 +23,11 @@ public enum ToolRationale {
             return (nil, argumentsJSON)
         }
         let rationale = obj.removeValue(forKey: schemaKey) as? String
-        let stripped: String
-        if let strippedData = try? JSONSerialization.data(withJSONObject: obj),
-           let strippedString = String(data: strippedData, encoding: .utf8) {
-            stripped = strippedString
+        let stripped: String = if let strippedData = try? JSONSerialization.data(withJSONObject: obj),
+                                  let strippedString = String(data: strippedData, encoding: .utf8) {
+            strippedString
         } else {
-            stripped = argumentsJSON
+            argumentsJSON
         }
         return (rationale?.isEmpty == false ? rationale : nil, stripped)
     }
@@ -67,7 +66,7 @@ public struct ToolResultMessage: Sendable, Codable, Equatable, Hashable {
         callID: ToolCallID,
         name: String,
         contentSummary: [ToolResultContentSummary],
-        isError: Bool = false
+        isError: Bool = false,
     ) {
         self.callID = callID
         self.name = name

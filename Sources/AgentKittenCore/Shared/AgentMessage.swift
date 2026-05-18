@@ -42,9 +42,9 @@ extension UserMessage: Codable {
 
     public init(from decoder: any Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
-        self.text = try container.decode(String.self, forKey: .text)
+        text = try container.decode(String.self, forKey: .text)
         // Backwards-compatible: messages encoded before sender was introduced decode as .local.
-        self.sender = try container.decodeIfPresent(UserID.self, forKey: .sender) ?? .local
+        sender = try container.decodeIfPresent(UserID.self, forKey: .sender) ?? .local
     }
 
     public func encode(to encoder: any Encoder) throws {

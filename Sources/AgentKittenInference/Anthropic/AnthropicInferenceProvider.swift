@@ -34,7 +34,7 @@ public actor AnthropicInferenceProvider: InferenceProviding {
     ///   - model: The Anthropic model identifier. Defaults to `"claude-sonnet-4-5"`.
     public init(
         credentials: any APIKeyProviding = EnvironmentAPIKeyProvider("ANTHROPIC_API_KEY"),
-        model: String = "claude-sonnet-4-5"
+        model: String = "claude-sonnet-4-5",
     ) {
         self.credentials = credentials
         self.model = model
@@ -47,7 +47,7 @@ public actor AnthropicInferenceProvider: InferenceProviding {
     /// is re-posted with a different tool list on the next request.
     public nonisolated func sessionCompatibility(
         from current: EffectiveExecutionConfiguration,
-        to next: EffectiveExecutionConfiguration
+        to next: EffectiveExecutionConfiguration,
     ) -> SessionCompatibility {
         if current.provider != next.provider {
             return .replace
@@ -65,7 +65,7 @@ public actor AnthropicInferenceProvider: InferenceProviding {
         systemPrompt: String?,
         toolRuntime: ToolRuntime,
         toolSelection: ToolSelection,
-        inferenceContext: InferenceContext
+        inferenceContext: InferenceContext,
     ) -> AnthropicInferenceSession {
         makeAnthropicSession(systemPrompt: systemPrompt, toolRuntime: toolRuntime)
     }
@@ -73,14 +73,14 @@ public actor AnthropicInferenceProvider: InferenceProviding {
     private nonisolated func makeAnthropicSession(
         systemPrompt: String?,
         toolRuntime: ToolRuntime,
-        initialHistory: [AnthropicMessage] = []
+        initialHistory: [AnthropicMessage] = [],
     ) -> AnthropicInferenceSession {
         AnthropicInferenceSession(
             credentials: credentials,
             defaultModel: model,
             systemPrompt: systemPrompt,
             toolRuntime: toolRuntime,
-            initialHistory: initialHistory
+            initialHistory: initialHistory,
         )
     }
 
@@ -94,13 +94,13 @@ public actor AnthropicInferenceProvider: InferenceProviding {
         systemPrompt: String?,
         toolRuntime: ToolRuntime,
         toolSelection: ToolSelection,
-        inferenceContext: InferenceContext
+        inferenceContext: InferenceContext,
     ) async throws -> AnthropicInferenceSession {
         let history = await session.captureHistory()
         return makeAnthropicSession(
             systemPrompt: systemPrompt,
             toolRuntime: toolRuntime,
-            initialHistory: history
+            initialHistory: history,
         )
     }
 

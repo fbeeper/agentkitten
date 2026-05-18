@@ -29,7 +29,7 @@ struct TurnValidator<Result: Sendable> {
     func run(
         generationStep: GenerationStep,
         userMessage: UserMessage,
-        context: AgentSessionRuntime.TurnRuntimeContext<Result>
+        context: AgentSessionRuntime.TurnRuntimeContext<Result>,
     ) async throws {
         var retryCount = 0
         var attemptMessage = userMessage
@@ -41,13 +41,13 @@ struct TurnValidator<Result: Sendable> {
                 userMessage: userMessage,
                 attemptMessage: attemptMessage,
                 generationStep: generationStep,
-                context: context
+                context: context,
             )
             let nextStep = try await handleValidationOutcome(
                 attempt.outcome,
                 result: attempt.result,
                 retryCount: &retryCount,
-                context: context
+                context: context,
             )
             switch nextStep {
             case .completed:
@@ -66,14 +66,14 @@ struct TurnValidator<Result: Sendable> {
         userMessage: UserMessage,
         attemptMessage: UserMessage,
         generationStep: GenerationStep,
-        context: AgentSessionRuntime.TurnRuntimeContext<Result>
+        context: AgentSessionRuntime.TurnRuntimeContext<Result>,
     ) async throws -> (result: Result, outcome: ValidatorOutcome) {
         if let resultToRevalidate {
             let validationOutcome = await validate(
                 resultToRevalidate,
                 against: userMessage,
                 invocationID: context.turnRuntime.id,
-                sink: context.traceSink
+                sink: context.traceSink,
             )
             return (result: resultToRevalidate, outcome: validationOutcome)
         }
@@ -82,7 +82,7 @@ struct TurnValidator<Result: Sendable> {
             result,
             against: userMessage,
             invocationID: context.turnRuntime.id,
-            sink: context.traceSink
+            sink: context.traceSink,
         )
         return (result: result, outcome: validationOutcome)
     }
@@ -91,14 +91,14 @@ struct TurnValidator<Result: Sendable> {
         _ outcome: ValidatorOutcome,
         result: Result,
         retryCount: inout Int,
-        context: AgentSessionRuntime.TurnRuntimeContext<Result>
+        context: AgentSessionRuntime.TurnRuntimeContext<Result>,
     ) async throws -> ValidationStep {
         switch outcome.result {
         case .pass:
             consumer.emitResult(
                 result,
                 timestamp: Date(),
-                on: context.turnRuntime
+                on: context.turnRuntime,
             )
             return .completed
         case .fail(let reason):
@@ -106,7 +106,7 @@ struct TurnValidator<Result: Sendable> {
                 .fail,
                 message: reason,
                 validator: outcome.validatorName,
-                sink: context.traceSink
+                sink: context.traceSink,
             )
             throw ValidationError.rejected(reason)
         case .feedback(let message):
@@ -115,7 +115,7 @@ struct TurnValidator<Result: Sendable> {
                 validatorName: outcome.validatorName,
                 result: result,
                 retryCount: &retryCount,
-                context: context
+                context: context,
             )
         case .error(let message):
             return try await handleValidationError(
@@ -123,7 +123,7 @@ struct TurnValidator<Result: Sendable> {
                 validatorName: outcome.validatorName,
                 result: result,
                 retryCount: &retryCount,
-                context: context
+                context: context,
             )
         }
     }
@@ -133,13 +133,13 @@ struct TurnValidator<Result: Sendable> {
         validatorName: String,
         result: Result,
         retryCount: inout Int,
-        context: AgentSessionRuntime.TurnRuntimeContext<Result>
+        context: AgentSessionRuntime.TurnRuntimeContext<Result>,
     ) async throws -> ValidationStep {
         recordValidation(
             .feedback,
             message: message,
             validator: validatorName,
-            sink: context.traceSink
+            sink: context.traceSink,
         )
         guard retryCount < configuration.maxRetries else {
             try await applyValidationPolicy(
@@ -147,7 +147,7 @@ struct TurnValidator<Result: Sendable> {
                 lastAttempt: result,
                 reason: message,
                 validator: validatorName,
-                context: context
+                context: context,
             )
             return .completed
         }
@@ -164,7 +164,7 @@ struct TurnValidator<Result: Sendable> {
         validatorName: String,
         result: Result,
         retryCount: inout Int,
-        context: AgentSessionRuntime.TurnRuntimeContext<Result>
+        context: AgentSessionRuntime.TurnRuntimeContext<Result>,
     ) async throws -> ValidationStep {
         guard retryCount < configuration.maxRetries else {
             try await applyValidationPolicy(
@@ -172,7 +172,7 @@ struct TurnValidator<Result: Sendable> {
                 lastAttempt: result,
                 reason: message,
                 validator: validatorName,
-                context: context
+                context: context,
             )
             return .completed
         }
@@ -184,13 +184,13 @@ struct TurnValidator<Result: Sendable> {
         _ result: Result,
         against userMessage: UserMessage,
         invocationID: InvocationID,
-        sink: TurnTraceSink
+        sink: TurnTraceSink,
     ) async -> ValidatorOutcome {
         let context = ValidationContext(
             result: result,
             userMessage: userMessage,
             invocationID: invocationID,
-            sessionState: sessionState
+            sessionState: sessionState,
         )
         for validator in configuration.validators {
             do {
@@ -200,7 +200,7 @@ struct TurnValidator<Result: Sendable> {
                         .pass,
                         message: AgentKittenLocalization.string("validation.validationPassed"),
                         validator: validator.traceName,
-                        sink: sink
+                        sink: sink,
                     )
                     continue
                 }
@@ -208,7 +208,7 @@ struct TurnValidator<Result: Sendable> {
             } catch {
                 return ValidatorOutcome(
                     validatorName: validator.traceName,
-                    result: .error(message: String(describing: error))
+                    result: .error(message: String(describing: error)),
                 )
             }
         }
@@ -220,7 +220,7 @@ struct TurnValidator<Result: Sendable> {
         lastAttempt: Result,
         reason: String,
         validator: String,
-        context: AgentSessionRuntime.TurnRuntimeContext<Result>
+        context: AgentSessionRuntime.TurnRuntimeContext<Result>,
     ) async throws {
         switch configuration.policy {
         case .restrictive:
@@ -228,7 +228,7 @@ struct TurnValidator<Result: Sendable> {
                 restrictiveResult,
                 message: reason,
                 validator: validator,
-                sink: context.traceSink
+                sink: context.traceSink,
             )
             throw ValidationError.failed(reason)
         case .permissive:
@@ -236,12 +236,12 @@ struct TurnValidator<Result: Sendable> {
                 .waived,
                 message: reason,
                 validator: validator,
-                sink: context.traceSink
+                sink: context.traceSink,
             )
             consumer.emitResult(
                 lastAttempt,
                 timestamp: Date(),
-                on: context.turnRuntime
+                on: context.turnRuntime,
             )
         }
     }
@@ -250,12 +250,12 @@ struct TurnValidator<Result: Sendable> {
         _ result: AgentTraceEntry.Kind.ValidationInfo.Result,
         message: String,
         validator: String,
-        sink: TurnTraceSink
+        sink: TurnTraceSink,
     ) {
         sink.record(kind: .validation(.init(
             result: result,
             message: message,
-            validator: validator
+            validator: validator,
         )))
     }
 }

@@ -1,14 +1,13 @@
 // SPDX-FileCopyrightText: 2026 AgentKitten Authors
 // SPDX-License-Identifier: Apache-2.0
 
+@testable import AgentKittenCore
 import Foundation
 import Testing
-@testable import AgentKittenCore
 
 // MARK: - UserIDTests
 
-@Suite struct UserIDTests {
-
+struct UserIDTests {
     @Test func construction_andDescription() {
         let id: UserID = "alice"
         #expect(id.description == "alice")
@@ -54,13 +53,11 @@ import Testing
     @Test func local_stable() {
         #expect(UserID.local == UserID.local)
     }
-
 }
 
 // MARK: - AgentIDTests
 
-@Suite struct AgentIDTests {
-
+struct AgentIDTests {
     @Test func construction_andDescription() {
         let id: AgentID = "weatherAgent"
         #expect(id.description == "weatherAgent")
@@ -114,8 +111,7 @@ import Testing
 
 // MARK: - SessionIDTests
 
-@Suite struct SessionIDTests {
-
+struct SessionIDTests {
     @Test func generate_nonEmpty() {
         #expect(!AgentSessionID.generate().description.isEmpty)
     }
@@ -151,8 +147,7 @@ import Testing
 
 // MARK: - InvocationIDTests
 
-@Suite struct InvocationIDTests {
-
+struct InvocationIDTests {
     @Test func generate_nonEmpty() {
         #expect(!InvocationID.generate().description.isEmpty)
     }
@@ -191,8 +186,7 @@ import Testing
 
 // MARK: - EventIDTests
 
-@Suite struct EventIDTests {
-
+struct EventIDTests {
     @Test func generate_nonEmpty() {
         #expect(!EventID.generate().description.isEmpty)
     }

@@ -1,8 +1,8 @@
 // SPDX-FileCopyrightText: 2026 AgentKitten Authors
 // SPDX-License-Identifier: Apache-2.0
 
-import Foundation
 @testable import AgentKittenCore
+import Foundation
 
 actor SharedScript {
     private let responses: [MockResponse]
@@ -17,7 +17,7 @@ actor SharedScript {
 
     init(
         responses: [MockResponse],
-        structuredResponses: [MockResponse]
+        structuredResponses: [MockResponse],
     ) {
         self.responses = responses
         self.structuredResponses = structuredResponses
@@ -35,7 +35,7 @@ actor SharedScript {
     func nextStructuredResponse(
         sessionID: UUID,
         prompt: String,
-        systemPrompt: String?
+        systemPrompt: String?,
     ) throws(StructuredGenerationError) -> MockResponse {
         promptsBySessionID[sessionID] = systemPrompt
         promptLog.append(systemPrompt)
@@ -43,7 +43,7 @@ actor SharedScript {
         structuredSessionIDs.append(sessionID)
         guard !structuredResponses.isEmpty else {
             throw StructuredGenerationError.generationFailed(
-                ScriptedInferenceError.noStructuredResponsesConfigured
+                ScriptedInferenceError.noStructuredResponsesConfigured,
             )
         }
         let response = structuredResponses[structuredIndex % structuredResponses.count]
@@ -81,7 +81,7 @@ actor ScriptedInferenceSession: InferenceSession, StructuredInferenceSession {
     init(
         script: SharedScript,
         systemPrompt: String?,
-        toolRuntime: ToolRuntime
+        toolRuntime: ToolRuntime,
     ) {
         self.script = script
         self.systemPrompt = systemPrompt
@@ -93,32 +93,32 @@ actor ScriptedInferenceSession: InferenceSession, StructuredInferenceSession {
         // fixtures for explicit scripted responses, not provider-parity mocks.
         let toolTurnRuntime = toolRuntime.makeTurnRuntime(
             toolStepBudget: parameters.toolStepBudget,
-            context: parameters.toolExecutionContext
+            context: parameters.toolExecutionContext,
         )
         let response = await script.nextExecutionResponse(
             sessionID: sessionID,
-            systemPrompt: systemPrompt
+            systemPrompt: systemPrompt,
         )
         return Self.stream(
             for: response,
-            toolTurnRuntime: toolTurnRuntime
+            toolTurnRuntime: toolTurnRuntime,
         )
     }
 
     func generateStream<T: Codable & Sendable & JSONSchemaProviding>(
         prompt: String,
-        parameters: InferenceRequestParameters
+        parameters: InferenceRequestParameters,
     ) async throws(StructuredGenerationError) -> StructuredInferenceStream<T> {
         // Scripted sessions intentionally ignore `toolSelection`: scripted tool
         // calls should still execute unless the test explicitly scripts otherwise.
         let toolTurnRuntime = toolRuntime.makeTurnRuntime(
             toolStepBudget: parameters.toolStepBudget,
-            context: parameters.toolExecutionContext
+            context: parameters.toolExecutionContext,
         )
         let response = try await script.nextStructuredResponse(
             sessionID: sessionID,
             prompt: prompt,
-            systemPrompt: systemPrompt
+            systemPrompt: systemPrompt,
         )
         return AsyncThrowingStream { continuation in
             let task = Task {
@@ -126,7 +126,7 @@ actor ScriptedInferenceSession: InferenceSession, StructuredInferenceSession {
                     let json = try await Self.structuredJSON(
                         for: response,
                         toolTurnRuntime: toolTurnRuntime,
-                        continuation: continuation
+                        continuation: continuation,
                     )
                     let value = try Self.decodeStructuredValue(T.self, from: json)
                     continuation.yield(.result(value, .endTurn))
@@ -145,7 +145,7 @@ actor ScriptedInferenceSession: InferenceSession, StructuredInferenceSession {
 extension ScriptedInferenceSession {
     private static func stream(
         for response: MockResponse,
-        toolTurnRuntime: ToolTurnRuntime
+        toolTurnRuntime: ToolTurnRuntime,
     ) -> InferenceStream {
         AsyncThrowingStream { continuation in
             let task = Task {
@@ -159,13 +159,13 @@ extension ScriptedInferenceSession {
                         let call = PendingToolCall(
                             id: UUID().uuidString,
                             name: name,
-                            argumentsJSON: argumentsJSON
+                            argumentsJSON: argumentsJSON,
                         )
                         try await streamToolCall(
                             call: call,
                             thenRespond: thenRespond,
                             toolTurnRuntime: toolTurnRuntime,
-                            continuation: continuation
+                            continuation: continuation,
                         )
                     }
                 } catch is CancellationError {
@@ -182,28 +182,28 @@ extension ScriptedInferenceSession {
         call: PendingToolCall,
         thenRespond: String,
         toolTurnRuntime: ToolTurnRuntime,
-        continuation: InferenceStream.Continuation
+        continuation: InferenceStream.Continuation,
     ) async throws {
         continuation.yield(.toolCallRequested(id: call.id, name: call.name, argumentsJSON: call.argumentsJSON))
         let outcome = await toolTurnRuntime.invoke(
             call,
             onApprovalRequired: { pendingCall in
                 continuation.yield(.toolApprovalRequired(call: pendingCall))
-            }
+            },
         )
         continuation.yield(
             .toolCallCompleted(
                 id: call.id,
                 name: call.name,
-                outcome: outcome
-            )
+                outcome: outcome,
+            ),
         )
         try await streamWords(thenRespond, into: continuation)
     }
 
     private static func streamWords(
         _ text: String,
-        into continuation: InferenceStream.Continuation
+        into continuation: InferenceStream.Continuation,
     ) async throws {
         let words = text.split(separator: " ")
         for (index, word) in words.enumerated() {
@@ -217,7 +217,7 @@ extension ScriptedInferenceSession {
 
     private static func decodeStructuredValue<T: Decodable>(
         _ type: T.Type,
-        from json: String
+        from json: String,
     ) throws(StructuredGenerationError) -> T {
         do {
             return try JSONDecoder().decode(T.self, from: Data(json.utf8))
@@ -229,7 +229,7 @@ extension ScriptedInferenceSession {
     private static func structuredJSON<T: Sendable>(
         for response: MockResponse,
         toolTurnRuntime: ToolTurnRuntime,
-        continuation: StructuredInferenceStream<T>.Continuation
+        continuation: StructuredInferenceStream<T>.Continuation,
     ) async throws(StructuredGenerationError) -> String {
         switch response {
         case .success(let text):
@@ -240,13 +240,13 @@ extension ScriptedInferenceSession {
             let pending = PendingToolCall(
                 id: UUID().uuidString,
                 name: name,
-                argumentsJSON: argumentsJSON
+                argumentsJSON: argumentsJSON,
             )
             return try await structuredToolResponse(
                 pending,
                 thenRespond: thenRespond,
                 toolTurnRuntime: toolTurnRuntime,
-                continuation: continuation
+                continuation: continuation,
             )
         }
     }
@@ -255,27 +255,27 @@ extension ScriptedInferenceSession {
         _ pending: PendingToolCall,
         thenRespond: String,
         toolTurnRuntime: ToolTurnRuntime,
-        continuation: StructuredInferenceStream<T>.Continuation
+        continuation: StructuredInferenceStream<T>.Continuation,
     ) async throws(StructuredGenerationError) -> String {
         continuation.yield(
             .toolCallRequested(
                 id: pending.id,
                 name: pending.name,
-                argumentsJSON: pending.argumentsJSON
-            )
+                argumentsJSON: pending.argumentsJSON,
+            ),
         )
         let outcome = await toolTurnRuntime.invoke(
             pending,
             onApprovalRequired: { pendingCall in
                 continuation.yield(.toolApprovalRequired(call: pendingCall))
-            }
+            },
         )
         continuation.yield(
             .toolCallCompleted(
                 id: pending.id,
                 name: pending.name,
-                outcome: outcome
-            )
+                outcome: outcome,
+            ),
         )
         switch outcome {
         case .success:
@@ -286,7 +286,7 @@ extension ScriptedInferenceSession {
             throw StructuredGenerationError.generationFailed(ScriptedInferenceError.stepLimitExceeded)
         case .failure(.execution(let message)):
             throw StructuredGenerationError.generationFailed(
-                InferenceError.invalidResponse(message)
+                InferenceError.invalidResponse(message),
             )
         }
     }

@@ -12,7 +12,6 @@ import Darwin
 /// propagation so every Playground command constructs sessions and agents
 /// the same way without repeating the `switch`/conditional-compilation pattern.
 enum PlaygroundSessionFactory {
-
     /// Creates a ``ToolRuntime`` from a flat list of tools and an execution policy.
     ///
     /// - Parameters:
@@ -20,7 +19,7 @@ enum PlaygroundSessionFactory {
     ///   - policy: Execution policy. Defaults to auto-approve.
     static func makeToolRuntime(
         tools: [AnyAgentTool] = [],
-        policy: AnyToolExecutionPolicy = AnyToolExecutionPolicy(AutoApprovePolicy())
+        policy: AnyToolExecutionPolicy = AnyToolExecutionPolicy(AutoApprovePolicy()),
     ) -> ToolRuntime {
         ToolRuntime(configuration: ToolDefinition(tools: tools, executionPolicy: policy))
     }
@@ -39,7 +38,7 @@ enum PlaygroundSessionFactory {
     static func makeSession(
         for option: ProviderOption,
         systemPrompt: String? = nil,
-        runtime: ToolRuntime
+        runtime: ToolRuntime,
     ) throws -> any InferenceSession & StructuredInferenceSession {
         switch option {
         case .mock:
@@ -47,14 +46,14 @@ enum PlaygroundSessionFactory {
                 systemPrompt: systemPrompt,
                 toolRuntime: runtime,
                 toolSelection: .all,
-                inferenceContext: .empty
+                inferenceContext: .empty,
             )
         case .anthropic:
             return InferenceProvider.anthropic().makeSession(
                 systemPrompt: systemPrompt,
                 toolRuntime: runtime,
                 toolSelection: .all,
-                inferenceContext: .empty
+                inferenceContext: .empty,
             )
         case .apple:
             #if canImport(FoundationModels)
@@ -63,7 +62,7 @@ enum PlaygroundSessionFactory {
                     systemPrompt: systemPrompt,
                     toolRuntime: runtime,
                     toolSelection: .all,
-                    inferenceContext: .empty
+                    inferenceContext: .empty,
                 )
             }
             throw PlaygroundError.appleIntelligenceRequiresMacOS26
@@ -84,12 +83,12 @@ enum PlaygroundSessionFactory {
     static func makeAgent(
         for option: ProviderOption,
         behavior: AgentBehavior,
-        toolDefinition: ToolDefinition = ToolDefinition()
+        toolDefinition: ToolDefinition = ToolDefinition(),
     ) throws -> Agent {
         Agent(
             providerRegistry: try PlaygroundProviderFactory.makeRegistry(for: option),
             behavior: behavior,
-            toolDefinition: toolDefinition
+            toolDefinition: toolDefinition,
         )
     }
 
@@ -101,13 +100,13 @@ enum PlaygroundSessionFactory {
         providerRegistry: ProviderRegistry,
         behavior: AgentBehavior,
         toolDefinition: ToolDefinition,
-        sessionState: SessionStateMode = .disabled
+        sessionState: SessionStateMode = .disabled,
     ) -> Agent {
-        return Agent(
+        Agent(
             providerRegistry: providerRegistry,
             behavior: behavior,
             toolDefinition: toolDefinition,
-            sessionState: sessionState
+            sessionState: sessionState,
         )
     }
 
@@ -122,13 +121,13 @@ enum PlaygroundSessionFactory {
         provider: ProviderOption,
         behavior: AgentBehavior,
         toolDefinition: ToolDefinition = ToolDefinition(),
-        sessionState: SessionStateMode = .disabled
+        sessionState: SessionStateMode = .disabled,
     ) throws -> Agent {
         Agent(
             providerRegistry: try PlaygroundProviderFactory.makeRegistry(for: provider),
             behavior: behavior,
             toolDefinition: toolDefinition,
-            sessionState: sessionState
+            sessionState: sessionState,
         )
     }
 
@@ -151,7 +150,7 @@ enum PlaygroundSessionFactory {
         session: any ToolApproving,
         toolPolicy: Playground.ToolPolicyOption,
         memory: PlaygroundToolApprovalMemory,
-        verboseTools: Bool = false
+        verboseTools: Bool = false,
     ) async throws {
         var streamedAssistantText = false
         for try await event in turn.events {
@@ -177,7 +176,7 @@ enum PlaygroundSessionFactory {
                     agentContext: (session, turn),
                     memory: memory,
                     toolPolicy: toolPolicy,
-                    verboseTools: verboseTools
+                    verboseTools: verboseTools,
                 )
             case .toolCallCompleted(let name, let id, let outcome):
                 guard verboseTools else {
@@ -193,14 +192,14 @@ enum PlaygroundSessionFactory {
         agentContext: (session: any ToolApproving, turn: Turn<AssistantMessage>),
         memory: PlaygroundToolApprovalMemory,
         toolPolicy: Playground.ToolPolicyOption,
-        verboseTools: Bool
+        verboseTools: Bool,
     ) async throws {
         if toolPolicy == .ask {
             _ = try await PlaygroundToolApprovalPrompt.resolve(
                 call: call,
                 session: agentContext.session,
                 turn: agentContext.turn,
-                memory: memory
+                memory: memory,
             )
         } else if verboseTools {
             print("\n\(PlaygroundToolEventFormatter.approvalRequired(call))", terminator: "")
@@ -221,7 +220,7 @@ enum PlaygroundSessionFactory {
         case .failure(let failure):
             print(
                 "\n[tool:failed] \(name) (\(id)) -> " +
-                PlaygroundTracePrinter.trim(failure.resultJSON)
+                    PlaygroundTracePrinter.trim(failure.resultJSON),
             )
         }
         fflush(stdout)

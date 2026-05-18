@@ -1,9 +1,9 @@
 // SPDX-FileCopyrightText: 2026 AgentKitten Authors
 // SPDX-License-Identifier: Apache-2.0
 
+@testable import AgentKittenCore
 import Foundation
 import Testing
-@testable import AgentKittenCore
 
 @Suite("Judge Validator System Prompt")
 struct JudgeValidatorSystemPromptTests {
@@ -17,7 +17,7 @@ struct JudgeValidatorSystemPromptTests {
         )
         let agent = Agent(
             providerRegistry: ProviderRegistry(default: outerProvider),
-            behavior: .test("Answer the user.")
+            behavior: .test("Answer the user."),
         )
         let session = agent.makeSession()
 
@@ -27,9 +27,9 @@ struct JudgeValidatorSystemPromptTests {
                 validator: JudgeValidator<AssistantMessage>(
                     prompt: .systemPrompt(customPrompt),
                     providerRegistry: ProviderRegistry(default: judgeProvider),
-                    name: "Custom Prompt Judge"
-                )
-            )
+                    name: "Custom Prompt Judge",
+                ),
+            ),
         )
         _ = try await collectEvents(from: turn)
 
@@ -50,13 +50,13 @@ struct JudgeValidatorSystemPromptTests {
                 .toolCall(
                     name: CountingEchoTool.name,
                     argumentsJSON: #"{"message":"hi"}"#,
-                    thenRespond: #"{"verdict":"pass"}"#
+                    thenRespond: #"{"verdict":"pass"}"#,
                 ),
             ],
         )
         let agent = Agent(
             providerRegistry: ProviderRegistry(default: outerProvider),
-            behavior: .test("Answer the user.")
+            behavior: .test("Answer the user."),
         )
         let session = agent.makeSession()
 
@@ -67,10 +67,10 @@ struct JudgeValidatorSystemPromptTests {
                     prompt: .systemPrompt(customPrompt),
                     providerRegistry: ProviderRegistry(default: judgeProvider),
                     toolDefinition: ToolDefinition(
-                        tools: [AnyAgentTool(CountingEchoTool(counter: counter))]
-                    )
-                )
-            )
+                        tools: [AnyAgentTool(CountingEchoTool(counter: counter))],
+                    ),
+                ),
+            ),
         )
         let events = try await collectEvents(from: turn)
 

@@ -18,7 +18,7 @@ enum AppleToolResultSupport {
         }
         let names = unsupportedToolNames.joined(separator: ", ")
         return .unsupportedConfiguration(
-            "Apple provider supports text-only tool results. Unsupported tools: \(names)"
+            "Apple provider supports text-only tool results. Unsupported tools: \(names)",
         )
     }
 
