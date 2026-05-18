@@ -36,7 +36,7 @@ jobs:
       run: make test
 
   test-macos-swift6_2:
-    name: Test (macOS, Xcode ${{ matrix.xcode }})
+    name: Test (macOS, Xcode ${{ matrix.xcode }}, Swift 6.2)
     runs-on: macos-26
     strategy:
       fail-fast: false
@@ -54,6 +54,24 @@ jobs:
       run: make build
     - name: Test
       run: make test
+
+  build-swift6_1:
+    name: Build (macOS, Xcode ${{ matrix.xcode }}, Swift 6.1)
+    runs-on: macos-15
+    strategy:
+      fail-fast: false
+      matrix:
+        xcode: ["16.3"]
+    steps:
+    - uses: actions/checkout@v6
+    - name: Select Xcode
+      run: sudo xcode-select -s /Applications/Xcode_${{ matrix.xcode }}.app
+    - name: Show versions
+      run: |
+        xcodebuild -version
+        swift --version
+    - name: Build
+      run: make build
 
   build-platforms:
     name: Build (${{ matrix.platform.name }}, Xcode ${{ matrix.xcode }})
