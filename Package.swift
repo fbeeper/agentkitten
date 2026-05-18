@@ -1,7 +1,7 @@
 // swift-tools-version: 6.0
 
-import PackageDescription
 import CompilerPluginSupport
+import PackageDescription
 
 let package = Package(
     name: "AgentKitten",
@@ -36,7 +36,7 @@ let package = Package(
             dependencies: ["AgentKittenMacros"],
             resources: [
                 .process("Resources"),
-            ]
+            ],
         ),
         .target(
             name: "AgentKitten",
@@ -45,21 +45,21 @@ let package = Package(
             ],
             resources: [
                 .process("PrivacyInfo.xcprivacy"),
-            ]
+            ],
         ),
         .target(
             name: "AgentKittenInference",
             dependencies: ["AgentKittenCore"],
             resources: [
                 .process("Resources"),
-            ]
+            ],
         ),
         .macro(
             name: "AgentKittenMacros",
             dependencies: [
                 .product(name: "SwiftSyntaxMacros", package: "swift-syntax"),
                 .product(name: "SwiftCompilerPlugin", package: "swift-syntax"),
-            ]
+            ],
         ),
         .executableTarget(
             name: "Playground",
@@ -70,14 +70,14 @@ let package = Package(
             ],
             resources: [
                 .process("Fixtures"),
-            ]
+            ],
         ),
         .testTarget(
             name: "AgentKittenInferenceTests",
             dependencies: ["AgentKittenInference"],
             resources: [
                 .process("Resources"),
-            ]
+            ],
         ),
         .testTarget(
             name: "AgentKittenCoreTests",
@@ -86,18 +86,18 @@ let package = Package(
             ],
             resources: [
                 .process("Resources"),
-            ]
+            ],
         ),
         .testTarget(
             name: "AgentKittenTests",
             dependencies: [
                 "AgentKitten",
-            ]
+            ],
         ),
         .testTarget(
             name: "PlaygroundTests",
-            dependencies: ["Playground"]
+            dependencies: ["Playground"],
         ),
     ],
-    swiftLanguageModes: [.v6]
+    swiftLanguageModes: [.v6],
 )
