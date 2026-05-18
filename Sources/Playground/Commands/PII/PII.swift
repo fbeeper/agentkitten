@@ -161,7 +161,7 @@ struct PIIStreamRehydrator {
                 break
             }
             // Flush everything before the `<`.
-            output += held[held.startIndex..<ltIdx]
+            output += held[held.startIndex ..< ltIdx]
             held = String(held[ltIdx...])
 
             if prefix.hasPrefix(held) {
@@ -173,7 +173,7 @@ struct PIIStreamRehydrator {
                 let digits = held.dropFirst(prefix.count)
                 if let gtIdx = digits.firstIndex(of: ">") {
                     // Complete sentinel.
-                    let sentinel = String(held[held.startIndex...gtIdx])
+                    let sentinel = String(held[held.startIndex ... gtIdx])
                     // Rehydrate via the vault; falls back to the original if unknown.
                     output += await vault.rehydrate(sentinel)
                     held = String(held.dropFirst(sentinel.count))

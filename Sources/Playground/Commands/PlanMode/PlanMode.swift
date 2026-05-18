@@ -144,7 +144,7 @@ extension Playground {
                     print(chunk, terminator: "")
                     fflush(stdout)
                 case .result(let assistant):
-                    if !streamedText && !suppressText {
+                    if !streamedText, !suppressText {
                         print(assistant.text, terminator: "")
                     }
                     print()

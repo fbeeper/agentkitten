@@ -229,7 +229,7 @@ private func jsonSchemaSource(
         return ".boolean(description: \(descArg))"
     default:
         // [T] → array
-        if typeName.hasPrefix("[") && typeName.hasSuffix("]") {
+        if typeName.hasPrefix("["), typeName.hasSuffix("]") {
             let inner = String(typeName.dropFirst().dropLast())
             let itemsSource = jsonSchemaSource(
                 for: inner,
