@@ -79,9 +79,9 @@ public actor AgentSession: ToolApproving {
         AgentSessionError.concurrentOperationInProgress(active: $0)
     }
 
-    // Internal setter: mutate only via setAutomaticCompactionPolicy(_:).
+    /// Internal setter: mutate only via setAutomaticCompactionPolicy(_:).
     public internal(set) var automaticCompactionPolicy: AutomaticCompactionPolicy
-    // Internal for conversation-preparation helpers in the split AgentSession extension file.
+    /// Internal for conversation-preparation helpers in the split AgentSession extension file.
     var conversationProvider: ConversationProvider
 
     init(
