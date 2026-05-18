@@ -34,7 +34,7 @@ public struct AnyToolExecutionPolicy: ToolExecutionPolicy, Sendable {
 
     /// Wraps a concrete policy for storage.
     public init<P: ToolExecutionPolicy>(_ policy: P) {
-        self.resolveClosure = { call, context in
+        resolveClosure = { call, context in
             await policy.resolve(call: call, context: context)
         }
     }

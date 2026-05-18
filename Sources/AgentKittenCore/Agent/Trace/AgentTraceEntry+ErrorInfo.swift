@@ -11,7 +11,7 @@ extension AgentTraceEntry.Kind {
         ///
         /// - Parameter error: The source error.
         public init(_ error: any Error) {
-            self.description = String(describing: error)
+            description = String(describing: error)
         }
 
         /// Creates a trace error with an explicit description.

@@ -26,7 +26,7 @@ public struct ToolRuntime: Sendable {
         approvalGate: ToolApprovalGate = ToolApprovalGate(),
         rationaleSchemaDescription: String = ToolRationale.schemaDescription,
     ) {
-        self.toolRegistry = executor.registry
+        toolRegistry = executor.registry
         self.executor = executor
         self.executionPolicy = AnyToolExecutionPolicy(executionPolicy)
         self.hooks = hooks

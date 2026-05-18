@@ -17,11 +17,11 @@ public struct InferenceContext: Sendable, Equatable, Hashable {
 
     /// Creates an empty inference context.
     public init() {
-        self.storage = CustomContext()
+        storage = CustomContext()
     }
 
     init(customValues: [String: ExecutionConfigurationCustomValue]) {
-        self.storage = CustomContext(customValues: customValues)
+        storage = CustomContext(customValues: customValues)
     }
 
     /// Reads or writes a typed inference value.

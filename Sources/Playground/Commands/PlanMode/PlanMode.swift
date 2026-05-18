@@ -181,12 +181,12 @@ extension Playground {
             case .plan:
                 TurnOverrides(
                     toolSelection: .including(["read_scratchpad", "propose_plan"]),
-                    turnNote: Self.planModeNote,
+                    turnNote: planModeNote,
                 )
             case .code:
                 TurnOverrides(
                     toolSelection: .including(["read_scratchpad", "write_scratchpad"]),
-                    turnNote: Self.codeModeNote,
+                    turnNote: codeModeNote,
                 )
             }
         }

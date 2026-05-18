@@ -134,7 +134,7 @@ public actor Turn<Result: Sendable> {
         requestedTurnOverrides: TurnOverrides,
         executionEnvironment: ExecutionEnvironment,
     ) {
-        self.runtime = TurnRuntime(
+        runtime = TurnRuntime(
             id: id,
             text: text,
             sender: sender,

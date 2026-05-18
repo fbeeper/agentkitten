@@ -102,7 +102,7 @@ enum PlaygroundSessionFactory {
         toolDefinition: ToolDefinition,
         sessionState: SessionStateMode = .disabled,
     ) -> Agent {
-        return Agent(
+        Agent(
             providerRegistry: providerRegistry,
             behavior: behavior,
             toolDefinition: toolDefinition,

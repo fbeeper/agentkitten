@@ -10,11 +10,11 @@ public struct ToolExecutionContext: Sendable {
 
     /// Creates an empty tool execution context.
     public init() {
-        self.storage = CustomContext()
+        storage = CustomContext()
     }
 
     init(customValues: [String: ExecutionConfigurationCustomValue]) {
-        self.storage = CustomContext(customValues: customValues)
+        storage = CustomContext(customValues: customValues)
     }
 
     /// Reads a typed custom turn value visible to tool policy.

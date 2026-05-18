@@ -48,12 +48,12 @@ public actor AnthropicInferenceSession: InferenceSession {
         self.systemPrompt = systemPrompt
         self.toolRuntime = toolRuntime
         let rationaleDescription = toolRuntime.rationaleSchemaDescription
-        self.tools = toolRuntime.allTools.map {
+        tools = toolRuntime.allTools.map {
             AnthropicToolBridge.anthropicTool(from: $0, rationaleDescription: rationaleDescription)
         }
-        self.history = initialHistory
+        history = initialHistory
         self.maxEmptyToolUseFollowUps = maxEmptyToolUseFollowUps
-        self.currentModel = defaultModel
+        currentModel = defaultModel
         self.clientFactory = clientFactory
     }
 

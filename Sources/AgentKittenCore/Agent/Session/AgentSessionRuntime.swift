@@ -30,7 +30,7 @@ struct AgentSessionRuntime {
         self.trace = trace
         self.approvalGate = approvalGate
         self.state = state
-        self.eventConsumer = ConversationEventConsumer(
+        eventConsumer = ConversationEventConsumer(
             agentID: agentID,
             sessionID: sessionID,
         )

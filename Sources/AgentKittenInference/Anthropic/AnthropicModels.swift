@@ -261,7 +261,7 @@ indirect enum AnthropicJSONValue: Encodable, Equatable {
             self.stringValue = stringValue
         }
         init?(intValue: Int) {
-            return nil
+            nil
         }
     }
 }

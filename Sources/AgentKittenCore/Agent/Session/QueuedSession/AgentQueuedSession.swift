@@ -29,11 +29,11 @@ public actor AgentQueuedSession: ToolApproving {
     private var queue = TurnQueue()
 
     init(session: AgentSession) {
-        self.sessionID = session.sessionID
-        self.agentID = session.agentID
-        self.ownerID = session.ownerID
-        self.trace = session.trace
-        self.state = session.state
+        sessionID = session.sessionID
+        agentID = session.agentID
+        ownerID = session.ownerID
+        trace = session.trace
+        state = session.state
         self.session = session
     }
 
@@ -93,7 +93,7 @@ public actor AgentQueuedSession: ToolApproving {
                 markRunning: { _ in true },
                 performWork: { [weak self, weak turn] in
                     guard let self else { return }
-                    if let task = await self.startQueuedAssistantTurn(
+                    if let task = await startQueuedAssistantTurn(
                         turn,
                         validation: validation,
                     ) {
@@ -141,7 +141,7 @@ public actor AgentQueuedSession: ToolApproving {
                 markRunning: { _ in true },
                 performWork: { [weak self, weak turn] in
                     guard let self else { return }
-                    if let task = await self.startQueuedStructuredTurn(
+                    if let task = await startQueuedStructuredTurn(
                         turn,
                         validation: validation,
                     ) {
@@ -169,7 +169,7 @@ public actor AgentQueuedSession: ToolApproving {
                             return
                         }
                         do {
-                            try await self.session.clearContext(state: statePolicy)
+                            try await session.clearContext(state: statePolicy)
                             continuation.resume()
                         } catch {
                             continuation.resume(throwing: error)
@@ -196,7 +196,7 @@ public actor AgentQueuedSession: ToolApproving {
                             return
                         }
                         do {
-                            let result = try await self.session.compactContext(options)
+                            let result = try await session.compactContext(options)
                             continuation.resume(returning: result)
                         } catch {
                             continuation.resume(throwing: error)
@@ -221,7 +221,7 @@ public actor AgentQueuedSession: ToolApproving {
                             return
                         }
                         do {
-                            let usage = try await self.session.contextUsage()
+                            let usage = try await session.contextUsage()
                             continuation.resume(returning: usage)
                         } catch {
                             continuation.resume(throwing: error)

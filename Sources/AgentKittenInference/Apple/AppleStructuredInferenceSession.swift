@@ -22,7 +22,7 @@ extension AppleInferenceSession: StructuredInferenceSession {
         await toolBridgeRuntime.beginTurn(toolTurnRuntime)
         do {
             let schema = try makeStructuredSchema(T.self)
-            let toolBridgeRuntime = self.toolBridgeRuntime
+            let toolBridgeRuntime = toolBridgeRuntime
             return AsyncThrowingStream { continuation in
                 let task = Task {
                     let relayTurn = await eventRelay.beginTurn(continuation)

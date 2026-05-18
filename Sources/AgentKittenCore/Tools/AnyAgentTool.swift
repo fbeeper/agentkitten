@@ -32,11 +32,11 @@ public struct AnyAgentTool: Sendable {
             !agentTool.schema.usesReservedKey,
             "Tool '\(T.name)' defines parameter '\(ToolRationale.schemaKey)', which is reserved by AgentKitten.",
         )
-        self.name = T.name
-        self.description = T.description
-        self.schema = agentTool.schema
-        self.capabilities = agentTool.capabilities
-        self.executeHandler = { data in
+        name = T.name
+        description = T.description
+        schema = agentTool.schema
+        capabilities = agentTool.capabilities
+        executeHandler = { data in
             let args = try JSONDecoder().decode(T.Arguments.self, from: data)
             let output = try await agentTool.execute(arguments: args)
             let encoded = try JSONEncoder().encode(output)
@@ -51,11 +51,11 @@ public struct AnyAgentTool: Sendable {
             !agentTool.schema.usesReservedKey,
             "Tool '\(T.name)' defines parameter '\(ToolRationale.schemaKey)', which is reserved by AgentKitten.",
         )
-        self.name = T.name
-        self.description = T.description
-        self.schema = agentTool.schema
-        self.capabilities = agentTool.capabilities
-        self.executeHandler = { data in
+        name = T.name
+        description = T.description
+        schema = agentTool.schema
+        capabilities = agentTool.capabilities
+        executeHandler = { data in
             let args = try JSONDecoder().decode(T.Arguments.self, from: data)
             return try await agentTool.execute(arguments: args)
         }

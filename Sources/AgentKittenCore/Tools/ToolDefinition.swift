@@ -30,7 +30,7 @@ public struct ToolDefinition: Sendable {
         executionPolicy: some ToolExecutionPolicy = AutoApprovePolicy(),
         hooks: [AnyToolHook] = [],
     ) {
-        self.registry = ToolRegistry(tools)
+        registry = ToolRegistry(tools)
         self.executionPolicy = AnyToolExecutionPolicy(executionPolicy)
         var seen = Set<String>()
         for hook in hooks {

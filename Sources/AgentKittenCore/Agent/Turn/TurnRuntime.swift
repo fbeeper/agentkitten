@@ -24,7 +24,7 @@ final class TurnRuntime<Result: Sendable>: Sendable {
         self.requestedTurnOverrides = requestedTurnOverrides
         self.executionEnvironment = executionEnvironment
         let (stream, continuation) = AsyncThrowingStream<AgentEvent<Result>, Error>.makeStream()
-        self.rawEvents = stream
+        rawEvents = stream
         self.continuation = continuation
     }
 }

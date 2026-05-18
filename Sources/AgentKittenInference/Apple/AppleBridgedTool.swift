@@ -94,7 +94,7 @@ struct AppleBridgedTool: Tool {
         rationaleDescription: String,
     ) {
         do {
-            self.parameters = try agentTool.schema.toGenerationSchema(
+            parameters = try agentTool.schema.toGenerationSchema(
                 toolName: agentTool.name,
                 rationaleDescription: rationaleDescription,
             )
@@ -102,8 +102,8 @@ struct AppleBridgedTool: Tool {
             logger.error("Schema bridge failed for tool '\(agentTool.name)': \(error)")
             return nil
         }
-        self.name = agentTool.name
-        self.description = agentTool.description
+        name = agentTool.name
+        description = agentTool.description
         self.agentTool = agentTool
         self.toolBridgeRuntime = toolBridgeRuntime
         self.eventRelay = eventRelay

@@ -5,7 +5,7 @@ struct CustomContext: Sendable, Equatable, Hashable {
     private var customValues: [String: ExecutionConfigurationCustomValue]
 
     init() {
-        self.customValues = [:]
+        customValues = [:]
     }
 
     init(customValues: [String: ExecutionConfigurationCustomValue]) {

@@ -92,7 +92,7 @@ actor ChickenWizardGameState {
     private var inventory: [String: Int]
 
     init() {
-        self.inventory = Self.starterIngredients
+        inventory = Self.starterIngredients
     }
 
     init(inventory: [String: Int]) {

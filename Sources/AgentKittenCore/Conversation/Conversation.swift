@@ -40,7 +40,7 @@ actor Conversation<Provider: InferenceProviding> {
         executionConfiguration: EffectiveExecutionConfiguration,
         toolRuntime: ToolRuntime,
     ) {
-        self.conversationID = .generate()
+        conversationID = .generate()
         self.owner = owner
         self.provider = provider
         self.systemPrompt = systemPrompt
@@ -51,8 +51,8 @@ actor Conversation<Provider: InferenceProviding> {
             toolSelection: executionConfiguration.toolSelection,
             inferenceContext: inferenceContext,
         )
-        self.sessionSlot = SessionSlot(id: .generate(), session: session)
-        self.digester = InferenceDigester()
+        sessionSlot = SessionSlot(id: .generate(), session: session)
+        digester = InferenceDigester()
     }
 
     /// Replaces the inner provider session, preserving conversation identity and history.

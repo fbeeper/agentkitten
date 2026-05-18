@@ -17,8 +17,8 @@ public struct ProviderRegistry: Sendable {
     public init<Provider: InferenceProviding>(
         default provider: Provider,
     ) {
-        self.defaultProvider = AnyInferenceProvider(provider)
-        self.providers = [:]
+        defaultProvider = AnyInferenceProvider(provider)
+        providers = [:]
     }
 
     /// Registers a provider for later lookup by its concrete type.

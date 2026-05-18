@@ -16,12 +16,12 @@ extension AgentSession {
         // mutable borrow of actor-isolated stored state across suspension, so
         // we resolve against a local copy and write the updated provider back
         // afterward.
-        var providerCopy = self.conversationProvider
+        var providerCopy = conversationProvider
         let resolvedConversation = try await providerCopy.resolveConversation(
             for: effectiveConfiguration,
             automaticCompactionPolicy: automaticCompactionPolicy,
         )
-        self.conversationProvider = providerCopy
+        conversationProvider = providerCopy
         let conversation = resolvedConversation.conversation
         let identity = await conversation.identity()
         record(

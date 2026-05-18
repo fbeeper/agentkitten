@@ -60,7 +60,7 @@ public actor AgentTrace {
     /// - Parameter retentionPolicy: In-memory retention policy for `entries`.
     public init(retentionPolicy: TraceRetentionPolicy = .maxTurns(150)) {
         self.retentionPolicy = retentionPolicy
-        self.timestampAnchor = TimestampAnchor()
+        timestampAnchor = TimestampAnchor()
         let commandStream: AsyncStream<Command>
         (commandStream, commandContinuation) = AsyncStream.makeStream(
             bufferingPolicy: .unbounded,
@@ -70,7 +70,7 @@ public actor AgentTrace {
                 guard let self else {
                     break
                 }
-                await self.apply(command)
+                await apply(command)
             }
         }
     }

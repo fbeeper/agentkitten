@@ -19,7 +19,7 @@ struct TurnEventSink<Result: Sendable> {
         invocationID: InvocationID,
     ) {
         self.continuation = continuation
-        self.mapper = ConversationEventMapper<Result>(
+        mapper = ConversationEventMapper<Result>(
             agentID: agentID,
             sessionID: sessionID,
             invocationID: invocationID,

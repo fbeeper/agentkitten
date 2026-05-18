@@ -27,13 +27,13 @@ struct AnyInferenceProvider: Sendable {
     init<Provider: InferenceProviding>(_ provider: Provider) {
         let providerObjectIdentifier = ObjectIdentifier(Provider.self)
         self.providerObjectIdentifier = providerObjectIdentifier
-        self.sessionCompatibilityClosure = { current, next in
+        sessionCompatibilityClosure = { current, next in
             provider.sessionCompatibility(from: current, to: next)
         }
-        self.preflightClosure = { toolRegistry, toolSelection in
+        preflightClosure = { toolRegistry, toolSelection in
             try provider.preflight(toolRegistry: toolRegistry, toolSelection: toolSelection)
         }
-        self.makeConversationClosure = { owner, systemPrompt, executionConfiguration, toolRuntime in
+        makeConversationClosure = { owner, systemPrompt, executionConfiguration, toolRuntime in
             try provider.preflight(
                 toolRegistry: toolRuntime.toolRegistry,
                 toolSelection: executionConfiguration.toolSelection,
@@ -48,7 +48,7 @@ struct AnyInferenceProvider: Sendable {
                 ),
             )
         }
-        self.generateIsolatedClosure = { prompt, configuration, context in
+        generateIsolatedClosure = { prompt, configuration, context in
             let session = provider.makeSession(
                 systemPrompt: nil,
                 toolRuntime: ToolRuntime(configuration: .noTools),

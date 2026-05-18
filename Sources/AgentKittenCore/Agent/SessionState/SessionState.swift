@@ -47,7 +47,7 @@ public actor SessionState {
         access: Access = .readWrite,
     ) {
         self.trace = trace
-        self.storage = contents
+        storage = contents
         self.access = access
     }
 

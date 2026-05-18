@@ -22,7 +22,7 @@ public struct TypedID<Tag>: Sendable, Hashable, Codable, CustomStringConvertible
 
     public init(from decoder: any Decoder) throws {
         let container = try decoder.singleValueContainer()
-        self.rawValue = try container.decode(String.self)
+        rawValue = try container.decode(String.self)
     }
 
     public func encode(to encoder: any Encoder) throws {
@@ -71,7 +71,7 @@ public struct UserID: Sendable, Hashable, Codable, CustomStringConvertible, Expr
 
     public init(from decoder: any Decoder) throws {
         let container = try decoder.singleValueContainer()
-        self.rawValue = try container.decode(String.self)
+        rawValue = try container.decode(String.self)
     }
 
     public func encode(to encoder: any Encoder) throws {

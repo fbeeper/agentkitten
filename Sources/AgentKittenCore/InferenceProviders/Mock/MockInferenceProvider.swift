@@ -53,9 +53,9 @@ public actor MockInferenceProvider: InferenceProviding {
     ) {
         if mockResponses.isEmpty {
             logger.error("MockInferenceProvider initialized with empty responses; using fallback.")
-            self.responses = [.success("This is a mock response.")]
+            responses = [.success("This is a mock response.")]
         } else {
-            self.responses = mockResponses
+            responses = mockResponses
         }
         self.structuredResponses = structuredResponses
         self.structuredMockResponses = structuredMockResponses

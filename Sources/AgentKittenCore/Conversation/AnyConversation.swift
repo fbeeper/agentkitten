@@ -34,33 +34,33 @@ struct AnyConversation: Sendable {
     init<Provider: InferenceProviding>(
         conversation: Conversation<Provider>,
     ) {
-        self.sendClosure = { userMessage, executionConfiguration, toolExecutionContext in
+        sendClosure = { userMessage, executionConfiguration, toolExecutionContext in
             try await conversation.send(
                 userMessage: userMessage,
                 executionConfiguration: executionConfiguration,
                 toolExecutionContext: toolExecutionContext,
             )
         }
-        self.identityClosure = {
+        identityClosure = {
             await conversation.identity()
         }
-        self.contextUsageClosure = {
+        contextUsageClosure = {
             try await conversation.contextUsage()
         }
-        self.compactContextClosure = { options, summaryGenerator in
+        compactContextClosure = { options, summaryGenerator in
             try await conversation.compactContext(
                 options: options,
                 summaryGenerator: summaryGenerator,
             )
         }
-        self.rebuildSessionClosure = { toolRuntime, toolSelection, inferenceContext in
+        rebuildSessionClosure = { toolRuntime, toolSelection, inferenceContext in
             try await conversation.rebuildSession(
                 toolRuntime: toolRuntime,
                 toolSelection: toolSelection,
                 inferenceContext: inferenceContext,
             )
         }
-        self.rebuildCompactedSessionClosure = { opts, summaryGenerator, runtime, selection, context in
+        rebuildCompactedSessionClosure = { opts, summaryGenerator, runtime, selection, context in
             try await conversation.rebuildSession(
                 compacting: opts,
                 summaryGenerator: summaryGenerator,
@@ -69,7 +69,7 @@ struct AnyConversation: Sendable {
                 inferenceContext: context,
             )
         }
-        self.structuredConversation = conversation
+        structuredConversation = conversation
     }
 
     func identity() async -> ConversationIdentity {

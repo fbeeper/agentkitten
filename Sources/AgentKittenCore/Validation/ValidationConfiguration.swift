@@ -77,7 +77,7 @@ public struct ValidationConfiguration<Result: Sendable>: Sendable {
             validators: [],
             maxRetries: 0,
             policy: .restrictive,
-            retryFeedbackMessageBuilder: Self.defaultRetryFeedbackMessage,
+            retryFeedbackMessageBuilder: defaultRetryFeedbackMessage,
         )
     }
 

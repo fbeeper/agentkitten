@@ -28,7 +28,7 @@ package final class SingleFlightOperationGate<Kind: Sendable>: Sendable {
 
     package func begin(_ kind: Kind) throws -> Lease {
         let id = UUID()
-        let errorFactory = self.errorFactory
+        let errorFactory = errorFactory
         try state.withLock { state in
             if let active = state.active {
                 throw errorFactory(active.kind)

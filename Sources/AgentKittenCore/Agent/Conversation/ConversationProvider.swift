@@ -28,7 +28,7 @@ struct ConversationProvider {
         factory: ConversationAssembler,
     ) {
         self.owner = owner
-        self.assembler = factory
+        assembler = factory
     }
 
     mutating func clearActiveConversation() {

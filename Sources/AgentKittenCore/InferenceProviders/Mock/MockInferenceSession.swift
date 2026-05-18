@@ -55,7 +55,7 @@ public actor MockInferenceSession: InferenceSession {
         }
         self.structuredResponses = structuredResponses
         self.structuredMockResponses = structuredMockResponses
-        self.toolRuntime = ToolRuntime(
+        toolRuntime = ToolRuntime(
             configuration: .noTools,
         )
     }

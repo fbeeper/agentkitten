@@ -101,13 +101,13 @@ public actor AgentSession: ToolApproving {
         self.trace = trace
         self.state = state
         self.approvalGate = approvalGate
-        self.agentEnvironment = ExecutionEnvironment(behavior: behavior, toolBehavior: toolBehavior)
-        self.automaticCompactionPolicy = behavior.defaultAutomaticCompactionPolicy
-        self.conversationProvider = ConversationProvider(
+        agentEnvironment = ExecutionEnvironment(behavior: behavior, toolBehavior: toolBehavior)
+        automaticCompactionPolicy = behavior.defaultAutomaticCompactionPolicy
+        conversationProvider = ConversationProvider(
             owner: ownerID,
             factory: conversationFactory,
         )
-        self.runtime = AgentSessionRuntime(
+        runtime = AgentSessionRuntime(
             agentID: agentID,
             sessionID: sessionID,
             trace: trace,

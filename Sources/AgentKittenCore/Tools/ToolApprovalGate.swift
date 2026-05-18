@@ -30,7 +30,7 @@ public actor ToolApprovalGate {
 
     /// Creates a gate that tracks pending approvals until the caller resolves them.
     public init() {
-        self.pending = [:]
+        pending = [:]
     }
 
     /// Marks the tool call as pending before the approval-required event is emitted.

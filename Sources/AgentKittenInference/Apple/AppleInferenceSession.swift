@@ -66,7 +66,7 @@ public actor AppleInferenceSession: InferenceSession {
             toolBridgeRuntime: toolBridgeRuntime,
             eventRelay: eventRelay,
         )
-        self.bridgedTools = bridged
+        bridgedTools = bridged
         self.model = model
         languageSession = Self.makeLanguageSession(
             systemPrompt: systemPrompt,
@@ -98,7 +98,7 @@ public actor AppleInferenceSession: InferenceSession {
             toolBridgeRuntime: toolBridgeRuntime,
             eventRelay: eventRelay,
         )
-        self.bridgedTools = bridged
+        bridgedTools = bridged
         self.model = model
         languageSession = LanguageModelSession(model: model, tools: bridged, transcript: transcript)
     }
@@ -194,9 +194,9 @@ public actor AppleInferenceSession: InferenceSession {
             toolSelection: parameters.toolSelection,
         )
         await toolBridgeRuntime.beginTurn(toolTurnRuntime)
-        let eventRelay = self.eventRelay
+        let eventRelay = eventRelay
         let relayTurn = await eventRelay.beginTurn(continuation)
-        let toolBridgeRuntime = self.toolBridgeRuntime
+        let toolBridgeRuntime = toolBridgeRuntime
         let task = Task {
             defer {
                 Task { await toolBridgeRuntime.endTurn(toolTurnRuntime) }

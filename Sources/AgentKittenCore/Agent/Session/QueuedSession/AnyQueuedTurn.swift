@@ -18,9 +18,9 @@ struct AnyQueuedTurn: Sendable {
         performWork: @Sendable @escaping () async -> Void,
     ) {
         self.id = id
-        self._isCancelled = isCancelled
-        self._markRunning = markRunning
-        self._performWork = performWork
+        _isCancelled = isCancelled
+        _markRunning = markRunning
+        _performWork = performWork
     }
 
     var isCancelled: Bool {

@@ -30,7 +30,7 @@ struct AnthropicHTTPClient: AnthropicHTTPStreaming {
 
     init(apiKey: String) {
         self.apiKey = apiKey
-        self.urlSession = URLSession.shared
+        urlSession = URLSession.shared
     }
 
     /// Streams SSE events from a single Anthropic Messages API request.

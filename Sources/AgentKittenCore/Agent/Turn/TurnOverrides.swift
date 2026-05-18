@@ -45,7 +45,7 @@ public struct TurnOverrides: Sendable {
         self.inferenceConfiguration = inferenceConfiguration
         self.provider = provider
         self.turnNote = turnNote
-        self.customValues = [:]
+        customValues = [:]
     }
 
     /// Accesses a typed custom turn value.
