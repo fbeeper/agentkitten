@@ -46,7 +46,6 @@ enum InferenceSessionIDTag {}
 /// The backing representation is an implementation detail — construct
 /// via ``init(_:)``; never assume the raw format.
 public struct UserID: Sendable, Hashable, Codable, CustomStringConvertible, ExpressibleByStringLiteral {
-
     private let rawValue: String
 
     /// Creates a user identifier from the given string.

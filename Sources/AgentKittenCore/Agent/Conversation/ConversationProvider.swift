@@ -192,7 +192,6 @@ struct ConversationProvider {
         }
         return plannedKind
     }
-
 }
 
 private struct ActiveConversation {

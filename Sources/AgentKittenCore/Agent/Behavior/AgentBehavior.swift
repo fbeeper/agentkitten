@@ -31,5 +31,4 @@ public struct AgentBehavior: Sendable {
         self.phaseBehaviors = phaseBehaviors
         self.defaultAutomaticCompactionPolicy = defaultAutomaticCompactionPolicy
     }
-
 }

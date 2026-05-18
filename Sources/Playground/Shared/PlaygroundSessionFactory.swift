@@ -12,7 +12,6 @@ import Darwin
 /// propagation so every Playground command constructs sessions and agents
 /// the same way without repeating the `switch`/conditional-compilation pattern.
 enum PlaygroundSessionFactory {
-
     /// Creates a ``ToolRuntime`` from a flat list of tools and an execution policy.
     ///
     /// - Parameters:

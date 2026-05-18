@@ -78,6 +78,7 @@ public actor AgentSession: ToolApproving {
     let operationGate = SingleFlightOperationGate<InferenceSessionOperationKind> {
         AgentSessionError.concurrentOperationInProgress(active: $0)
     }
+
     // Internal setter: mutate only via setAutomaticCompactionPolicy(_:).
     public internal(set) var automaticCompactionPolicy: AutomaticCompactionPolicy
     // Internal for conversation-preparation helpers in the split AgentSession extension file.
@@ -274,7 +275,6 @@ public actor AgentSession: ToolApproving {
             ?? turnRuntime.text
         return UserMessage(text: composedText, sender: turnRuntime.sender)
     }
-
 }
 
 // MARK: - Turn startup

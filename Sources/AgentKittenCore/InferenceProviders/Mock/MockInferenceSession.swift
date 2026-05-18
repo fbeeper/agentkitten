@@ -353,7 +353,6 @@ extension MockInferenceSession {
             onApprovalRequired: onApprovalRequired,
         )
     }
-
 }
 
 private enum MockStructuredGenerationError: Error, CustomStringConvertible {

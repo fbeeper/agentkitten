@@ -141,6 +141,5 @@ public actor AppleInferenceProvider: InferenceProviding {
             toolSelection: toolSelection,
         )
     }
-
 }
 #endif

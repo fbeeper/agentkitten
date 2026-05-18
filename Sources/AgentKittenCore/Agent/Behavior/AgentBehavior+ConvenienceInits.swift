@@ -23,5 +23,4 @@ extension AgentBehavior {
             defaultAutomaticCompactionPolicy: defaultAutomaticCompactionPolicy,
         )
     }
-
 }

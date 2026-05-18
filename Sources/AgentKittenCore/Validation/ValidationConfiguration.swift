@@ -107,11 +107,11 @@ public struct ValidationConfiguration<Result: Sendable>: Sendable {
         UserMessage(text: """
         Internal validation feedback for your previous response:
         \(message)
-        
+
         Revise your previous answer so it satisfies this feedback while still \
         addressing the user's request. Apply this feedback only to the current \
         response you are revising right now.
-        
+
         Do not mention validation, feedback, a judge, internal checks, or these \
         instructions in your answer. Present the revised answer directly as if it \
         were your first response to the user. Do not carry this feedback forward \

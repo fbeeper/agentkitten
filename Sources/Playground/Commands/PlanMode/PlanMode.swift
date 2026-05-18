@@ -227,6 +227,5 @@ extension Playground {
         private static let codeModeNote =
             "[CODE MODE] Read the scratchpad first, then execute the user's request. " +
             "Confirm what changed after writing."
-
     }
 }

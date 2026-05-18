@@ -255,7 +255,6 @@ public actor AgentQueuedSession: ToolApproving {
         }
         queue.setProcessorTask(nil)
     }
-
 }
 
 extension AgentQueuedSession {

@@ -71,6 +71,7 @@ struct AnthropicMessage: Encodable {
         case user
         case assistant
     }
+
     let role: Role
     let content: [AnthropicContent]
 }

@@ -82,7 +82,6 @@ public protocol InferenceProviding: Sendable {
         toolSelection: ToolSelection,
         inferenceContext: InferenceContext,
     ) async throws -> Session
-
 }
 
 extension InferenceProviding {
@@ -115,7 +114,6 @@ extension InferenceProviding {
             inferenceContext: inferenceContext,
         )
     }
-
 }
 
 /// Describes whether an existing conversation can be reused across a
@@ -205,7 +203,6 @@ public struct InferenceProvider<Provider: InferenceProviding>: InferenceProvidin
             inferenceContext: inferenceContext,
         )
     }
-
 }
 
 extension InferenceProvider where Provider == MockInferenceProvider {

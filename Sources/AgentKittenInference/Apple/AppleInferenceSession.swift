@@ -170,6 +170,7 @@ public actor AppleInferenceSession: InferenceSession {
             }
         }
     }
+
     /// Runs a single inference turn and streams the model's response.
     public func run(_ message: UserMessage, parameters: InferenceRequestParameters) async throws -> InferenceStream {
         let lease = try operationGate.begin(.run)
@@ -284,7 +285,6 @@ public actor AppleInferenceSession: InferenceSession {
         }
         return .providerUnavailable("Apple Intelligence is not available: \(reason)")
     }
-
 }
 
 @available(macOS 26, iOS 26, visionOS 26, macCatalyst 26, *)
