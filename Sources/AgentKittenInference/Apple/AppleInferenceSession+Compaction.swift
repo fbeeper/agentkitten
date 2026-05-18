@@ -25,11 +25,10 @@ extension AppleInferenceSession: ContextCompactableSession {
             transcript: languageSession.transcript,
             preservedRecentTurnCount: preservedRecentTurnCount,
         )
-        let entries: [FoundationModels.Transcript.Entry]
-        if let summary {
-            entries = Self.summaryEntries(summary) + plan.recentEntries
+        let entries: [FoundationModels.Transcript.Entry] = if let summary {
+            Self.summaryEntries(summary) + plan.recentEntries
         } else {
-            entries = plan.recentEntries
+            plan.recentEntries
         }
         replaceTranscript(FoundationModels.Transcript(entries: entries))
         let usageAfter = (try? await Self.contextUsage(

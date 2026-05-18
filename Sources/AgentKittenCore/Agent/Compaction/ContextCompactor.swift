@@ -84,11 +84,10 @@ package struct SummarizationContextCompactionStrategy: ContextCompactionStrategy
             from: allEntries,
             preservedRecentTurnCount: options.preservedRecentTurnCount,
         )
-        let summary: String?
-        if older.isEmpty {
-            summary = nil
+        let summary: String? = if older.isEmpty {
+            nil
         } else {
-            summary = try await summarize(
+            try await summarize(
                 entries: older,
                 requestSummary: summaryGenerator,
             )

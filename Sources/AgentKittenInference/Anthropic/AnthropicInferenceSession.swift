@@ -210,12 +210,11 @@ public actor AnthropicInferenceSession: InferenceSession {
         for call in toolCalls {
             // Parse argsJSON once here; fall back to an empty object so history
             // re-encoding never throws if the model emitted malformed JSON.
-            let inputValue: AnthropicJSONValue
-            if let data = call.argsJSON.data(using: .utf8),
+            let inputValue: AnthropicJSONValue = if let data = call.argsJSON.data(using: .utf8),
                let raw = try? JSONSerialization.jsonObject(with: data) {
-                inputValue = AnthropicJSONValue(raw)
+                AnthropicJSONValue(raw)
             } else {
-                inputValue = .object([:])
+                .object([:])
             }
             content.append(.toolUse(id: call.id, name: call.name, input: inputValue))
         }

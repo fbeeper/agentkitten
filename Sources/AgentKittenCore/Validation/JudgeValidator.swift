@@ -212,15 +212,14 @@ extension JudgeValidator {
         prompt: Prompt,
         hasTools: Bool,
     ) -> String {
-        let base: String
-        switch prompt {
+        let base: String = switch prompt {
         case .criteria(let criteriaString):
-            base = AgentKittenLocalization.formattedString(
+            AgentKittenLocalization.formattedString(
                 "validation.judgeSystemPromptFormat",
                 criteriaString.trimmingCharacters(in: .whitespacesAndNewlines),
             )
         case .systemPrompt(let rawPrompt):
-            base = rawPrompt
+            rawPrompt
         }
         var sections = [base, AgentKittenLocalization.string("validation.judgeVerdictGuidance")]
         if hasTools {

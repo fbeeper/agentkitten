@@ -36,13 +36,12 @@ extension AgentSession {
         _ options: ContextCompactionOptions,
         invocationID: InvocationID,
     ) async throws -> ContextCompactionResult {
-        let result: ContextCompactionResult
-        if let compacted = try await conversationProvider.compactActiveConversation(
+        let result: ContextCompactionResult = if let compacted = try await conversationProvider.compactActiveConversation(
             options: options,
         ) {
-            result = compacted
+            compacted
         } else {
-            result = .skipped(.noActiveConversation)
+            .skipped(.noActiveConversation)
         }
         record(
             kind: .contextCompaction(conversationProvider.compactionTraceInfo(

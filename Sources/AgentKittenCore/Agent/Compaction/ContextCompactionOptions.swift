@@ -108,15 +108,14 @@ public struct AnyContextCompactionStrategy: Sendable, Equatable, Hashable {
 
 extension ContextCompactionOptions.SummarizationOptions {
     func buildPrompt(for request: CompactionRequest) -> String {
-        var parts: [String]
-        switch prompt {
+        var parts: [String] = switch prompt {
         case .standard:
-            parts = [
+            [
                 AgentKittenLocalization.string("contextCompaction.summarizeHistory"),
                 AgentKittenLocalization.string("contextCompaction.preserveFacts"),
             ]
         case .appending(let instructions):
-            parts = [
+            [
                 AgentKittenLocalization.string("contextCompaction.summarizeHistory"),
                 AgentKittenLocalization.string("contextCompaction.preserveFacts"),
                 AgentKittenLocalization.formattedString(
@@ -124,7 +123,7 @@ extension ContextCompactionOptions.SummarizationOptions {
                 ),
             ]
         case .custom(let override):
-            parts = [override]
+            [override]
         }
 
         switch request {

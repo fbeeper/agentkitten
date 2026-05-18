@@ -57,14 +57,13 @@ extension AgentSession {
         if case .skipped(.disabled) = result {
             return
         }
-        let info: AgentTraceEntry.Kind.ContextCompactionInfo
-        if shouldRecordAutomaticCompactionConfiguration(for: result) {
-            info = conversationProvider.compactionTraceInfo(
+        let info: AgentTraceEntry.Kind.ContextCompactionInfo = if shouldRecordAutomaticCompactionConfiguration(for: result) {
+            conversationProvider.compactionTraceInfo(
                 mode: .automatic,
                 result: result,
             )
         } else {
-            info = .init(mode: .automatic, result: result)
+            .init(mode: .automatic, result: result)
         }
         record(
             kind: .contextCompaction(info),

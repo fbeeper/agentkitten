@@ -23,12 +23,11 @@ public enum ToolRationale {
             return (nil, argumentsJSON)
         }
         let rationale = obj.removeValue(forKey: schemaKey) as? String
-        let stripped: String
-        if let strippedData = try? JSONSerialization.data(withJSONObject: obj),
+        let stripped: String = if let strippedData = try? JSONSerialization.data(withJSONObject: obj),
            let strippedString = String(data: strippedData, encoding: .utf8) {
-            stripped = strippedString
+            strippedString
         } else {
-            stripped = argumentsJSON
+            argumentsJSON
         }
         return (rationale?.isEmpty == false ? rationale : nil, stripped)
     }
