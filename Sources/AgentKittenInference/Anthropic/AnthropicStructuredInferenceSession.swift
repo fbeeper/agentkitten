@@ -206,9 +206,7 @@ extension AnthropicInferenceSession: StructuredInferenceSession {
     }
 
     private func buildStructuredSystemPrompt(schemaJSON: String) -> String {
-        let instruction = AgentKittenInferenceLocalization.formattedString(
-            "structuredOutput.anthropicInstructionFormat", schemaJSON,
-        )
+        let instruction = String(format: structuredOutputInstructionFormat, schemaJSON)
         if let systemPrompt, !systemPrompt.isEmpty {
             return "\(systemPrompt)\n\n\(instruction)"
         }

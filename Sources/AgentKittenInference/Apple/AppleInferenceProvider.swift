@@ -58,13 +58,21 @@ public struct AppleLanguageModelKey: ExecutionConfigurationKey {
 public actor AppleInferenceProvider: InferenceProviding {
     /// The model used when no ``AppleLanguageModelKey`` is set on a turn or behavior.
     public let defaultModel: AppleLanguageModel
+    private let historyRenderingConfiguration: HistoryRenderingConfiguration
 
     /// Creates a new Apple inference provider.
     ///
-    /// - Parameter defaultModel: The model to use when no ``AppleLanguageModelKey`` override
-    ///   is present. Defaults to ``AppleLanguageModel/default``.
-    public init(defaultModel: AppleLanguageModel = .default) {
+    /// - Parameters:
+    ///   - defaultModel: The model to use when no ``AppleLanguageModelKey`` override
+    ///     is present. Defaults to ``AppleLanguageModel/default``.
+    ///   - historyRenderingConfiguration: Labels and format strings used when rendering history
+    ///     during context compaction. Defaults to built-in English values.
+    public init(
+        defaultModel: AppleLanguageModel = .default,
+        historyRenderingConfiguration: HistoryRenderingConfiguration = .init(),
+    ) {
         self.defaultModel = defaultModel
+        self.historyRenderingConfiguration = historyRenderingConfiguration
     }
 
     public nonisolated func preflight(
@@ -116,6 +124,7 @@ public actor AppleInferenceProvider: InferenceProviding {
             model: model,
             toolRuntime: toolRuntime,
             toolSelection: toolSelection,
+            historyRenderingConfiguration: historyRenderingConfiguration,
         )
     }
 
@@ -139,6 +148,7 @@ public actor AppleInferenceProvider: InferenceProviding {
             model: model,
             toolRuntime: toolRuntime,
             toolSelection: toolSelection,
+            historyRenderingConfiguration: historyRenderingConfiguration,
         )
     }
 }

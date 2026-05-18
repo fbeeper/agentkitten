@@ -9,7 +9,7 @@ import FoundationModels
 extension AppleInferenceSession: ContextCompactableSession {
     public func compactionEntries() -> [RenderedSessionEntry] {
         languageSession.transcript.filter { if case .instructions = $0 { false } else { true } }.map {
-            RenderedSessionEntry(isTurnStart: Self.isTurnStarter($0), rendered: Self.render($0))
+            RenderedSessionEntry(isTurnStart: Self.isTurnStarter($0), rendered: render($0))
         }
     }
 
@@ -26,7 +26,7 @@ extension AppleInferenceSession: ContextCompactableSession {
             preservedRecentTurnCount: preservedRecentTurnCount,
         )
         let entries: [FoundationModels.Transcript.Entry] = if let summary {
-            Self.summaryEntries(summary) + plan.recentEntries
+            summaryEntries(summary) + plan.recentEntries
         } else {
             plan.recentEntries
         }
@@ -46,31 +46,29 @@ extension AppleInferenceSession {
         return false
     }
 
-    static func render(_ entries: [FoundationModels.Transcript.Entry]) -> String {
+    func render(_ entries: [FoundationModels.Transcript.Entry]) -> String {
         entries.compactMap { entry in
             let rendered = render(entry)
             return rendered.isEmpty ? nil : rendered
         }.joined(separator: "\n\n")
     }
 
-    private static func render(_ entry: FoundationModels.Transcript.Entry) -> String {
-        let user = AgentKittenInferenceLocalization.string("contextCompaction.userRoleLabel")
-        let assistant = AgentKittenInferenceLocalization.string("contextCompaction.assistantRoleLabel")
+    private func render(_ entry: FoundationModels.Transcript.Entry) -> String {
         switch entry {
         case .instructions:
             return ""
         case .prompt(let prompt):
-            return "\(user): \(renderSegments(prompt.segments))"
+            return "\(historyRenderingConfiguration.userRoleLabel): \(Self.renderSegments(prompt.segments))"
         case .response(let response):
-            return "\(assistant): \(renderSegments(response.segments))"
+            return "\(historyRenderingConfiguration.assistantRoleLabel): \(Self.renderSegments(response.segments))"
         case .toolCalls(let toolCalls):
             let calls = toolCalls.map {
-                AgentKittenInferenceLocalization.formattedString("contextCompaction.toolCallFormat", $0.toolName)
+                String(format: historyRenderingConfiguration.toolCallFormat, $0.toolName)
             }.joined(separator: "\n")
-            return "\(assistant): \(calls)"
+            return "\(historyRenderingConfiguration.assistantRoleLabel): \(calls)"
         case .toolOutput(let output):
-            let body = renderSegments(output.segments)
-            return AgentKittenInferenceLocalization.formattedString("contextCompaction.toolResultFormat", body)
+            let body = Self.renderSegments(output.segments)
+            return String(format: historyRenderingConfiguration.toolResultFormat, body)
         @unknown default:
             return entry.description
         }
@@ -89,10 +87,10 @@ extension AppleInferenceSession {
         }.joined(separator: " ")
     }
 
-    private static func summaryEntries(_ summary: String) -> [FoundationModels.Transcript.Entry] {
+    private func summaryEntries(_ summary: String) -> [FoundationModels.Transcript.Entry] {
         [
             .prompt(.init(segments: [
-                .text(.init(content: AgentKittenInferenceLocalization.string("contextCompaction.summaryMarker"))),
+                .text(.init(content: historyRenderingConfiguration.summaryMarker)),
             ])),
             .response(.init(assetIDs: [], segments: [
                 .text(.init(content: summary)),

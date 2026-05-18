@@ -51,7 +51,9 @@ extension JSONSchema {
         case .boolean:
             return DynamicGenerationSchema(type: Bool.self)
         case .array(let items, _):
-            return DynamicGenerationSchema(arrayOf: items.toDynamicSchema(name: name + "Element"))
+            return DynamicGenerationSchema(
+                arrayOf: items.toDynamicSchema(name: name + "Element"),
+            )
         case .object(let properties, let required):
             let props = properties.sorted(by: { $0.key < $1.key }).map { key, schema in
                 DynamicGenerationSchema.Property(
@@ -88,8 +90,7 @@ extension JSONSchema {
         case .array(_, let desc):
             return desc
         case .enumeration(let values, let desc):
-            let prefix = AgentKittenInferenceLocalization.string("contextCompaction.enumOneOfPrefix")
-            let valuesClause = "\(prefix) \(values.joined(separator: ", "))"
+            let valuesClause = values.joined(separator: ", ")
             if let desc {
                 return "\(desc). \(valuesClause)"
             }

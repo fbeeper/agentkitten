@@ -282,18 +282,30 @@ struct AnthropicStructuredSessionTests {
         #expect(request.tools == nil)
     }
 
-    @Test func generate_usesOverrideBundleForStructuredInstruction() {
-        let saved = AgentKittenInferenceLocalization.overrideBundle
-        defer { AgentKittenInferenceLocalization.overrideBundle = saved }
-        AgentKittenInferenceLocalization.overrideBundle = Bundle.module
-
-        let result = AgentKittenInferenceLocalization.formattedString(
-            "structuredOutput.anthropicInstructionFormat", "{}",
+    @Test func generate_usesCustomInstructionFormatForStructuredOutput() async throws {
+        let client = CapturingHTTPClient(events: [
+            .textDelta(#"{"label":"neutral","confidence":0.5}"#),
+            .stopReason("end_turn"),
+        ])
+        let customFormat =
+            "CUSTOM TEST SCHEMA:\n%@\nRETURN RAW JSON VALUE. OBJECT ROOT -> START { END }. ARRAY ROOT -> START [ END ]."
+        let session = AnthropicInferenceSession(
+            credentials: MockAPIKeyProvider("test-key"),
+            defaultModel: "test-model",
+            systemPrompt: nil,
+            toolRuntime: testToolRuntime(),
+            structuredOutputInstructionFormat: customFormat,
+            clientFactory: { _ in client },
         )
-        #expect(result.contains("CUSTOM TEST SCHEMA:"))
-        #expect(result.contains("RETURN RAW JSON VALUE."))
-        #expect(result.contains("OBJECT ROOT -> START { END }."))
-        #expect(result.contains("ARRAY ROOT -> START [ END ]."))
+        let _: Sentiment = try await session.generate(
+            prompt: "test",
+            parameters: InferenceRequestParameters(toolSelection: .disabled),
+        )
+        let request = try #require(client.capturedRequest)
+        #expect(request.system?.contains("CUSTOM TEST SCHEMA:") == true)
+        #expect(request.system?.contains("RETURN RAW JSON VALUE.") == true)
+        #expect(request.system?.contains("OBJECT ROOT -> START { END }.") == true)
+        #expect(request.system?.contains("ARRAY ROOT -> START [ END ].") == true)
     }
 
     @Test func generate_filtersRegisteredToolsBySelection() async throws {
