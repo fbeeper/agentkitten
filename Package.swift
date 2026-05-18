@@ -3,10 +3,6 @@
 import PackageDescription
 import CompilerPluginSupport
 
-let swiftSettings: [SwiftSetting] = [
-    .treatAllWarnings(as: .error),
-]
-
 let package = Package(
     name: "AgentKitten",
     defaultLocalization: "en",
@@ -30,7 +26,6 @@ let package = Package(
         ]),
     ],
     dependencies: [
-        .package(url: "https://github.com/SimplyDanny/SwiftLintPlugins", from: "0.62.2"),
         .package(url: "https://github.com/apple/swift-argument-parser", from: "1.3.0"),
         .package(url: "https://github.com/swiftlang/swift-syntax", from: "600.0.0"),
         .package(url: "https://github.com/apple/swift-docc-plugin", from: "1.5.0"),
@@ -41,10 +36,6 @@ let package = Package(
             dependencies: ["AgentKittenMacros"],
             resources: [
                 .process("Resources"),
-            ],
-            swiftSettings: swiftSettings,
-            plugins: [
-                .plugin(name: "SwiftLintBuildToolPlugin", package: "SwiftLintPlugins"),
             ]
         ),
         .target(
@@ -54,10 +45,6 @@ let package = Package(
             ],
             resources: [
                 .process("PrivacyInfo.xcprivacy"),
-            ],
-            swiftSettings: swiftSettings,
-            plugins: [
-                .plugin(name: "SwiftLintBuildToolPlugin", package: "SwiftLintPlugins"),
             ]
         ),
         .target(
@@ -65,10 +52,6 @@ let package = Package(
             dependencies: ["AgentKittenCore"],
             resources: [
                 .process("Resources"),
-            ],
-            swiftSettings: swiftSettings,
-            plugins: [
-                .plugin(name: "SwiftLintBuildToolPlugin", package: "SwiftLintPlugins"),
             ]
         ),
         .macro(
@@ -87,10 +70,6 @@ let package = Package(
             ],
             resources: [
                 .process("Fixtures"),
-            ],
-            swiftSettings: swiftSettings,
-            plugins: [
-                .plugin(name: "SwiftLintBuildToolPlugin", package: "SwiftLintPlugins"),
             ]
         ),
         .testTarget(
@@ -98,10 +77,6 @@ let package = Package(
             dependencies: ["AgentKittenInference"],
             resources: [
                 .process("Resources"),
-            ],
-            swiftSettings: swiftSettings,
-            plugins: [
-                .plugin(name: "SwiftLintBuildToolPlugin", package: "SwiftLintPlugins"),
             ]
         ),
         .testTarget(
@@ -111,29 +86,17 @@ let package = Package(
             ],
             resources: [
                 .process("Resources"),
-            ],
-            swiftSettings: swiftSettings,
-            plugins: [
-                .plugin(name: "SwiftLintBuildToolPlugin", package: "SwiftLintPlugins"),
             ]
         ),
         .testTarget(
             name: "AgentKittenTests",
             dependencies: [
                 "AgentKitten",
-            ],
-            swiftSettings: swiftSettings,
-            plugins: [
-                .plugin(name: "SwiftLintBuildToolPlugin", package: "SwiftLintPlugins"),
             ]
         ),
         .testTarget(
             name: "PlaygroundTests",
-            dependencies: ["Playground"],
-            swiftSettings: swiftSettings,
-            plugins: [
-                .plugin(name: "SwiftLintBuildToolPlugin", package: "SwiftLintPlugins"),
-            ]
+            dependencies: ["Playground"]
         ),
     ],
     swiftLanguageModes: [.v6]

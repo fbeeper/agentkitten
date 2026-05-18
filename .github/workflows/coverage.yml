@@ -21,7 +21,7 @@ jobs:
           xcodebuild -version
           swift --version
       - name: Test with coverage
-        run: swift test --enable-code-coverage
+        run: make test-with-coverage
       - name: Export lcov
         run: |
           BIN_DIR=$(swift build --show-bin-path)
