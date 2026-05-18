@@ -12,9 +12,11 @@ all: lint build test
 
 setup:
 	command -v swiftlint || brew install swiftlint
+	command -v swiftformat || brew install swiftformat
 
 lint:
 	swiftlint lint
+	swiftformat --config .swiftformat . --lint
 
 build:
 	swift build -Xswiftc -warnings-as-errors

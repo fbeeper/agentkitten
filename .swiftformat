@@ -1,0 +1,13 @@
+--swift-version 6.1
+
+--disable extensionAccessControl
+--disable hoistAwait
+--disable hoistPatternLet
+--disable hoistTry
+--disable opaqueGenericParameters
+--disable redundantSendable
+--disable unusedArguments
+--disable wrapMultilineStatementBraces
+
+--ifdef no-indent
+--maxwidth 120
