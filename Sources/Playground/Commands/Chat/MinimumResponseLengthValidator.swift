@@ -3,7 +3,9 @@
 
 import AgentKitten
 
-struct MinimumResponseLengthValidator: Validator<AssistantMessage> {
+struct MinimumResponseLengthValidator: Validator {
+    typealias Result = AssistantMessage
+
     let minimumLength: Int
 
     var traceName: String {
