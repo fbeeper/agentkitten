@@ -152,7 +152,7 @@ private func collectEnumCases(
         }
         return enumDecl.memberBlock.members
             .compactMap { $0.decl.as(EnumCaseDeclSyntax.self) }
-            .flatMap { $0.elements.map { $0.name.text } }
+            .flatMap { $0.elements.map(\.name.text) }
     }
     return nil
 }
