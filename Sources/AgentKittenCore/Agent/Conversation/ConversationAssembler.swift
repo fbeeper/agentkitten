@@ -8,7 +8,7 @@ struct ConversationAssembler: Sendable {
     private let providerRegistry: ProviderRegistry
     private let baseSystemPrompt: String
     private let toolDefinition: ToolDefinition
-    private let rationaleSchemaDescription: String
+    private let runtimeConfig: ToolRuntimeConfig
     private let toolApprovalGate: ToolApprovalGate
 
     init(
@@ -16,14 +16,14 @@ struct ConversationAssembler: Sendable {
         providerRegistry: ProviderRegistry,
         baseSystemPrompt: String,
         toolDefinition: ToolDefinition,
-        rationaleSchemaDescription: String,
+        runtimeConfig: ToolRuntimeConfig,
         toolApprovalGate: ToolApprovalGate,
     ) {
         self.phaseBehaviors = phaseBehaviors
         self.providerRegistry = providerRegistry
         self.baseSystemPrompt = baseSystemPrompt
         self.toolDefinition = toolDefinition
-        self.rationaleSchemaDescription = rationaleSchemaDescription
+        self.runtimeConfig = runtimeConfig
         self.toolApprovalGate = toolApprovalGate
     }
 
@@ -33,8 +33,8 @@ struct ConversationAssembler: Sendable {
     ) throws -> AnyConversation {
         let provider = resolveProvider(executionConfiguration: executionConfiguration)
         let toolRuntime = ToolRuntime(
-            configuration: toolDefinition,
-            rationaleSchemaDescription: rationaleSchemaDescription,
+            toolDefinition: toolDefinition,
+            runtimeConfig: runtimeConfig,
             approvalGate: toolApprovalGate,
         )
         return try provider.makeConversation(
@@ -54,8 +54,8 @@ struct ConversationAssembler: Sendable {
         for executionConfiguration: EffectiveExecutionConfiguration,
     ) async throws {
         let toolRuntime = ToolRuntime(
-            configuration: toolDefinition,
-            rationaleSchemaDescription: rationaleSchemaDescription,
+            toolDefinition: toolDefinition,
+            runtimeConfig: runtimeConfig,
             approvalGate: toolApprovalGate,
         )
         try resolveProvider(executionConfiguration: executionConfiguration)
@@ -151,8 +151,8 @@ struct ConversationAssembler: Sendable {
         compacting options: ContextCompactionOptions,
     ) async throws -> ContextCompactionResult {
         let toolRuntime = ToolRuntime(
-            configuration: toolDefinition,
-            rationaleSchemaDescription: rationaleSchemaDescription,
+            toolDefinition: toolDefinition,
+            runtimeConfig: runtimeConfig,
             approvalGate: toolApprovalGate,
         )
         try resolveProvider(executionConfiguration: executionConfiguration)

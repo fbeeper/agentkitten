@@ -11,7 +11,7 @@ struct FixtureImageTool: RichAgentTool {
     struct Arguments: Codable, Sendable {}
 
     static let name = "fixture_image"
-    static let description = """
+    static let defaultDescription = """
     Returns a bundled demo PNG as an image tool result. Use this when you need to inspect \
     the image directly rather than infer from text alone.
     """

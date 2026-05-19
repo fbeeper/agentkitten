@@ -198,7 +198,7 @@ struct TurnValidator<Result: Sendable> {
                 if result == .pass {
                     recordValidation(
                         .pass,
-                        message: AgentKittenLocalization.string("validation.validationPassed"),
+                        message: configuration.validationPassedMessage,
                         validator: validator.traceName,
                         sink: sink,
                     )

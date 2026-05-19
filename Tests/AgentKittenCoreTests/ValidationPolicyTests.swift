@@ -182,7 +182,7 @@ struct ValidationPolicyTests {
             .message(.assistant(AssistantMessage(text: "just enough"))),
             .validation(.init(
                 result: .pass,
-                message: AgentKittenLocalization.string("validation.validationPassed"),
+                message: "Validation passed.",
                 validator: "MinimumLengthValidator(4)",
             )),
             .validation(.init(

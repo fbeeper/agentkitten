@@ -52,7 +52,7 @@ struct ValidationBehaviorTests {
             .message(.assistant(AssistantMessage(text: "Long enough response"))),
             .validation(.init(
                 result: .pass,
-                message: AgentKittenLocalization.string("validation.validationPassed"),
+                message: "Validation passed.",
                 validator: "MinimumLengthValidator(8)",
             )),
             .turnCompleted(.completed),
@@ -91,7 +91,7 @@ struct ValidationBehaviorTests {
             .message(.assistant(AssistantMessage(text: "Accepted revision"))),
             .validation(.init(
                 result: .pass,
-                message: AgentKittenLocalization.string("validation.validationPassed"),
+                message: "Validation passed.",
                 validator: "MinimumLengthValidator(8)",
             )),
             .turnCompleted(.completed),

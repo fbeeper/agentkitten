@@ -34,9 +34,6 @@ let package = Package(
         .target(
             name: "AgentKittenCore",
             dependencies: ["AgentKittenMacros"],
-            resources: [
-                .process("Resources"),
-            ],
         ),
         .target(
             name: "AgentKitten",
@@ -77,9 +74,6 @@ let package = Package(
             name: "AgentKittenCoreTests",
             dependencies: [
                 "AgentKittenCore",
-            ],
-            resources: [
-                .process("Resources"),
             ],
         ),
         .testTarget(

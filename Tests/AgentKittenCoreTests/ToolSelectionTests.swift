@@ -50,7 +50,7 @@ private struct SelectionOtherTool: AgentTool {
     struct Output: Codable, Sendable {}
 
     static let name = "selection_other"
-    static let description = "A second tool used for selection tests."
+    static let defaultDescription = "A second tool used for selection tests."
 
     var schema: ToolSchema {
         ToolSchema(parameters: .object(properties: [:], required: []))

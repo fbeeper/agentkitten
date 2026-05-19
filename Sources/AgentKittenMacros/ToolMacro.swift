@@ -8,7 +8,7 @@ import SwiftSyntaxMacros
 
 /// Implements the `@Tool("name", description: "desc")` member macro.
 ///
-/// Generates `static var name`, `static var description`, `var schema`, and
+/// Generates `static var name`, `static var defaultDescription`, `var schema`, and
 /// `var capabilities` members by inspecting the attached struct's `Arguments`
 /// nested type and any `@ParameterDescription` annotations on its properties.
 public struct ToolMacro: MemberMacro {
@@ -49,7 +49,7 @@ public struct ToolMacro: MemberMacro {
         // 4. Emit synthesized members.
         return [
             "static var name: String { \(literal: toolName) }",
-            "static var description: String { \(literal: toolDescription) }",
+            "static var defaultDescription: String { \(literal: toolDescription) }",
             "var schema: ToolSchema { \(raw: schemaSource) }",
             "var capabilities: ToolCapabilities { .none }",
         ]

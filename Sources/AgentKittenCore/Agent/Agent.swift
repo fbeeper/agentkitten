@@ -160,7 +160,7 @@ public struct Agent: Sendable {
             providerRegistry: providerRegistry,
             baseSystemPrompt: makeSessionSystemPrompt(registry: sessionToolDefinition.registry),
             toolDefinition: sessionToolDefinition,
-            rationaleSchemaDescription: toolBehavior.rationaleGuidance.schemaDescription,
+            runtimeConfig: toolBehavior.runtimeConfig,
             toolApprovalGate: approvalGate,
         )
         return AgentSession(
@@ -207,13 +207,27 @@ public struct Agent: Sendable {
     private func makeSessionToolDefinition(
         stateAccess: AgentSession.SessionStateAccess,
     ) -> ToolDefinition {
+        let sessionStateConfig: SessionStateConfiguration? = switch sessionStateMode {
+        case .disabled: nil
+        case .readOnly(let config), .enabled(let config): config
+        }
         let sessionToolRegistry = switch stateAccess {
         case .disabled:
             toolDefinition.registry
         case .readOnly(let state):
-            toolDefinition.registry.adding(SessionStateBuiltins.makeReadOnlyTools(state: state))
+            toolDefinition.registry.adding(
+                SessionStateBuiltins.makeReadOnlyTools(
+                    state: state,
+                    config: sessionStateConfig ?? .init(),
+                ),
+            )
         case .enabled(let state):
-            toolDefinition.registry.adding(SessionStateBuiltins.makeTools(state: state))
+            toolDefinition.registry.adding(
+                SessionStateBuiltins.makeTools(
+                    state: state,
+                    config: sessionStateConfig ?? .init(),
+                ),
+            )
         }
         return toolDefinition.replacing(registry: sessionToolRegistry)
     }
@@ -225,7 +239,7 @@ public struct Agent: Sendable {
             sections.append(trimmedBase)
         }
         if !registry.all.isEmpty {
-            let guidance = toolBehavior.guidance.prompt.trimmingCharacters(
+            let guidance = toolBehavior.guidancePrompt.trimmingCharacters(
                 in: .whitespacesAndNewlines,
             )
             if !guidance.isEmpty {

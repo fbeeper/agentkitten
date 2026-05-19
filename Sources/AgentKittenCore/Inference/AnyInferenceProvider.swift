@@ -49,9 +49,10 @@ struct AnyInferenceProvider: Sendable {
             )
         }
         generateIsolatedClosure = { prompt, configuration, context in
+            let toolBehavior = ToolBehavior()
             let session = provider.makeSession(
                 systemPrompt: nil,
-                toolRuntime: ToolRuntime(configuration: .noTools),
+                toolRuntime: ToolRuntime(toolDefinition: .noTools, toolBehavior: toolBehavior),
                 toolSelection: .disabled,
                 inferenceContext: context,
             )

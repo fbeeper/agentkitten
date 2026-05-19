@@ -65,7 +65,7 @@ struct InferenceWeatherTool: AgentTool {
     }
 
     static let name = "weather"
-    static let description = "Returns a weather forecast."
+    static let defaultDescription = "Returns a weather forecast."
 
     var schema: ToolSchema {
         ToolSchema(parameters: .object(

@@ -1,5 +1,6 @@
 // SPDX-FileCopyrightText: 2026 AgentKitten Authors
 // SPDX-License-Identifier: Apache-2.0
+// swiftlint:disable file_length
 
 import Foundation
 
@@ -31,6 +32,24 @@ public struct JudgeValidator<Result: Codable & Sendable>: Validator {
 
     /// Human-readable validator name recorded in trace validation entries.
     public let name: String
+    /// Format string for the judge's system prompt when built from criteria; takes one `%@` argument.
+    ///
+    /// A best-effort check verifies the expected placeholder count at init time, but cannot
+    /// guarantee the format string produces correct output. Callers are responsible for
+    /// verifying behaviour end-to-end.
+    public let judgeSystemPromptFormat: String
+    /// Guidance appended to the system prompt instructing the judge how to return its verdict.
+    public let judgeVerdictGuidance: String
+    /// Format string for the judge's user prompt; takes two `%@` arguments (user message, candidate result).
+    ///
+    /// A best-effort check verifies the expected placeholder count at init time, but cannot
+    /// guarantee the format string produces correct output. Callers are responsible for
+    /// verifying behaviour end-to-end.
+    public let judgeUserPromptFormat: String
+    /// Fallback reason used when the judge rejects the result but provides no message.
+    public let rejectedFallback: String
+    /// Fallback message used when the judge requests a revised result but provides no message.
+    public let revisedFallback: String
 
     private let prompt: Prompt
     private let providerRegistry: ProviderRegistry
@@ -54,6 +73,11 @@ public struct JudgeValidator<Result: Codable & Sendable>: Validator {
     ///   - toolDefinition: Optional tools exposed to the judge. Defaults to no tools.
     ///   - sessionStateAccess: Whether the judge may inspect session state. Defaults to read-only tools.
     ///   - name: Validator name recorded in trace validation entries.
+    ///   - judgeSystemPromptFormat: Format string for the judge system prompt (criteria case); takes one `%@`.
+    ///   - judgeVerdictGuidance: Guidance appended to the system prompt for verdict format.
+    ///   - judgeUserPromptFormat: Format string for the user prompt; takes two `%@` arguments.
+    ///   - rejectedFallback: Fallback reason when the judge rejects without a message.
+    ///   - revisedFallback: Fallback message when the judge requests revision without a message.
     public init(
         prompt: Prompt,
         providerRegistry: ProviderRegistry,
@@ -62,7 +86,20 @@ public struct JudgeValidator<Result: Codable & Sendable>: Validator {
         toolDefinition: ToolDefinition = .noTools,
         sessionStateAccess: SessionStateAccess = .readOnlyTools,
         name: String = "JudgeValidator",
+        judgeSystemPromptFormat: String = Self.defaultJudgeSystemPromptFormat,
+        judgeVerdictGuidance: String = Self.defaultJudgeVerdictGuidance,
+        judgeUserPromptFormat: String = Self.defaultJudgeUserPromptFormat,
+        rejectedFallback: String = Self.defaultJudgeRejectionMessage,
+        revisedFallback: String = Self.defaultJudgeRevisionMessage,
     ) {
+        precondition(
+            judgeSystemPromptFormat.formatPlaceholderCount == 1,
+            "judgeSystemPromptFormat must contain exactly one %@ placeholder for the criteria.",
+        )
+        precondition(
+            judgeUserPromptFormat.formatPlaceholderCount == 2,
+            "judgeUserPromptFormat must contain exactly two %@ placeholders (user message and candidate result).",
+        )
         self.prompt = prompt
         self.name = name
         self.providerRegistry = providerRegistry
@@ -70,6 +107,11 @@ public struct JudgeValidator<Result: Codable & Sendable>: Validator {
         self.toolBehavior = toolBehavior
         self.toolDefinition = toolDefinition
         self.sessionStateAccess = sessionStateAccess
+        self.judgeSystemPromptFormat = judgeSystemPromptFormat
+        self.judgeVerdictGuidance = judgeVerdictGuidance
+        self.judgeUserPromptFormat = judgeUserPromptFormat
+        self.rejectedFallback = rejectedFallback
+        self.revisedFallback = revisedFallback
     }
 
     /// Creates a judge validator using a single inference provider.
@@ -86,6 +128,11 @@ public struct JudgeValidator<Result: Codable & Sendable>: Validator {
     ///   - toolDefinition: Optional tools exposed to the judge. Defaults to no tools.
     ///   - sessionStateAccess: Whether the judge may inspect session state. Defaults to read-only tools.
     ///   - name: Validator name recorded in trace validation entries.
+    ///   - judgeSystemPromptFormat: Format string for the judge system prompt (criteria case); takes one `%@`.
+    ///   - judgeVerdictGuidance: Guidance appended to the system prompt for verdict format.
+    ///   - judgeUserPromptFormat: Format string for the user prompt; takes two `%@` arguments.
+    ///   - rejectedFallback: Fallback reason when the judge rejects without a message.
+    ///   - revisedFallback: Fallback message when the judge requests revision without a message.
     public init<Provider: InferenceProviding>(
         prompt: Prompt,
         provider: Provider,
@@ -94,6 +141,11 @@ public struct JudgeValidator<Result: Codable & Sendable>: Validator {
         toolDefinition: ToolDefinition = .noTools,
         sessionStateAccess: SessionStateAccess = .readOnlyTools,
         name: String = "JudgeValidator",
+        judgeSystemPromptFormat: String = Self.defaultJudgeSystemPromptFormat,
+        judgeVerdictGuidance: String = Self.defaultJudgeVerdictGuidance,
+        judgeUserPromptFormat: String = Self.defaultJudgeUserPromptFormat,
+        rejectedFallback: String = Self.defaultJudgeRejectionMessage,
+        revisedFallback: String = "Judge requested a revised result.",
     ) {
         self.init(
             prompt: prompt,
@@ -103,19 +155,35 @@ public struct JudgeValidator<Result: Codable & Sendable>: Validator {
             toolDefinition: toolDefinition,
             sessionStateAccess: sessionStateAccess,
             name: name,
+            judgeSystemPromptFormat: judgeSystemPromptFormat,
+            judgeVerdictGuidance: judgeVerdictGuidance,
+            judgeUserPromptFormat: judgeUserPromptFormat,
+            rejectedFallback: rejectedFallback,
+            revisedFallback: revisedFallback,
         )
     }
 
     public func validate(_ context: ValidationContext<Result>) async throws -> ValidationResult {
-        let prompt = Self.makeJudgePrompt(from: context)
+        let judgePrompt = makeJudgePrompt(from: context)
         let session = await makeJudgeSession(validationContext: context)
-        let turn: Turn<JudgeDecision> = try await session.generate(prompt)
+        let turn: Turn<JudgeDecision> = try await session.generate(judgePrompt)
 
         do {
             let decision = try await Self.firstResult(from: turn)
-            return decision.validationResult
+            return mapDecision(decision)
         } catch {
             return .error(message: String(describing: error))
+        }
+    }
+
+    private func mapDecision(_ decision: JudgeDecision) -> ValidationResult {
+        switch decision.verdict {
+        case .pass:
+            .pass
+        case .fail:
+            .fail(reason: decision.resolvedMessage(fallback: rejectedFallback))
+        case .feedback:
+            .feedback(message: decision.resolvedMessage(fallback: revisedFallback))
         }
     }
 
@@ -147,7 +215,7 @@ public struct JudgeValidator<Result: Codable & Sendable>: Validator {
                 providerRegistry: providerRegistry,
                 baseSystemPrompt: behavior.systemPrompt,
                 toolDefinition: stateConfiguration.toolDefinition,
-                rationaleSchemaDescription: toolBehavior.rationaleGuidance.schemaDescription,
+                runtimeConfig: toolBehavior.runtimeConfig,
                 toolApprovalGate: approvalGate,
             ),
         )
@@ -183,7 +251,7 @@ extension JudgeValidator {
                         SessionStateBuiltins.makeReadOnlyTools(state: readOnlyState),
                     ),
                 )
-                let systemPrompt = Self.makeJudgeSystemPrompt(prompt: prompt, hasTools: true)
+                let systemPrompt = makeJudgeSystemPrompt(prompt: prompt, hasTools: true)
                     + "\n\n"
                     + SessionStateConfiguration.defaultPromptGuidance
                     + "\n\n"
@@ -201,39 +269,39 @@ extension JudgeValidator {
         JudgeStateConfiguration(
             state: .disabled,
             toolDefinition: toolDefinition,
-            systemPrompt: Self.makeJudgeSystemPrompt(
+            systemPrompt: makeJudgeSystemPrompt(
                 prompt: prompt,
                 hasTools: !toolDefinition.registry.all.isEmpty,
             ),
         )
     }
 
-    private static func makeJudgeSystemPrompt(
+    private func makeJudgeSystemPrompt(
         prompt: Prompt,
         hasTools: Bool,
     ) -> String {
         let base: String = switch prompt {
         case .criteria(let criteriaString):
-            AgentKittenLocalization.formattedString(
-                "validation.judgeSystemPromptFormat",
+            String(
+                format: judgeSystemPromptFormat,
                 criteriaString.trimmingCharacters(in: .whitespacesAndNewlines),
             )
         case .systemPrompt(let rawPrompt):
             rawPrompt
         }
-        var sections = [base, AgentKittenLocalization.string("validation.judgeVerdictGuidance")]
+        var sections = [base, judgeVerdictGuidance]
         if hasTools {
-            sections.append(ToolBehavior.Guidance.defaultPrompt)
+            sections.append(ToolBehavior.defaultGuidancePrompt)
         }
         return sections.joined(separator: "\n\n")
     }
 
-    private static func makeJudgePrompt(
+    private func makeJudgePrompt(
         from context: ValidationContext<Result>,
     ) -> String {
-        let resultDescription = encodeResult(context.result)
-        return AgentKittenLocalization.formattedString(
-            "validation.judgeUserPromptFormat",
+        let resultDescription = Self.encodeResult(context.result)
+        return String(
+            format: judgeUserPromptFormat,
             context.userMessage.text,
             resultDescription,
         )
@@ -294,32 +362,17 @@ private struct JudgeDecision: Codable, Sendable, JSONSchemaProviding {
             properties: [
                 "verdict": .enumeration(
                     values: ["pass", "fail", "feedback"],
-                    description: AgentKittenLocalization.string("validation.verdictDescription"),
+                    description: "The validation verdict.",
                 ),
                 "message": .string(
-                    description: AgentKittenLocalization.string("validation.messageDescription"),
+                    description: "Reason for fail or feedback text for retry.",
                 ),
             ],
             required: ["verdict"],
         )
     }
 
-    var validationResult: ValidationResult {
-        switch verdict {
-        case .pass:
-            .pass
-        case .fail:
-            .fail(reason: resolvedMessage(
-                fallback: AgentKittenLocalization.string("validation.rejectedFallback"),
-            ))
-        case .feedback:
-            .feedback(message: resolvedMessage(
-                fallback: AgentKittenLocalization.string("validation.revisedFallback"),
-            ))
-        }
-    }
-
-    private func resolvedMessage(fallback: String) -> String {
+    func resolvedMessage(fallback: String) -> String {
         let trimmed = message?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
         return trimmed.isEmpty ? fallback : trimmed
     }
@@ -327,4 +380,56 @@ private struct JudgeDecision: Codable, Sendable, JSONSchemaProviding {
 
 private enum JudgeValidatorError: Error {
     case missingResult
+}
+
+extension JudgeValidator {
+    /// Default format string for the judge system prompt (criteria case); takes one `%@`.
+    public static var defaultJudgeSystemPromptFormat: String {
+        """
+        You are a validation judge for another AI assistant's response.
+
+        Evaluate the candidate result against the original user request and the \
+        validation criteria below.
+
+        Validation criteria:
+        %@
+
+        Prefer feedback over fail when a revised answer could satisfy the criteria. \
+        Use fail only when the result should be rejected rather than retried.
+        """
+    }
+
+    /// Default guidance appended to the system prompt for verdict format.
+    public static var defaultJudgeVerdictGuidance: String {
+        """
+        Return one structured decision:
+        - pass: the result satisfies the criteria
+        - fail: the result is invalid and should be rejected
+        - feedback: the result could be improved by another assistant attempt
+        """
+    }
+
+    /// Default format string for the judge user prompt; takes two `%@` arguments.
+    public static var defaultJudgeUserPromptFormat: String {
+        """
+        Original user message:
+        %1$@
+
+        Candidate result:
+        %2$@
+
+        Evaluate the candidate result against the criteria from your system \
+        instructions and return the structured verdict.
+        """
+    }
+
+    /// Default fallback reason when the judge rejects without a message.
+    public static var defaultJudgeRejectionMessage: String {
+        "Judge rejected the result."
+    }
+
+    /// Default fallback message when the judge requests revision without a message.
+    public static var defaultJudgeRevisionMessage: String {
+        "Judge requested a revised result."
+    }
 }

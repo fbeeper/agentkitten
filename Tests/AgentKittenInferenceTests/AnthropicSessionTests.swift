@@ -202,7 +202,7 @@ struct InferenceEchoTool: AgentTool {
     }
 
     static let name = "echo"
-    static let description = "Echoes the provided message."
+    static let defaultDescription = "Echoes the provided message."
 
     var schema: ToolSchema {
         ToolSchema(parameters: .object(
@@ -222,7 +222,7 @@ private struct InferenceImageTool: RichAgentTool {
     }
 
     static let name = "image_echo"
-    static let description = "Returns text and image content."
+    static let defaultDescription = "Returns text and image content."
 
     var schema: ToolSchema {
         ToolSchema(parameters: .object(

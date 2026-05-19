@@ -15,7 +15,7 @@ import Testing
     #expect(behavior.phaseBehaviors.base.inferenceConfiguration == .init())
     #expect(behavior.defaultAutomaticCompactionPolicy == AutomaticCompactionPolicy.disabled)
     #expect(toolBehavior.defaultSelection == .all)
-    #expect(toolBehavior.guidance == .default)
+    #expect(toolBehavior.guidancePrompt == ToolBehavior.defaultGuidancePrompt)
     #expect(toolBehavior.defaultStepBudget == .budget(20))
 }
 

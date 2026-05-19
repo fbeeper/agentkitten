@@ -196,7 +196,7 @@ struct ChickenWizardPotionTool: AgentTool {
     typealias Output = ChickenWizardPotionToolOutput
 
     static let name = "chicken_potion"
-    static let description =
+    static let defaultDescription =
         """
         Inspects the player's potion ingredients or brews the chicken wizard's \
         single life-altering potion, consuming ingredients on success. Brewing \

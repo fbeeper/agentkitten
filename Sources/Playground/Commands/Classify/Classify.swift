@@ -174,7 +174,7 @@ private struct MockCurrentTimeTool: AgentTool {
     typealias Output = CurrentTimeTool.Output
 
     static let name = CurrentTimeTool.name
-    static let description = CurrentTimeTool.description
+    static let defaultDescription = CurrentTimeTool.defaultDescription
 
     var schema: ToolSchema {
         CurrentTimeTool().schema

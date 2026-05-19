@@ -4,7 +4,7 @@
 import Foundation
 
 // Future: AppIntent / AssistantIntent bridge — tools must be concrete named types, not closures.
-// Future: @Tool macro synthesizes name, description, schema from Arguments struct.
+// Future: @Tool macro synthesizes name, defaultDescription, schema from Arguments struct.
 
 /// A typed tool that an agent can invoke during inference.
 ///
@@ -23,7 +23,7 @@ import Foundation
 ///         let condition: String
 ///     }
 ///     static let name = "get_weather"
-///     static let description = "Returns current weather for a location."
+///     static let defaultDescription = "Returns current weather for a location."
 ///     var schema: ToolSchema { ToolSchema(parameters: .object(
 ///         properties: ["location": .string(description: "City and state, e.g. 'Austin, TX'")],
 ///         required: ["location"]
@@ -45,10 +45,16 @@ public protocol AgentTool: Sendable {
     /// Static because `AssistantIntent` metadata is compile-time.
     static var name: String { get }
 
-    /// A short description that the model uses to decide when to invoke the tool.
+    /// The compile-time description used as the default and for future `AssistantIntent` bridging.
     ///
     /// Static because `AssistantIntent` metadata is compile-time.
-    static var description: String { get }
+    static var defaultDescription: String { get }
+
+    /// The description forwarded to the model at runtime.
+    ///
+    /// Defaults to ``defaultDescription``. Override this instance property when the description
+    /// must be sourced from runtime configuration rather than a compile-time constant.
+    var description: String { get }
 
     /// The JSON schema for this tool's input parameters.
     var schema: ToolSchema { get }
@@ -63,6 +69,10 @@ public protocol AgentTool: Sendable {
 }
 
 extension AgentTool {
+    public var description: String {
+        Self.defaultDescription
+    }
+
     public var capabilities: ToolCapabilities {
         .none
     }
@@ -76,8 +86,16 @@ public protocol RichAgentTool: Sendable {
     /// The tool's unique routing name. Must be stable across runs.
     static var name: String { get }
 
-    /// A short description that the model uses to decide when to invoke the tool.
-    static var description: String { get }
+    /// The compile-time description used as the default and for future `AssistantIntent` bridging.
+    ///
+    /// Static because `AssistantIntent` metadata is compile-time.
+    static var defaultDescription: String { get }
+
+    /// The description forwarded to the model at runtime.
+    ///
+    /// Defaults to ``defaultDescription``. Override this instance property when the description
+    /// must be sourced from runtime configuration rather than a compile-time constant.
+    var description: String { get }
 
     /// The JSON schema for this tool's input parameters.
     var schema: ToolSchema { get }
@@ -92,6 +110,10 @@ public protocol RichAgentTool: Sendable {
 }
 
 extension RichAgentTool {
+    public var description: String {
+        Self.defaultDescription
+    }
+
     public var capabilities: ToolCapabilities {
         .none
     }

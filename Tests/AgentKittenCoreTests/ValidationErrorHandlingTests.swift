@@ -34,7 +34,7 @@ struct ValidationErrorHandlingTests {
             .message(.assistant(AssistantMessage(text: "stable response"))),
             .validation(.init(
                 result: .pass,
-                message: AgentKittenLocalization.string("validation.validationPassed"),
+                message: "Validation passed.",
                 validator: "FlakyValidator",
             )),
             .turnCompleted(.completed),

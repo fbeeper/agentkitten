@@ -146,7 +146,7 @@ private struct MockEchoTool: AgentTool {
     }
 
     static let name = "echo"
-    static let description = "Echoes the provided message."
+    static let defaultDescription = "Echoes the provided message."
 
     var schema: ToolSchema {
         ToolSchema(parameters: .object(
@@ -311,7 +311,7 @@ private struct MockEchoTool: AgentTool {
         }
     }
 
-    #expect(outcome == .failure(.denied(reason: AgentKittenLocalization.string("tools.disabledReason"))))
+    #expect(outcome == .failure(.denied(reason: "tools disabled")))
     #expect(resultText == "Done.")
 }
 
@@ -354,6 +354,6 @@ private struct MockEchoTool: AgentTool {
         }
     }
 
-    #expect(outcome == .failure(.denied(reason: AgentKittenLocalization.string("tools.disabledReason"))))
+    #expect(outcome == .failure(.denied(reason: "tools disabled")))
     #expect(value == MockStructuredValue(label: "structured"))
 }

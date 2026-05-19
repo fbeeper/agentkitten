@@ -13,7 +13,7 @@ struct CurrentTimeTool: AgentTool {
     }
 
     static let name = "current_time"
-    static let description = "Returns the current date and time."
+    static let defaultDescription = "Returns the current date and time."
 
     var schema: ToolSchema {
         ToolSchema(parameters: .object(properties: [:], required: []))
