@@ -11,10 +11,17 @@ public struct ValidationConfiguration<Result: Sendable>: Sendable {
         case permissive
     }
 
+    /// Default message recorded in the trace when a validator passes.
+    public static var defaultValidationPassedMessage: String {
+        "Validation passed."
+    }
+
     /// Maximum retry budget shared across all validators after the initial response.
     public let maxRetries: Int
     /// Aggregated policy applied once validation cannot produce a passing result.
     public let policy: Policy
+    /// Message recorded in the trace when a validator passes.
+    public let validationPassedMessage: String
     let validators: [AnyValidator<Result>]
     private let retryFeedbackMessageBuilder: @Sendable (String) -> UserMessage
 
@@ -22,11 +29,13 @@ public struct ValidationConfiguration<Result: Sendable>: Sendable {
         validators: [AnyValidator<Result>],
         maxRetries: Int,
         policy: Policy,
+        validationPassedMessage: String,
         retryFeedbackMessageBuilder: @Sendable @escaping (String) -> UserMessage,
     ) {
         self.validators = validators
         self.maxRetries = max(0, maxRetries)
         self.policy = policy
+        self.validationPassedMessage = validationPassedMessage
         self.retryFeedbackMessageBuilder = retryFeedbackMessageBuilder
     }
 
@@ -36,15 +45,18 @@ public struct ValidationConfiguration<Result: Sendable>: Sendable {
     ///   - validator: Initial validator to evaluate for each assistant response.
     ///   - maxRetries: Maximum retry budget after the initial response.
     ///   - policy: Aggregated policy applied when validation cannot produce a pass.
+    ///   - validationPassedMessage: Message recorded in the trace when a validator passes.
     public init(
         validator: some Validator<Result>,
         maxRetries: Int = 0,
         policy: Policy = .restrictive,
+        validationPassedMessage: String = Self.defaultValidationPassedMessage,
     ) {
         self.init(
             validator: validator,
             maxRetries: maxRetries,
             policy: policy,
+            validationPassedMessage: validationPassedMessage,
             retryFeedbackMessage: Self.defaultRetryFeedbackMessage,
         )
     }
@@ -55,18 +67,21 @@ public struct ValidationConfiguration<Result: Sendable>: Sendable {
     ///   - validator: Initial validator to evaluate for each assistant response.
     ///   - maxRetries: Maximum retry budget after the initial response.
     ///   - policy: Aggregated policy applied when validation cannot produce a pass.
+    ///   - validationPassedMessage: Message recorded in the trace when a validator passes.
     ///   - retryFeedbackMessage: Builds the synthetic retry message injected after
     ///     validation feedback requests another generation attempt.
     public init(
         validator: some Validator<Result>,
         maxRetries: Int,
         policy: Policy,
+        validationPassedMessage: String = Self.defaultValidationPassedMessage,
         retryFeedbackMessage: @Sendable @escaping (String) -> UserMessage = Self.defaultRetryFeedbackMessage,
     ) {
         self.init(
             validators: [AnyValidator(validator)],
             maxRetries: maxRetries,
             policy: policy,
+            validationPassedMessage: validationPassedMessage,
             retryFeedbackMessageBuilder: retryFeedbackMessage,
         )
     }
@@ -77,6 +92,7 @@ public struct ValidationConfiguration<Result: Sendable>: Sendable {
             validators: [],
             maxRetries: 0,
             policy: .restrictive,
+            validationPassedMessage: defaultValidationPassedMessage,
             retryFeedbackMessageBuilder: defaultRetryFeedbackMessage,
         )
     }
@@ -89,6 +105,7 @@ public struct ValidationConfiguration<Result: Sendable>: Sendable {
             validators: validators + [AnyValidator(validator)],
             maxRetries: maxRetries,
             policy: policy,
+            validationPassedMessage: validationPassedMessage,
             retryFeedbackMessageBuilder: retryFeedbackMessageBuilder,
         )
     }

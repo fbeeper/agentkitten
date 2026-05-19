@@ -74,7 +74,7 @@ private struct AppleEchoTool: AgentTool {
     }
 
     static let name = "echo"
-    static let description = "Echoes the provided message."
+    static let defaultDescription = "Echoes the provided message."
 
     let counter: AppleToolCounter
 
@@ -98,7 +98,7 @@ private struct AppleImageTool: RichAgentTool {
     }
 
     static let name = "image_echo"
-    static let description = "Returns image content."
+    static let defaultDescription = "Returns image content."
 
     var schema: ToolSchema {
         ToolSchema(parameters: .object(

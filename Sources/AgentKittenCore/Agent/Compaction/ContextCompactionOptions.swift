@@ -12,33 +12,44 @@ public enum ContextCompactionOptions: Sendable, Equatable, Hashable {
 
     /// Options for summarization-based context compaction.
     public struct SummarizationOptions: Sendable, Equatable, Hashable {
-        /// Controls the system prompt used when requesting a summary from the model.
-        public enum Prompt: Sendable, Equatable, Hashable {
-            /// Uses the built-in summarization preamble.
-            case standard
-            /// Uses the built-in preamble with additional instructions appended.
-            case appending(String)
-            /// Replaces the built-in preamble entirely; the client owns the full prompt.
-            case custom(String)
-        }
-
         /// Number of recent user/assistant turns the provider should preserve after the summary.
         public let preservedRecentTurnCount: Int
-        /// The system prompt used when requesting a summary from the model.
-        public let prompt: Prompt
         /// Whether to attempt splitting the history into smaller chunks when the full history
         /// exceeds the model context. When `false`, the context-window error is rethrown directly.
         public let allowsSplitting: Bool
+        /// Format string for the built-in summarization prompt; takes one `%@` argument for
+        /// the rendered history block.
+        ///
+        /// A best-effort check verifies the expected placeholder count at init time, but cannot
+        /// guarantee the format string produces correct output. Callers are responsible for
+        /// verifying behaviour end-to-end.
+        public let summaryInstructionFormat: String
+        /// Label prepended to the history block.
+        public let historyLabel: String
+        /// Label prepended to the existing older-history summary block.
+        public let existingSummaryLabel: String
+        /// Label prepended to the newer history block when folding into an existing summary.
+        public let newerHistoryLabel: String
 
         /// Creates summarization compaction options.
         public init(
             preservedRecentTurnCount: Int = 2,
-            prompt: Prompt = .standard,
             allowsSplitting: Bool = true,
+            summaryInstructionFormat: String = Self.defaultSummaryInstructionFormat,
+            historyLabel: String = Self.defaultHistoryLabel,
+            existingSummaryLabel: String = Self.defaultExistingSummaryLabel,
+            newerHistoryLabel: String = Self.defaultNewerHistoryLabel,
         ) {
+            precondition(
+                summaryInstructionFormat.formatPlaceholderCount == 1,
+                "summaryInstructionFormat must contain exactly one %@ placeholder for the history block.",
+            )
             self.preservedRecentTurnCount = preservedRecentTurnCount
-            self.prompt = prompt
             self.allowsSplitting = allowsSplitting
+            self.summaryInstructionFormat = summaryInstructionFormat
+            self.historyLabel = historyLabel
+            self.existingSummaryLabel = existingSummaryLabel
+            self.newerHistoryLabel = newerHistoryLabel
         }
     }
 
@@ -108,35 +119,36 @@ public struct AnyContextCompactionStrategy: Sendable, Equatable, Hashable {
 
 extension ContextCompactionOptions.SummarizationOptions {
     func buildPrompt(for request: CompactionRequest) -> String {
-        var parts: [String] = switch prompt {
-        case .standard:
-            [
-                AgentKittenLocalization.string("contextCompaction.summarizeHistory"),
-                AgentKittenLocalization.string("contextCompaction.preserveFacts"),
-            ]
-        case .appending(let instructions):
-            [
-                AgentKittenLocalization.string("contextCompaction.summarizeHistory"),
-                AgentKittenLocalization.string("contextCompaction.preserveFacts"),
-                AgentKittenLocalization.formattedString(
-                    "contextCompaction.additionalInstructionsFormat", instructions,
-                ),
-            ]
-        case .custom(let override):
-            [override]
-        }
-
-        switch request {
+        let history: String = switch request {
         case .entries(let rendered):
-            parts.append(AgentKittenLocalization.string("contextCompaction.historyLabel"))
-            parts.append(rendered.joined(separator: "\n\n"))
+            [historyLabel, rendered.joined(separator: "\n\n")].joined(separator: "\n\n")
         case .summaryAndEntries(let summary, let rendered):
-            parts.append(AgentKittenLocalization.string("contextCompaction.existingSummaryLabel"))
-            parts.append(summary)
-            parts.append(AgentKittenLocalization.string("contextCompaction.newerHistoryLabel"))
-            parts.append(rendered.joined(separator: "\n\n"))
+            [
+                existingSummaryLabel,
+                summary,
+                newerHistoryLabel,
+                rendered.joined(separator: "\n\n"),
+            ].joined(separator: "\n\n")
         }
-
-        return parts.joined(separator: "\n\n")
+        return String(format: summaryInstructionFormat, history)
     }
+}
+
+extension ContextCompactionOptions.SummarizationOptions {
+    /// Default format string for the summarization prompt; takes one `%@` for the history block.
+    public static let defaultSummaryInstructionFormat =
+        """
+        Summarize the following prior conversation history for future continuation.
+
+        %@
+
+        Preserve durable facts, user preferences, decisions, unresolved tasks, \
+        tool results, and constraints.
+        """
+    /// Default label prepended to the history block.
+    public static let defaultHistoryLabel = "History:"
+    /// Default label prepended to the existing older-history summary block.
+    public static let defaultExistingSummaryLabel = "Existing older-history summary:"
+    /// Default label prepended to the newer history block when folding into an existing summary.
+    public static let defaultNewerHistoryLabel = "Newer history to fold into that summary:"
 }

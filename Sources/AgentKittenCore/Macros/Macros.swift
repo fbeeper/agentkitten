@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: 2026 AgentKitten Authors
 // SPDX-License-Identifier: Apache-2.0
 
-/// Synthesizes `name`, `description`, `schema`, and `capabilities` for a concrete ``AgentTool``.
+/// Synthesizes `name`, `defaultDescription`, `schema`, and `capabilities` for a concrete ``AgentTool``.
 ///
 /// Attach to a struct conforming to ``AgentTool``. The macro reads the `Arguments`
 /// nested struct and generates a ``ToolSchema`` from its stored properties.
@@ -34,7 +34,7 @@
 /// Use `@ParameterDescription` on stored properties in `Arguments` to supply per-parameter
 /// descriptions. Unrecognised types (including enums not defined in the same struct) produce
 /// a compile-time warning and fall back to `.string`.
-@attached(member, names: named(name), named(description), named(schema), named(capabilities))
+@attached(member, names: named(name), named(defaultDescription), named(schema), named(capabilities))
 public macro Tool(_ name: String, description: String) =
     #externalMacro(module: "AgentKittenMacros", type: "ToolMacro")
 

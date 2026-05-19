@@ -15,7 +15,7 @@ private struct EventMetadataEchoTool: AgentTool {
     }
 
     static let name = "echo"
-    static let description = "Echoes the provided message back."
+    static let defaultDescription = "Echoes the provided message back."
 
     var schema: ToolSchema {
         ToolSchema(parameters: .object(

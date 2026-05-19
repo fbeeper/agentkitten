@@ -78,6 +78,6 @@ struct JudgeValidatorSystemPromptTests {
         #expect(await counter.value() == 1)
         let latestPrompt = await judgeProvider.script.latestPrompt()
         #expect(latestPrompt?.hasPrefix(customPrompt) == true)
-        #expect(latestPrompt?.contains(ToolBehavior.Guidance.defaultPrompt) == true)
+        #expect(latestPrompt?.contains(ToolBehavior.defaultGuidancePrompt) == true)
     }
 }

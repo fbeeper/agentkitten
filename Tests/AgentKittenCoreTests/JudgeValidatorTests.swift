@@ -58,7 +58,7 @@ struct JudgeValidatorTests {
             .message(.assistant(AssistantMessage(text: "Candidate response"))),
             .validation(.init(
                 result: .pass,
-                message: AgentKittenLocalization.string("validation.validationPassed"),
+                message: "Validation passed.",
                 validator: "Policy Judge",
             )),
             .turnCompleted(.completed),

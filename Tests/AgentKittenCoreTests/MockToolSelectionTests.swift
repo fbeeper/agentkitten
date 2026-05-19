@@ -27,7 +27,7 @@ import Testing
         }
     }
 
-    let expectedReason = AgentKittenLocalization.formattedString("tools.unavailableReasonFormat", "counting_echo")
+    let expectedReason = "tool unavailable: counting_echo"
     #expect(outcome == .failure(.denied(reason: expectedReason)))
     #expect(await counter.value() == 0)
 }
@@ -89,7 +89,7 @@ import Testing
         }
     }
 
-    let expectedReason = AgentKittenLocalization.formattedString("tools.unavailableReasonFormat", "counting_echo")
+    let expectedReason = "tool unavailable: counting_echo"
     #expect(outcome == .failure(.denied(reason: expectedReason)))
     #expect(await counter.value() == 0)
 }

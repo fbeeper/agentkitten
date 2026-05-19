@@ -12,7 +12,7 @@ struct ReadScratchpadTool: AgentTool {
     }
 
     static let name = "read_scratchpad"
-    static let description = "Returns the current content of the scratchpad file."
+    static let defaultDescription = "Returns the current content of the scratchpad file."
 
     let store: ScratchpadStore
 

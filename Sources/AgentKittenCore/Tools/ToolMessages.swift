@@ -8,9 +8,8 @@ public enum ToolRationale {
     /// Key injected into tool schemas and extracted from model responses.
     public static let schemaKey = "_agentKitten_toolRationale"
     /// Description forwarded to the model as the schema property description.
-    public static var schemaDescription: String {
-        AgentKittenLocalization.string("tools.rationaleSchemaDescription")
-    }
+    public static let schemaDescription =
+        "Brief action-oriented phrase stating what this tool call will do, not why the user asked."
 
     /// Extracts the rationale and returns the JSON with the schema key removed.
     /// Returns `nil` rationale when absent, malformed, empty, or not a string.

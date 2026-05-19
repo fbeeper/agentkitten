@@ -55,8 +55,10 @@ public actor MockInferenceSession: InferenceSession {
         }
         self.structuredResponses = structuredResponses
         self.structuredMockResponses = structuredMockResponses
+        let toolBehavior = ToolBehavior()
         toolRuntime = ToolRuntime(
-            configuration: .noTools,
+            toolDefinition: .noTools,
+            toolBehavior: toolBehavior,
         )
     }
 

@@ -56,7 +56,7 @@ struct CountingEchoTool: AgentTool {
     }
 
     static let name = "counting_echo"
-    static let description = "Echoes the provided message and records execution count."
+    static let defaultDescription = "Echoes the provided message and records execution count."
 
     let counter: ToolCallCounter
 
@@ -79,11 +79,13 @@ func testToolRuntime(
     registry: ToolRegistry = ToolRegistry(),
     executionPolicy: some ToolExecutionPolicy = AutoApprovePolicy(),
 ) -> ToolRuntime {
-    ToolRuntime(
-        configuration: ToolDefinition(
+    let toolBehavior = ToolBehavior()
+    return ToolRuntime(
+        toolDefinition: ToolDefinition(
             tools: registry.all,
             executionPolicy: executionPolicy,
         ),
+        toolBehavior: toolBehavior,
     )
 }
 

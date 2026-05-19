@@ -12,6 +12,7 @@ public struct ToolRuntime: Sendable {
     private let executor: ToolExecutor
     private let executionPolicy: AnyToolExecutionPolicy
     private let hooks: [AnyToolHook]
+    private let runtimeConfig: ToolRuntimeConfig
 
     /// Suspends pending tool calls that require interactive approval.
     public let approvalGate: ToolApprovalGate
@@ -24,35 +25,52 @@ public struct ToolRuntime: Sendable {
         executionPolicy: some ToolExecutionPolicy,
         hooks: [AnyToolHook],
         approvalGate: ToolApprovalGate = ToolApprovalGate(),
-        rationaleSchemaDescription: String = ToolRationale.schemaDescription,
+        runtimeConfig: ToolRuntimeConfig,
     ) {
         toolRegistry = executor.registry
         self.executor = executor
         self.executionPolicy = AnyToolExecutionPolicy(executionPolicy)
         self.hooks = hooks
         self.approvalGate = approvalGate
-        self.rationaleSchemaDescription = rationaleSchemaDescription
+        self.runtimeConfig = runtimeConfig
+        rationaleSchemaDescription = runtimeConfig.rationaleSchemaDescription
     }
 
     /// Creates a tool runtime from a tool configuration plus runtime controls.
     ///
     /// - Parameters:
-    ///   - configuration: Declarative tool setup used to derive the registry, policy, and hooks.
+    ///   - toolDefinition: Declarative tool setup used to derive the registry, policy, and hooks.
     ///   - rationaleSchemaDescription: Schema description for the injected rationale field.
     ///     Defaults to AgentKitten's built-in description; pass a custom value when the agent's
-    ///     ``ToolBehavior/rationaleGuidance`` is overridden.
+    ///     ``ToolBehavior/rationaleSchemaDescription`` is overridden.
     ///   - approvalGate: The gate that suspends tool calls requiring interactive approval.
+    ///   - disabledReason: Reason string returned when tools are disabled.
+    ///   - unavailableReasonFormat: Format string for the reason when a specific tool is unavailable.
     public init(
-        configuration: ToolDefinition,
-        rationaleSchemaDescription: String = ToolRationale.schemaDescription,
+        toolDefinition: ToolDefinition,
+        toolBehavior: ToolBehavior,
         approvalGate: ToolApprovalGate = ToolApprovalGate(),
     ) {
         self.init(
-            executor: ToolExecutor(registry: configuration.registry),
-            executionPolicy: configuration.executionPolicy,
-            hooks: configuration.hooks,
+            executor: ToolExecutor(registry: toolDefinition.registry),
+            executionPolicy: toolDefinition.executionPolicy,
+            hooks: toolDefinition.hooks,
             approvalGate: approvalGate,
-            rationaleSchemaDescription: rationaleSchemaDescription,
+            runtimeConfig: toolBehavior.runtimeConfig,
+        )
+    }
+
+    init(
+        toolDefinition: ToolDefinition,
+        runtimeConfig: ToolRuntimeConfig,
+        approvalGate: ToolApprovalGate = ToolApprovalGate(),
+    ) {
+        self.init(
+            executor: ToolExecutor(registry: toolDefinition.registry),
+            executionPolicy: toolDefinition.executionPolicy,
+            hooks: toolDefinition.hooks,
+            approvalGate: approvalGate,
+            runtimeConfig: runtimeConfig,
         )
     }
 
@@ -80,6 +98,7 @@ public struct ToolRuntime: Sendable {
             toolStepBudget: toolStepBudget,
             context: context,
             toolSelection: toolSelection,
+            runtimeConfig: runtimeConfig,
         )
     }
 }
@@ -96,6 +115,7 @@ public actor ToolTurnRuntime {
     private let approvalGate: ToolApprovalGate
     private let context: ToolExecutionContext
     private let toolSelection: ToolSelection
+    private let runtimeConfig: ToolRuntimeConfig
     private var toolStepBudget: ToolStepBudget
 
     package init(
@@ -106,6 +126,7 @@ public actor ToolTurnRuntime {
         toolStepBudget: ToolStepBudget,
         context: ToolExecutionContext,
         toolSelection: ToolSelection,
+        runtimeConfig: ToolRuntimeConfig,
     ) {
         self.executor = executor
         self.executionPolicy = executionPolicy
@@ -114,6 +135,7 @@ public actor ToolTurnRuntime {
         self.context = context
         self.toolSelection = toolSelection
         self.toolStepBudget = toolStepBudget
+        self.runtimeConfig = runtimeConfig
     }
 
     /// Resolves policy and approval, enforces turn budget, runs hooks, and executes the tool.
@@ -192,9 +214,9 @@ public actor ToolTurnRuntime {
     private func toolDeniedReason(for name: String) -> String {
         switch toolSelection {
         case .disabled:
-            AgentKittenLocalization.string("tools.disabledReason")
+            runtimeConfig.disabledReason
         case .including, .excluding:
-            AgentKittenLocalization.formattedString("tools.unavailableReasonFormat", name)
+            String(format: runtimeConfig.unavailableReasonFormat, name)
         case .all:
             preconditionFailure("Tool selection denied a tool while all tools are available.")
         }

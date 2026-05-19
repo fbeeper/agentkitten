@@ -201,7 +201,7 @@ private func makeConversationProvider(
             providerRegistry: registry,
             baseSystemPrompt: "Base prompt",
             toolDefinition: toolDefinition,
-            rationaleSchemaDescription: ToolRationale.schemaDescription,
+            runtimeConfig: ToolBehavior().runtimeConfig,
             toolApprovalGate: ToolApprovalGate(),
         ),
     )
@@ -358,7 +358,7 @@ private struct ConversationOtherTool: AgentTool {
     struct Output: Codable, Sendable {}
 
     static let name = "conversation_other"
-    static let description = "A second tool used for conversation provider selection tests."
+    static let defaultDescription = "A second tool used for conversation provider selection tests."
 
     var schema: ToolSchema {
         ToolSchema(parameters: .object(properties: [:], required: []))

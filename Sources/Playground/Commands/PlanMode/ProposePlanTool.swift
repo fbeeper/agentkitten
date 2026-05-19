@@ -16,7 +16,7 @@ struct ProposePlanTool: AgentTool {
     }
 
     static let name = "propose_plan"
-    static let description =
+    static let defaultDescription =
         "Submits a plan for user approval. The plan must include numbered steps " +
         "and key code snippets for each change. Call at most once per turn, " +
         "then make no further tool calls. Only available in plan mode."

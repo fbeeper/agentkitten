@@ -154,13 +154,17 @@ private struct AnthropicRequiresApprovalPolicy: ToolExecutionPolicy {
         credentials: MockAPIKeyProvider("test-key"),
         defaultModel: "test-model",
         systemPrompt: nil,
-        toolRuntime: ToolRuntime(
-            configuration: ToolDefinition(
-                tools: [AnyAgentTool(InferenceEchoTool())],
-                executionPolicy: AnthropicRequiresApprovalPolicy(),
-            ),
-            approvalGate: gate,
-        ),
+        toolRuntime: {
+            let toolBehavior = ToolBehavior()
+            return ToolRuntime(
+                toolDefinition: ToolDefinition(
+                    tools: [AnyAgentTool(InferenceEchoTool())],
+                    executionPolicy: AnthropicRequiresApprovalPolicy(),
+                ),
+                toolBehavior: toolBehavior,
+                approvalGate: gate,
+            )
+        }(),
         clientFactory: { _ in mock },
     )
 

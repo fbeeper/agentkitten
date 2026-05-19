@@ -170,14 +170,15 @@ struct AnthropicSessionRationaleTests {
 @Suite("ToolRuntime rationaleSchemaDescription")
 struct ToolRuntimeRationaleTests {
     @Test func toolRuntime_defaultsToToolRationaleSchemaDescription() {
-        let runtime = ToolRuntime(configuration: .noTools)
+        let toolBehavior = ToolBehavior()
+        let runtime = ToolRuntime(toolDefinition: .noTools, toolBehavior: toolBehavior)
         #expect(runtime.rationaleSchemaDescription == ToolRationale.schemaDescription)
     }
 
     @Test func toolBehavior_customRationaleGuidance_propagatesSchemaDescription() {
         let custom = "My custom rationale"
-        let toolBehavior = ToolBehavior(rationaleGuidance: .custom(custom))
-        #expect(toolBehavior.rationaleGuidance.schemaDescription == custom)
+        let toolBehavior = ToolBehavior(rationaleSchemaDescription: custom)
+        #expect(toolBehavior.rationaleSchemaDescription == custom)
     }
 }
 

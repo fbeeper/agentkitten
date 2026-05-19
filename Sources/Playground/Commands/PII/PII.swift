@@ -209,7 +209,7 @@ private struct NotifyContactTool: AgentTool {
     }
 
     static let name = "notify_contact"
-    static let description = "Sends a notification message to a contact's email address."
+    static let defaultDescription = "Sends a notification message to a contact's email address."
 
     var schema: ToolSchema {
         ToolSchema(parameters: .object(

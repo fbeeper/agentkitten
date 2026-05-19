@@ -32,7 +32,7 @@ private struct StructuredEchoTool: AgentTool {
     }
 
     static let name = "echo"
-    static let description = "Echoes the provided message."
+    static let defaultDescription = "Echoes the provided message."
 
     var schema: ToolSchema {
         ToolSchema(parameters: .object(

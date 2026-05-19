@@ -33,7 +33,7 @@ public struct AnyAgentTool: Sendable {
             "Tool '\(T.name)' defines parameter '\(ToolRationale.schemaKey)', which is reserved by AgentKitten.",
         )
         name = T.name
-        description = T.description
+        description = agentTool.description
         schema = agentTool.schema
         capabilities = agentTool.capabilities
         executeHandler = { data in
@@ -52,7 +52,7 @@ public struct AnyAgentTool: Sendable {
             "Tool '\(T.name)' defines parameter '\(ToolRationale.schemaKey)', which is reserved by AgentKitten.",
         )
         name = T.name
-        description = T.description
+        description = agentTool.description
         schema = agentTool.schema
         capabilities = agentTool.capabilities
         executeHandler = { data in

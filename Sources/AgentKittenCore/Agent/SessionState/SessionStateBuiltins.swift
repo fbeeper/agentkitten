@@ -9,17 +9,23 @@ enum SessionStateBuiltins {
         RemoveStateTool.name,
     ]
 
-    static func makeReadOnlyTools(state: SessionState) -> [AnyAgentTool] {
+    static func makeReadOnlyTools(
+        state: SessionState,
+        config: SessionStateConfiguration = .init(),
+    ) -> [AnyAgentTool] {
         [
-            AnyAgentTool(GetStateTool(state: state)),
-            AnyAgentTool(ListStateKeysTool(state: state)),
+            AnyAgentTool(GetStateTool(state: state, config: config)),
+            AnyAgentTool(ListStateKeysTool(state: state, config: config)),
         ]
     }
 
-    static func makeTools(state: SessionState) -> [AnyAgentTool] {
-        makeReadOnlyTools(state: state) + [
-            AnyAgentTool(SetStateTool(state: state)),
-            AnyAgentTool(RemoveStateTool(state: state)),
+    static func makeTools(
+        state: SessionState,
+        config: SessionStateConfiguration = .init(),
+    ) -> [AnyAgentTool] {
+        makeReadOnlyTools(state: state, config: config) + [
+            AnyAgentTool(SetStateTool(state: state, config: config)),
+            AnyAgentTool(RemoveStateTool(state: state, config: config)),
         ]
     }
 }
@@ -34,24 +40,31 @@ private struct GetStateTool: AgentTool {
     }
 
     static let name = "get_state"
-    static var description: String {
-        AgentKittenLocalization.string("sessionState.getStateDescription")
+    static var defaultDescription: String {
+        preconditionFailure("Use instance description")
     }
 
+    let description: String
     let state: SessionState
+    private let keyDescription: String
+
+    init(state: SessionState, config: SessionStateConfiguration) {
+        self.state = state
+        description = config.getStateDescription
+        keyDescription = config.getStateKeyDescription
+    }
 
     var schema: ToolSchema {
         ToolSchema(parameters: .object(
             properties: [
-                "key": .string(description: AgentKittenLocalization.string("sessionState.getStateKeyDescription")),
+                "key": .string(description: keyDescription),
             ],
             required: ["key"],
         ))
     }
 
     func execute(arguments: Arguments) async throws -> Output {
-        let value = await state.value(forKey: arguments.key)
-        return Output(value: value)
+        Output(value: await state.value(forKey: arguments.key))
     }
 }
 
@@ -63,22 +76,24 @@ private struct ListStateKeysTool: AgentTool {
     }
 
     static let name = "list_state_keys"
-    static var description: String {
-        AgentKittenLocalization.string("sessionState.listStateKeysDescription")
+    static var defaultDescription: String {
+        preconditionFailure("Use instance description")
     }
 
+    let description: String
     let state: SessionState
 
+    init(state: SessionState, config: SessionStateConfiguration) {
+        self.state = state
+        description = config.listStateKeysDescription
+    }
+
     var schema: ToolSchema {
-        ToolSchema(parameters: .object(
-            properties: [:],
-            required: [],
-        ))
+        ToolSchema(parameters: .object(properties: [:], required: []))
     }
 
     func execute(arguments: Arguments) async throws -> Output {
-        let keys = await state.contents().keys.sorted()
-        return Output(keys: keys)
+        Output(keys: await state.contents().keys.sorted())
     }
 }
 
@@ -93,24 +108,29 @@ private struct SetStateTool: AgentTool {
     }
 
     static let name = "set_state"
-    static var description: String {
-        AgentKittenLocalization.string("sessionState.setStateDescription")
+    static var defaultDescription: String {
+        preconditionFailure("Use instance description")
     }
 
+    let description: String
     let state: SessionState
+    private let keyDescription: String
+    private let valueDescription: String
+
+    init(state: SessionState, config: SessionStateConfiguration) {
+        self.state = state
+        description = config.setStateDescription
+        keyDescription = config.setStateKeyDescription
+        valueDescription = config.setStateValueDescription
+    }
 
     var schema: ToolSchema {
         ToolSchema(parameters: .object(
             properties: [
-                "key": .string(description: AgentKittenLocalization.string("sessionState.setStateKeyDescription")),
-                "value": .string(
-                    description: AgentKittenLocalization.string("sessionState.setStateValueDescription"),
-                ),
+                "key": .string(description: keyDescription),
+                "value": .string(description: valueDescription),
             ],
-            required: [
-                "key",
-                "value",
-            ],
+            required: ["key", "value"],
         ))
     }
 
@@ -131,16 +151,24 @@ private struct RemoveStateTool: AgentTool {
     }
 
     static let name = "remove_state"
-    static var description: String {
-        AgentKittenLocalization.string("sessionState.removeStateDescription")
+    static var defaultDescription: String {
+        preconditionFailure("Use instance description")
     }
 
+    let description: String
     let state: SessionState
+    private let keyDescription: String
+
+    init(state: SessionState, config: SessionStateConfiguration) {
+        self.state = state
+        description = config.removeStateDescription
+        keyDescription = config.removeStateKeyDescription
+    }
 
     var schema: ToolSchema {
         ToolSchema(parameters: .object(
             properties: [
-                "key": .string(description: AgentKittenLocalization.string("sessionState.removeStateKeyDescription")),
+                "key": .string(description: keyDescription),
             ],
             required: ["key"],
         ))

@@ -91,7 +91,7 @@ private func makeConversation(
         providerRegistry: registry,
         baseSystemPrompt: "Base prompt",
         toolDefinition: .noTools,
-        rationaleSchemaDescription: ToolRationale.schemaDescription,
+        runtimeConfig: ToolBehavior().runtimeConfig,
         toolApprovalGate: ToolApprovalGate(),
     )
     return try factory.makeConversation(

@@ -21,7 +21,11 @@ enum PlaygroundSessionFactory {
         tools: [AnyAgentTool] = [],
         policy: AnyToolExecutionPolicy = AnyToolExecutionPolicy(AutoApprovePolicy()),
     ) -> ToolRuntime {
-        ToolRuntime(configuration: ToolDefinition(tools: tools, executionPolicy: policy))
+        let toolBehavior = ToolBehavior()
+        return ToolRuntime(
+            toolDefinition: ToolDefinition(tools: tools, executionPolicy: policy),
+            toolBehavior: toolBehavior,
+        )
     }
 
     /// Creates a session for the given provider option.

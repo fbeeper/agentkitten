@@ -304,7 +304,7 @@ private final class CountingModelInfoHTTPClient: AnthropicHTTPStreaming, @unchec
 }
 
 @Test func anthropicSummarizer_customPromptReplacesDefaultPreamble() async throws {
-    let customPrompt = "You are a medical summarizer. Preserve clinical facts only."
+    let customPrompt = "You are a medical summarizer.\n\n%@\n\nPreserve clinical facts only."
     let client = MinimalCapturingHTTPClient()
     let session = AnthropicInferenceSession(
         credentials: MockAPIKeyProvider("test-key"),
@@ -323,7 +323,7 @@ private final class CountingModelInfoHTTPClient: AnthropicHTTPStreaming, @unchec
     _ = await ContextCompactor().compact(session,
                                          options: .summarize(.init(
                                              preservedRecentTurnCount: 1,
-                                             prompt: .custom(customPrompt),
+                                             summaryInstructionFormat: customPrompt,
                                          )),
                                          summaryGenerator: makeSummaryGenerator(client: client))
 
@@ -333,13 +333,14 @@ private final class CountingModelInfoHTTPClient: AnthropicHTTPStreaming, @unchec
             msg.content.compactMap { if case .text(let txt) = $0 { txt } else { nil } }.first
         }.first,
     )
-    #expect(captured.hasPrefix(customPrompt))
+    #expect(captured.contains("You are a medical summarizer."))
+    #expect(captured.contains("Old request."))
+    #expect(captured.contains("Preserve clinical facts only."))
     #expect(!captured.contains("Summarize the following"))
     #expect(!captured.contains("Preserve durable facts"))
 }
 
-@Test func anthropicSummarizer_appendingPromptIncludesInstructionsAfterPreamble() async throws {
-    let extra = "Focus on action items."
+@Test func anthropicSummarizer_standardPromptPlacesHistoryWhereFormatted() async throws {
     let client = MinimalCapturingHTTPClient()
     let session = AnthropicInferenceSession(
         credentials: MockAPIKeyProvider("test-key"),
@@ -358,7 +359,7 @@ private final class CountingModelInfoHTTPClient: AnthropicHTTPStreaming, @unchec
     _ = await ContextCompactor().compact(session,
                                          options: .summarize(.init(
                                              preservedRecentTurnCount: 1,
-                                             prompt: .appending(extra),
+                                             summaryInstructionFormat: "Prefix\n%@\nSuffix",
                                          )),
                                          summaryGenerator: makeSummaryGenerator(client: client))
 
@@ -368,12 +369,10 @@ private final class CountingModelInfoHTTPClient: AnthropicHTTPStreaming, @unchec
             msg.content.compactMap { if case .text(let txt) = $0 { txt } else { nil } }.first
         }.first,
     )
-    #expect(captured.contains("Summarize the following"))
-    #expect(captured.contains("Preserve durable facts"))
-    #expect(captured.contains(extra))
-    let preambleRange = try #require(captured.range(of: "Summarize the following"))
-    let extraRange = try #require(captured.range(of: extra))
-    #expect(preambleRange.lowerBound < extraRange.lowerBound)
+    #expect(captured.hasPrefix("Prefix"))
+    #expect(captured.contains("History:"))
+    #expect(captured.contains("Old request."))
+    #expect(captured.hasSuffix("Suffix"))
 }
 
 extension ContextCompactionResult {

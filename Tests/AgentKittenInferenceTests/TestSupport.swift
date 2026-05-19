@@ -10,11 +10,13 @@ func testToolRuntime(
     registry: ToolRegistry = ToolRegistry(),
     executionPolicy: some ToolExecutionPolicy = AutoApprovePolicy(),
 ) -> ToolRuntime {
-    ToolRuntime(
-        configuration: ToolDefinition(
+    let toolBehavior = ToolBehavior()
+    return ToolRuntime(
+        toolDefinition: ToolDefinition(
             tools: registry.all,
             executionPolicy: executionPolicy,
         ),
+        toolBehavior: toolBehavior,
     )
 }
 

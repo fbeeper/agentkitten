@@ -15,7 +15,7 @@ struct WriteScratchpadTool: AgentTool {
     }
 
     static let name = "write_scratchpad"
-    static let description = "Overwrites the scratchpad file with the provided content."
+    static let defaultDescription = "Overwrites the scratchpad file with the provided content."
 
     let store: ScratchpadStore
 

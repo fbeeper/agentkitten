@@ -31,7 +31,7 @@ public enum ToolCallFailure: Sendable, Equatable, Codable {
         case .execution(let message):
             Self.errorJSON(message)
         case .stepLimitExceeded:
-            Self.errorJSON(AgentKittenLocalization.string("tools.stepLimitExceededError"))
+            Self.errorJSON("step limit exceeded")
         case .denied(let reason):
             Self.errorJSON(reason)
         }

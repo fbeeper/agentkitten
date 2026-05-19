@@ -17,7 +17,7 @@ private struct EchoTool: AgentTool {
     }
 
     static let name = "echo"
-    static let description = "Echoes the provided message back."
+    static let defaultDescription = "Echoes the provided message back."
 
     var schema: ToolSchema {
         ToolSchema(parameters: .object(
@@ -37,7 +37,7 @@ private struct RichEchoTool: RichAgentTool {
     }
 
     static let name = "rich_echo"
-    static let description = "Returns text and image content."
+    static let defaultDescription = "Returns text and image content."
 
     var schema: ToolSchema {
         ToolSchema(parameters: .object(

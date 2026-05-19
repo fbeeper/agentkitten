@@ -15,7 +15,7 @@ private struct PolicyEchoTool: AgentTool {
     }
 
     static let name = "echo"
-    static let description = "Echoes the provided message."
+    static let defaultDescription = "Echoes the provided message."
 
     var schema: ToolSchema {
         ToolSchema(parameters: .object(
@@ -108,7 +108,7 @@ private struct SpyWriteFileTool: AgentTool {
     }
 
     static let name = "write_file"
-    static let description = "Writes a file."
+    static let defaultDescription = "Writes a file."
 
     let recorder: SpyRecorder
 
