@@ -2,9 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import ArgumentParser
-import Darwin
-import Foundation
 
+@main
 struct Playground: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
         abstract: "AgentKitten development playground.",
@@ -18,11 +17,3 @@ struct Playground: AsyncParsableCommand {
         ],
     )
 }
-
-// AsyncParsableCommand.main() calls exit() when done; RunLoop keeps the process alive until then.
-Task {
-    await Playground.main()
-    exit(0)
-}
-
-RunLoop.main.run()
