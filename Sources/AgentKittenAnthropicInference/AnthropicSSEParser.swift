@@ -43,6 +43,8 @@ enum AnthropicSSEParser {
 
     /// Drives the parser from a full SSE payload encoded as UTF-8 text.
     static func events(from data: Data) -> AsyncThrowingStream<SSEEvent, Error> {
+        // Split on `\n`, preserve blank lines for SSE event boundaries, then trim a
+        // trailing `\r` from each line so CRLF-delimited payloads normalize correctly.
         let lines = (String(bytes: data, encoding: .utf8) ?? "")
             .split(separator: "\n", omittingEmptySubsequences: false)
             .map { $0.hasSuffix("\r") ? String($0.dropLast()) : String($0) }

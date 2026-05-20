@@ -40,6 +40,11 @@ struct AnthropicHTTPClient: AnthropicHTTPStreaming {
     ///
     /// - Parameter request: The fully constructed request body.
     /// - Returns: An async stream of ``SSEEvent`` values.
+    ///
+    /// On Darwin platforms this uses incremental byte streaming from `URLSession`.
+    /// On non-Darwin platforms it falls back to buffering the full response body
+    /// before parsing SSE lines because `FoundationNetworking` does not expose the
+    /// same streaming API surface.
     func stream(request: AnthropicRequest) -> AsyncThrowingStream<SSEEvent, Error> {
         AsyncThrowingStream { continuation in
             let task = Task {
@@ -151,6 +156,10 @@ struct AnthropicHTTPClient: AnthropicHTTPStreaming {
             throw Self.error(statusCode: httpResponse.statusCode, body: body)
         }
 
+        // FoundationNetworking on non-Darwin platforms does not expose the same
+        // incremental byte-streaming API as Darwin URLSession, so this fallback buffers
+        // the full SSE response body before parsing it into lines. This preserves
+        // compatibility at the cost of true incremental streaming on Linux.
         for try await event in AnthropicSSEParser.events(from: data) {
             try Task.checkCancellation()
             continuation.yield(event)

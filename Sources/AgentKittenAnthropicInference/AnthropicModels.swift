@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import AgentKittenCore
+// Needed for CFGetTypeID / CFBooleanGetTypeID when distinguishing bridged
+// NSNumber booleans from numeric values across platforms.
 import CoreFoundation
 import Foundation
 
