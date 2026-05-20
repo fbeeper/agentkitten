@@ -71,7 +71,7 @@ extension Playground {
             case .anthropic, .apple:
                 let agent = try PlaygroundSessionFactory.makeAgent(
                     for: provider,
-                    behavior: .init(systemPrompt: system),
+                    behavior: AgentBehavior(systemPrompt: system),
                     toolDefinition: toolDefinition,
                 )
                 try await runConversation(agent: agent, prompt: effectivePrompt)

@@ -24,7 +24,7 @@ public struct AgentBehavior: Sendable {
     /// - Parameter defaultAutomaticCompactionPolicy: Default automatic compaction policy for new sessions.
     public init(
         systemPrompt: String,
-        phaseBehaviors: PhaseBehaviorSet = .init(),
+        phaseBehaviors: PhaseBehaviorSet = PhaseBehaviorSet(),
         defaultAutomaticCompactionPolicy: AutomaticCompactionPolicy = .disabled,
     ) {
         self.systemPrompt = systemPrompt

@@ -45,7 +45,14 @@ struct TurnTraceSink {
             )
         case .toolApprovalRequired(let call):
             let context = await approvalGate.traceContext(callID: call.id)
-            record(kind: .toolApprovalRequired(.init(call: call, context: context)))
+            record(
+                kind: .toolApprovalRequired(
+                    AgentTraceEntry.Kind.ToolApprovalRequiredInfo(
+                        call: call,
+                        context: context,
+                    ),
+                ),
+            )
         case .toolHookFired(let info):
             record(kind: .toolHookFired(info))
         case .toolCallCompleted(let name, let id, let outcome):
@@ -84,7 +91,11 @@ struct TurnTraceSink {
             let jsonData = try encoder.encode(result)
             guard let json = String(data: jsonData, encoding: .utf8) else {
                 record(
-                    kind: .error(.init(description: "Failed to decode structured result JSON as UTF-8")),
+                    kind: .error(
+                        AgentTraceEntry.Kind.ErrorInfo(
+                            description: "Failed to decode structured result JSON as UTF-8",
+                        ),
+                    ),
                 )
                 return
             }
@@ -96,7 +107,7 @@ struct TurnTraceSink {
                 ),
             )
         } catch {
-            record(kind: .error(.init(error)))
+            record(kind: .error(AgentTraceEntry.Kind.ErrorInfo(error)))
         }
     }
 }

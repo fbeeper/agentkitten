@@ -5,12 +5,14 @@
 import Testing
 
 @Test func contextWindowExceededFailsTurnWithTypedErrorAndQueueContinues() async throws {
-    let overflow = InferenceError.contextWindowExceeded(.init(
-        provider: "TestProvider",
-        message: "context window exceeded",
-        contextTokens: 101,
-        contextSize: 100,
-    ))
+    let overflow = InferenceError.contextWindowExceeded(
+        ContextWindowExceededInfo(
+            provider: "TestProvider",
+            message: "context window exceeded",
+            contextTokens: 101,
+            contextSize: 100,
+        ),
+    )
     let agent = Agent(
         providerRegistry: ProviderRegistry(default: ScriptedInferenceProvider(
             responses: [

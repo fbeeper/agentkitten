@@ -121,11 +121,13 @@ private final class CountingModelInfoHTTPClient: AnthropicHTTPStreaming, @unchec
         clientFactory: { _ in FailingCountHTTPClient() },
     )
 
-    let result = await ContextCompactor().compact(session,
-                                                  options: .truncate(.init(preservedRecentTurnCount: 1)),
-                                                  summaryGenerator: makeSummaryGenerator(
-                                                      client: MinimalCapturingHTTPClient(),
-                                                  ))
+    let result = await ContextCompactor().compact(
+        session,
+        options: .truncate(ContextCompactionOptions.TruncationOptions(preservedRecentTurnCount: 1)),
+        summaryGenerator: makeSummaryGenerator(
+            client: MinimalCapturingHTTPClient(),
+        ),
+    )
     let rebuilt = try await provider.makeSession(
         continuing: session,
         systemPrompt: nil,
@@ -232,19 +234,23 @@ private final class CountingModelInfoHTTPClient: AnthropicHTTPStreaming, @unchec
         systemPrompt: nil,
         toolRuntime: testToolRuntime(),
         initialHistory: [
-            .init(role: .user, content: [.text("Old request one.")]),
-            .init(role: .assistant, content: [.text("Old answer one.")]),
-            .init(role: .user, content: [.text("Recent request one.")]),
-            .init(role: .assistant, content: [.text("Recent answer one.")]),
-            .init(role: .user, content: [.text("Recent request two.")]),
-            .init(role: .assistant, content: [.text("Recent answer two.")]),
+            AnthropicMessage(role: .user, content: [.text("Old request one.")]),
+            AnthropicMessage(role: .assistant, content: [.text("Old answer one.")]),
+            AnthropicMessage(role: .user, content: [.text("Recent request one.")]),
+            AnthropicMessage(role: .assistant, content: [.text("Recent answer one.")]),
+            AnthropicMessage(role: .user, content: [.text("Recent request two.")]),
+            AnthropicMessage(role: .assistant, content: [.text("Recent answer two.")]),
         ],
         clientFactory: { _ in client },
     )
 
-    let result = await ContextCompactor().compact(session,
-                                                  options: .summarize(.init(preservedRecentTurnCount: 2)),
-                                                  summaryGenerator: makeSummaryGenerator(client: client))
+    let result = await ContextCompactor().compact(
+        session,
+        options: .summarize(
+            ContextCompactionOptions.SummarizationOptions(preservedRecentTurnCount: 2),
+        ),
+        summaryGenerator: makeSummaryGenerator(client: client),
+    )
     #expect(result.didCompact)
 
     let request = try #require(client.capturedRequest)
@@ -276,19 +282,23 @@ private final class CountingModelInfoHTTPClient: AnthropicHTTPStreaming, @unchec
         systemPrompt: nil,
         toolRuntime: testToolRuntime(),
         initialHistory: [
-            .init(role: .user, content: [.text("Old request.")]),
-            .init(role: .assistant, content: [.text("Old answer.")]),
-            .init(role: .user, content: [.text("Recent request.")]),
-            .init(role: .assistant, content: [.text("Recent answer.")]),
+            AnthropicMessage(role: .user, content: [.text("Old request.")]),
+            AnthropicMessage(role: .assistant, content: [.text("Old answer.")]),
+            AnthropicMessage(role: .user, content: [.text("Recent request.")]),
+            AnthropicMessage(role: .assistant, content: [.text("Recent answer.")]),
         ],
         clientFactory: { _ in MinimalCapturingHTTPClient() },
     )
 
-    let result = await ContextCompactor().compact(session,
-                                                  options: .truncate(.init(preservedRecentTurnCount: 1)),
-                                                  summaryGenerator: makeSummaryGenerator(
-                                                      client: MinimalCapturingHTTPClient(),
-                                                  ))
+    let result = await ContextCompactor().compact(
+        session,
+        options: .truncate(
+            ContextCompactionOptions.TruncationOptions(preservedRecentTurnCount: 1),
+        ),
+        summaryGenerator: makeSummaryGenerator(
+            client: MinimalCapturingHTTPClient(),
+        ),
+    )
     #expect(result.didCompact)
 
     let history = await session.captureHistory()
@@ -312,16 +322,16 @@ private final class CountingModelInfoHTTPClient: AnthropicHTTPStreaming, @unchec
         systemPrompt: nil,
         toolRuntime: testToolRuntime(),
         initialHistory: [
-            .init(role: .user, content: [.text("Old request.")]),
-            .init(role: .assistant, content: [.text("Old answer.")]),
-            .init(role: .user, content: [.text("Recent request.")]),
-            .init(role: .assistant, content: [.text("Recent answer.")]),
+            AnthropicMessage(role: .user, content: [.text("Old request.")]),
+            AnthropicMessage(role: .assistant, content: [.text("Old answer.")]),
+            AnthropicMessage(role: .user, content: [.text("Recent request.")]),
+            AnthropicMessage(role: .assistant, content: [.text("Recent answer.")]),
         ],
         clientFactory: { _ in client },
     )
 
     _ = await ContextCompactor().compact(session,
-                                         options: .summarize(.init(
+                                         options: .summarize(ContextCompactionOptions.SummarizationOptions(
                                              preservedRecentTurnCount: 1,
                                              summaryInstructionFormat: customPrompt,
                                          )),
@@ -348,20 +358,24 @@ private final class CountingModelInfoHTTPClient: AnthropicHTTPStreaming, @unchec
         systemPrompt: nil,
         toolRuntime: testToolRuntime(),
         initialHistory: [
-            .init(role: .user, content: [.text("Old request.")]),
-            .init(role: .assistant, content: [.text("Old answer.")]),
-            .init(role: .user, content: [.text("Recent request.")]),
-            .init(role: .assistant, content: [.text("Recent answer.")]),
+            AnthropicMessage(role: .user, content: [.text("Old request.")]),
+            AnthropicMessage(role: .assistant, content: [.text("Old answer.")]),
+            AnthropicMessage(role: .user, content: [.text("Recent request.")]),
+            AnthropicMessage(role: .assistant, content: [.text("Recent answer.")]),
         ],
         clientFactory: { _ in client },
     )
 
-    _ = await ContextCompactor().compact(session,
-                                         options: .summarize(.init(
-                                             preservedRecentTurnCount: 1,
-                                             summaryInstructionFormat: "Prefix\n%@\nSuffix",
-                                         )),
-                                         summaryGenerator: makeSummaryGenerator(client: client))
+    _ = await ContextCompactor().compact(
+        session,
+        options: .summarize(
+            ContextCompactionOptions.SummarizationOptions(
+                preservedRecentTurnCount: 1,
+                summaryInstructionFormat: "Prefix\n%@\nSuffix",
+            ),
+        ),
+        summaryGenerator: makeSummaryGenerator(client: client),
+    )
 
     let request = try #require(client.capturedRequest)
     let captured = try #require(

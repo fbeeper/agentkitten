@@ -65,7 +65,10 @@ extension AgentSession {
                 result: result,
             )
         } else {
-            .init(mode: .automatic, result: result)
+            AgentTraceEntry.Kind.ContextCompactionInfo(
+                mode: .automatic,
+                result: result,
+            )
         }
         record(
             kind: .contextCompaction(info),

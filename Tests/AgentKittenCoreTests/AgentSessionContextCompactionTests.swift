@@ -88,7 +88,7 @@ import Testing
         systemPrompt: "Test",
         defaultAutomaticCompactionPolicy: .enabled(
             trigger: .percentOfContextWindow(0.01),
-            options: .init(),
+            options: ContextCompactionOptions(),
         ),
     )
     let agent = Agent(
@@ -141,7 +141,7 @@ import Testing
         systemPrompt: "Test",
         defaultAutomaticCompactionPolicy: .enabled(
             trigger: .percentOfContextWindow(0.99),
-            options: .init(),
+            options: ContextCompactionOptions(),
         ),
     )
     let agent = Agent(
@@ -178,7 +178,7 @@ import Testing
         systemPrompt: "Test",
         defaultAutomaticCompactionPolicy: .enabled(
             trigger: .percentOfContextWindow(0.01),
-            options: .init(),
+            options: ContextCompactionOptions(),
         ),
     )
     let agent = Agent(
@@ -218,7 +218,7 @@ import Testing
         systemPrompt: "Test",
         defaultAutomaticCompactionPolicy: .enabled(
             trigger: .percentOfContextWindow(0.01),
-            options: .init(),
+            options: ContextCompactionOptions(),
         ),
     )
     let agent = Agent(
@@ -257,7 +257,7 @@ import Testing
         systemPrompt: "Test",
         defaultAutomaticCompactionPolicy: .enabled(
             trigger: .percentOfContextWindow(0.01),
-            options: .init(),
+            options: ContextCompactionOptions(),
         ),
     )
     let replacement = ReplacementMockProvider(responses: ["Replacement response."])
@@ -302,7 +302,7 @@ import Testing
     #expect(await session.automaticCompactionPolicy == .disabled)
     await session.setAutomaticCompactionPolicy(.enabled(
         trigger: .percentOfContextWindow(0.01),
-        options: .init(),
+        options: ContextCompactionOptions(),
     ))
 
     let firstTurn = try await session.send("First")

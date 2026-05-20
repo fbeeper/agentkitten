@@ -12,7 +12,7 @@ import Testing
     let behavior = AgentBehavior(systemPrompt: "Test")
     let toolBehavior = ToolBehavior()
 
-    #expect(behavior.phaseBehaviors.base.inferenceConfiguration == .init())
+    #expect(behavior.phaseBehaviors.base.inferenceConfiguration == InferenceConfiguration())
     #expect(behavior.defaultAutomaticCompactionPolicy == AutomaticCompactionPolicy.disabled)
     #expect(toolBehavior.defaultSelection == .all)
     #expect(toolBehavior.guidancePrompt == ToolBehavior.defaultGuidancePrompt)
@@ -23,7 +23,7 @@ import Testing
 func agentSessionVisibleFromUmbrellaModule() {
     let agent = Agent(
         providerRegistry: ProviderRegistry(default: InferenceProvider.mock()),
-        behavior: .init(systemPrompt: "Test"),
+        behavior: AgentBehavior(systemPrompt: "Test"),
     )
     let session = agent.makeSession()
 

@@ -69,7 +69,7 @@ public actor AppleInferenceProvider: InferenceProviding {
     ///     during context compaction. Defaults to built-in English values.
     public init(
         defaultModel: AppleLanguageModel = .default,
-        historyRenderingConfiguration: HistoryRenderingConfiguration = .init(),
+        historyRenderingConfiguration: HistoryRenderingConfiguration = HistoryRenderingConfiguration(),
     ) {
         self.defaultModel = defaultModel
         self.historyRenderingConfiguration = historyRenderingConfiguration

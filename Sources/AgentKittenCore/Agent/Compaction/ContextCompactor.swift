@@ -163,9 +163,11 @@ package struct SummarizationContextCompactionStrategy: ContextCompactionStrategy
     ) throws -> (older: [RenderedSessionEntry], newer: [RenderedSessionEntry]) {
         let groups = makeGroups(entries)
         guard groups.count > 1 else {
-            throw InferenceError.contextWindowExceeded(.init(
-                message: "Cannot split compaction input: all entries form a single turn group.",
-            ))
+            throw InferenceError.contextWindowExceeded(
+                ContextWindowExceededInfo(
+                    message: "Cannot split compaction input: all entries form a single turn group.",
+                ),
+            )
         }
         let midpoint = max(1, groups.count / 2)
         return (

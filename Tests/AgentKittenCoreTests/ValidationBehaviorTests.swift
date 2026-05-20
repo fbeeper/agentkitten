@@ -50,7 +50,7 @@ struct ValidationBehaviorTests {
         #expect(directTurnEntryKinds(in: await directTurnEntries(for: turn.id, on: session)) == [
             .turnStarted(UserMessage(text: "Hello")),
             .message(.assistant(AssistantMessage(text: "Long enough response"))),
-            .validation(.init(
+            .validation(AgentTraceEntry.Kind.ValidationInfo(
                 result: .pass,
                 message: "Validation passed.",
                 validator: "MinimumLengthValidator(8)",
@@ -83,13 +83,13 @@ struct ValidationBehaviorTests {
         #expect(directTurnEntryKinds(in: await directTurnEntries(for: turn.id, on: session)) == [
             .turnStarted(UserMessage(text: "Hello")),
             .message(.assistant(AssistantMessage(text: "bad"))),
-            .validation(.init(
+            .validation(AgentTraceEntry.Kind.ValidationInfo(
                 result: .feedback,
                 message: "Response must be at least 8 characters.",
                 validator: "MinimumLengthValidator(8)",
             )),
             .message(.assistant(AssistantMessage(text: "Accepted revision"))),
-            .validation(.init(
+            .validation(AgentTraceEntry.Kind.ValidationInfo(
                 result: .pass,
                 message: "Validation passed.",
                 validator: "MinimumLengthValidator(8)",

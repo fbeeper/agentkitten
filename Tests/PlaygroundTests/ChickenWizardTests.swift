@@ -56,7 +56,7 @@ struct ChickenWizardTests {
         let tool = ChickenWizardPotionTool(gameState: state, brewGuard: brewGuard)
 
         await brewGuard.beginTurn(userMessage: "What ingredients are needed?")
-        let blocked = try await tool.execute(arguments: .init(action: .brew))
+        let blocked = try await tool.execute(arguments: ChickenWizardPotionTool.Arguments(action: .brew))
         #expect(!blocked.brewed)
         #expect(blocked.message.contains("direct and polite request"))
 
@@ -64,7 +64,7 @@ struct ChickenWizardTests {
         #expect(pantryAfterBlockedAttempt.brewable)
 
         await brewGuard.beginTurn(userMessage: "Please brew the potion for me.")
-        let brewed = try await tool.execute(arguments: .init(action: .brew))
+        let brewed = try await tool.execute(arguments: ChickenWizardPotionTool.Arguments(action: .brew))
         #expect(brewed.brewed)
         #expect(
             brewed.availableIngredients.contains(

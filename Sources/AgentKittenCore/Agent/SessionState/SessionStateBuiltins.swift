@@ -11,7 +11,7 @@ enum SessionStateBuiltins {
 
     static func makeReadOnlyTools(
         state: SessionState,
-        config: SessionStateConfiguration = .init(),
+        config: SessionStateConfiguration = SessionStateConfiguration(),
     ) -> [AnyAgentTool] {
         [
             AnyAgentTool(GetStateTool(state: state, config: config)),
@@ -21,7 +21,7 @@ enum SessionStateBuiltins {
 
     static func makeTools(
         state: SessionState,
-        config: SessionStateConfiguration = .init(),
+        config: SessionStateConfiguration = SessionStateConfiguration(),
     ) -> [AnyAgentTool] {
         makeReadOnlyTools(state: state, config: config) + [
             AnyAgentTool(SetStateTool(state: state, config: config)),

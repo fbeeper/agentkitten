@@ -53,7 +53,7 @@ public actor AnthropicInferenceProvider: InferenceProviding {
     public init(
         credentials: any APIKeyProviding = EnvironmentAPIKeyProvider("ANTHROPIC_API_KEY"),
         model: String = "claude-sonnet-4-5",
-        historyRenderingConfiguration: HistoryRenderingConfiguration = .init(),
+        historyRenderingConfiguration: HistoryRenderingConfiguration = HistoryRenderingConfiguration(),
         structuredOutputInstructionFormat: String = AnthropicInferenceProvider.defaultStructuredOutputInstructionFormat,
     ) {
         self.credentials = credentials

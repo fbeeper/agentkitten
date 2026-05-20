@@ -252,10 +252,14 @@ struct TurnValidator<Result: Sendable> {
         validator: String,
         sink: TurnTraceSink,
     ) {
-        sink.record(kind: .validation(.init(
-            result: result,
-            message: message,
-            validator: validator,
-        )))
+        sink.record(
+            kind: .validation(
+                AgentTraceEntry.Kind.ValidationInfo(
+                    result: result,
+                    message: message,
+                    validator: validator,
+                ),
+            ),
+        )
     }
 }

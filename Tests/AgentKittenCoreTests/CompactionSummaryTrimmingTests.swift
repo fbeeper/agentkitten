@@ -14,7 +14,9 @@ import Testing
 
     let turn = try await session.send("Hello")
     _ = try await collectEvents(from: turn)
-    _ = try await session.compactContext(.summarize(.init(preservedRecentTurnCount: 0)))
+    _ = try await session.compactContext(
+        .summarize(ContextCompactionOptions.SummarizationOptions(preservedRecentTurnCount: 0)),
+    )
 
     #expect(await provider.appliedSummaries() == ["summary"])
 }
@@ -92,7 +94,7 @@ extension TrailingWhitespaceSummarySession: ContextCompactableSession {
     ) async throws -> ContextCompactionResult {
         _ = preservedRecentTurnCount
         await state.record(summary: summary)
-        return .compacted(.init(
+        return .compacted(ContextCompactionResult.Compacted(
             usageBefore: ContextUsage(contextTokens: 90, contextSize: 100),
             usageAfter: ContextUsage(contextTokens: 10, contextSize: 100),
         ))

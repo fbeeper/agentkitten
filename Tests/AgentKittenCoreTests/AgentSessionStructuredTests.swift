@@ -227,7 +227,7 @@ struct AgentSessionStructuredTests {
                 type: structuredResultTypeLabel(for: SessionStructuredLabel.self),
                 json: try structuredResultJSON(for: SessionStructuredLabel(name: "low", score: 0.2)),
             ),
-            .validation(.init(
+            .validation(AgentTraceEntry.Kind.ValidationInfo(
                 result: .feedback,
                 message: "Score 0.2 is below minimum 0.5.",
                 validator: "StructuredScoreThresholdValidator",
@@ -236,12 +236,12 @@ struct AgentSessionStructuredTests {
                 type: structuredResultTypeLabel(for: SessionStructuredLabel.self),
                 json: try structuredResultJSON(for: SessionStructuredLabel(name: "still-low", score: 0.3)),
             ),
-            .validation(.init(
+            .validation(AgentTraceEntry.Kind.ValidationInfo(
                 result: .feedback,
                 message: "Score 0.3 is below minimum 0.5.",
                 validator: "StructuredScoreThresholdValidator",
             )),
-            .validation(.init(
+            .validation(AgentTraceEntry.Kind.ValidationInfo(
                 result: .waived,
                 message: "Score 0.3 is below minimum 0.5.",
                 validator: "StructuredScoreThresholdValidator",

@@ -5,7 +5,7 @@
 import Testing
 
 @Test func contextCompactor_callsRequestSummaryWithRenderedEntries() async throws {
-    let strategy = SummarizationContextCompactionStrategy(options: .init())
+    let strategy = SummarizationContextCompactionStrategy(options: ContextCompactionOptions.SummarizationOptions())
     let recorder = PromptRecorder()
 
     let summary = try await strategy.summarize(
@@ -27,7 +27,7 @@ import Testing
 }
 
 @Test func contextCompactor_splitsEntriesAfterTooLargeError() async throws {
-    let strategy = SummarizationContextCompactionStrategy(options: .init())
+    let strategy = SummarizationContextCompactionStrategy(options: ContextCompactionOptions.SummarizationOptions())
     let counter = CallCounter()
 
     // Two turns: [u1, r1] and [u2, r2]. Throw inputTooLarge when both turns present.
@@ -43,7 +43,7 @@ import Testing
         requestSummary: { prompt in
             await counter.increment()
             if prompt.contains("u1"), prompt.contains("u2") {
-                throw InferenceError.contextWindowExceeded(.init(message: "too large"))
+                throw InferenceError.contextWindowExceeded(ContextWindowExceededInfo(message: "too large"))
             }
             if prompt.contains("u1") { return "summary-one" }
             return "summary-two"
@@ -55,7 +55,7 @@ import Testing
 }
 
 @Test func contextCompactor_foldsNewerEntriesIntoOlderSummary() async throws {
-    let strategy = SummarizationContextCompactionStrategy(options: .init())
+    let strategy = SummarizationContextCompactionStrategy(options: ContextCompactionOptions.SummarizationOptions())
     let counter = CallCounter()
 
     // Three single-entry turns, each too large to batch with another.
@@ -73,7 +73,7 @@ import Testing
             let hasExistingSummary = prompt.contains("[Conversation summary]")
             let entryCount = ["A", "B", "C"].count(where: { prompt.contains($0) })
             if entryCount > 1, !hasExistingSummary {
-                throw InferenceError.contextWindowExceeded(.init(message: "too large"))
+                throw InferenceError.contextWindowExceeded(ContextWindowExceededInfo(message: "too large"))
             }
             return "summary"
         },
@@ -84,7 +84,7 @@ import Testing
 }
 
 @Test func contextCompactor_doesNotSplitFatalErrors() async throws {
-    let strategy = SummarizationContextCompactionStrategy(options: .init())
+    let strategy = SummarizationContextCompactionStrategy(options: ContextCompactionOptions.SummarizationOptions())
     let counter = CallCounter()
 
     do {
@@ -105,14 +105,20 @@ import Testing
 }
 
 @Test func contextCompactor_doesNotSplitWhenAllowsSplittingIsFalse() async throws {
-    let strategy = SummarizationContextCompactionStrategy(options: .init(allowsSplitting: false))
+    let strategy = SummarizationContextCompactionStrategy(
+        options: ContextCompactionOptions.SummarizationOptions(allowsSplitting: false),
+    )
     do {
         _ = try await strategy.summarize(
             entries: [
                 RenderedSessionEntry(isTurnStart: true, rendered: "User: one"),
                 RenderedSessionEntry(isTurnStart: true, rendered: "User: two"),
             ],
-            requestSummary: { _ in throw InferenceError.contextWindowExceeded(.init(message: "too large")) },
+            requestSummary: { _ in
+                throw InferenceError.contextWindowExceeded(
+                    ContextWindowExceededInfo(message: "too large"),
+                )
+            },
         )
         Issue.record("Expected contextWindowExceeded")
     } catch is InferenceError {}
@@ -120,7 +126,7 @@ import Testing
 
 @Test func contextCompactor_splitRespectsGroupBoundaries() async throws {
     // Two turns: [u1, r1] and [u2, r2]. Split must fall on the turn boundary.
-    let strategy = SummarizationContextCompactionStrategy(options: .init())
+    let strategy = SummarizationContextCompactionStrategy(options: ContextCompactionOptions.SummarizationOptions())
     let counter = CallCounter()
 
     let entries = [
@@ -135,7 +141,9 @@ import Testing
         requestSummary: { prompt in
             await counter.increment()
             if prompt.contains("u1"), prompt.contains("u2") {
-                throw InferenceError.contextWindowExceeded(.init(message: "too large"))
+                throw InferenceError.contextWindowExceeded(
+                    ContextWindowExceededInfo(message: "too large"),
+                )
             }
             if prompt.contains("u1") { return "summary-turn1" }
             return "summary-turn2"
@@ -151,7 +159,7 @@ import Testing
     // Rendered strings are deliberately different from summary return values
     // so that fold prompts (which include the prior summary) don't accidentally
     // match the "both raw entries present" condition.
-    let strategy = SummarizationContextCompactionStrategy(options: .init())
+    let strategy = SummarizationContextCompactionStrategy(options: ContextCompactionOptions.SummarizationOptions())
     let counter = CallCounter()
 
     let entries = [
@@ -164,7 +172,9 @@ import Testing
         requestSummary: { prompt in
             await counter.increment()
             if prompt.contains("PROMPT_ALPHA"), prompt.contains("PROMPT_BETA") {
-                throw InferenceError.contextWindowExceeded(.init(message: "too large"))
+                throw InferenceError.contextWindowExceeded(
+                    ContextWindowExceededInfo(message: "too large"),
+                )
             }
             if prompt.contains("PROMPT_ALPHA") { return "SUM_ALPHA" }
             return "SUM_ALPHA_BETA"
@@ -180,7 +190,7 @@ import Testing
     let session = TestContextCompactableSession()
     let result = await compactor.compact(
         session,
-        options: .truncate(.init(preservedRecentTurnCount: 1)),
+        options: .truncate(ContextCompactionOptions.TruncationOptions(preservedRecentTurnCount: 1)),
         summaryGenerator: { _ in
             Issue.record("Summary generator should not be called for truncation")
             return "unused"
@@ -189,7 +199,14 @@ import Testing
 
     #expect(result.didCompact)
     let applied = await session.appliedCompactions()
-    #expect(applied == [.init(summary: nil, preservedRecentTurnCount: 1)])
+    #expect(
+        applied == [
+            TestContextCompactableSession.AppliedCompaction(
+                summary: nil,
+                preservedRecentTurnCount: 1,
+            ),
+        ],
+    )
 }
 
 @Test func contextCompactor_customStrategyUsesSuppliedImplementation() async {
@@ -214,7 +231,14 @@ import Testing
 
     #expect(result.didCompact)
     let applied = await session.appliedCompactions()
-    #expect(applied == [.init(summary: "custom summary", preservedRecentTurnCount: 0)])
+    #expect(
+        applied == [
+            TestContextCompactableSession.AppliedCompaction(
+                summary: "custom summary",
+                preservedRecentTurnCount: 0,
+            ),
+        ],
+    )
 }
 
 private enum CompactionTestError: Error {
@@ -258,14 +282,18 @@ private actor TestContextCompactableSession: ContextCompactableSession {
         summary: String?,
         preservedRecentTurnCount: Int,
     ) async throws -> ContextCompactionResult {
-        applied.append(.init(
-            summary: summary,
-            preservedRecentTurnCount: preservedRecentTurnCount,
-        ))
-        return .compacted(.init(
-            usageBefore: ContextUsage(contextTokens: 90, contextSize: 100),
-            usageAfter: ContextUsage(contextTokens: 10, contextSize: 100),
-        ))
+        applied.append(
+            AppliedCompaction(
+                summary: summary,
+                preservedRecentTurnCount: preservedRecentTurnCount,
+            ),
+        )
+        return .compacted(
+            ContextCompactionResult.Compacted(
+                usageBefore: ContextUsage(contextTokens: 90, contextSize: 100),
+                usageAfter: ContextUsage(contextTokens: 10, contextSize: 100),
+            ),
+        )
     }
 
     func appliedCompactions() -> [AppliedCompaction] {

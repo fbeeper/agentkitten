@@ -74,7 +74,7 @@ struct AgentQueuedSessionTests {
         let maintenanceTask = Task {
             let usageBefore = try await session.contextUsage()
             let compaction = try await session.compactContext(
-                .truncate(.init(preservedRecentTurnCount: 0)),
+                .truncate(ContextCompactionOptions.TruncationOptions(preservedRecentTurnCount: 0)),
             )
             let usageAfter = try await session.contextUsage()
             return (usageBefore, compaction, usageAfter)

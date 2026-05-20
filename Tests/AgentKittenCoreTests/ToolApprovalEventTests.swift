@@ -266,7 +266,7 @@ struct ToolApprovalEventTests {
                 name: pendingToolCall.name,
                 argumentsJSON: pendingToolCall.argumentsJSON,
             ))),
-            .toolApprovalRequired(.init(call: pendingToolCall)),
+            .toolApprovalRequired(AgentTraceEntry.Kind.ToolApprovalRequiredInfo(call: pendingToolCall)),
             .message(.assistant(AssistantMessage(text: "Approved later"))),
             .turnCompleted(.completed),
         ])

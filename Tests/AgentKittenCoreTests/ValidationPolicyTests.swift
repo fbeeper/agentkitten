@@ -26,13 +26,15 @@ struct ValidationPolicyTests {
         #expect(directTurnEntryKinds(in: await directTurnEntries(for: turn.id, on: session)) == [
             .turnStarted(UserMessage(text: "Hello")),
             .message(.assistant(AssistantMessage(text: "Will fail validation"))),
-            .validation(.init(
+            .validation(AgentTraceEntry.Kind.ValidationInfo(
                 result: .fail,
                 message: "Terminal validation failure",
                 validator: "TerminalFailureValidator",
             )),
-            .error(.init(description: "rejected(\"Terminal validation failure\")")),
-            .turnCompleted(.failed(.init(description: "rejected(\"Terminal validation failure\")"))),
+            .error(AgentTraceEntry.Kind.ErrorInfo(description: "rejected(\"Terminal validation failure\")")),
+            .turnCompleted(
+                .failed(AgentTraceEntry.Kind.ErrorInfo(description: "rejected(\"Terminal validation failure\")")),
+            ),
         ])
     }
 
@@ -61,18 +63,18 @@ struct ValidationPolicyTests {
         #expect(directTurnEntryKinds(in: await directTurnEntries(for: turn.id, on: session)) == [
             .turnStarted(UserMessage(text: "Hello")),
             .message(.assistant(AssistantMessage(text: "bad"))),
-            .validation(.init(
+            .validation(AgentTraceEntry.Kind.ValidationInfo(
                 result: .feedback,
                 message: "Response must be at least 10 characters.",
                 validator: "MinimumLengthValidator(10)",
             )),
             .message(.assistant(AssistantMessage(text: "worse"))),
-            .validation(.init(
+            .validation(AgentTraceEntry.Kind.ValidationInfo(
                 result: .feedback,
                 message: "Response must be at least 10 characters.",
                 validator: "MinimumLengthValidator(10)",
             )),
-            .validation(.init(
+            .validation(AgentTraceEntry.Kind.ValidationInfo(
                 result: .waived,
                 message: "Response must be at least 10 characters.",
                 validator: "MinimumLengthValidator(10)",
@@ -101,7 +103,7 @@ struct ValidationPolicyTests {
         #expect(directTurnEntryKinds(in: await directTurnEntries(for: turn.id, on: session)) == [
             .turnStarted(UserMessage(text: "Hello")),
             .message(.assistant(AssistantMessage(text: "still returned"))),
-            .validation(.init(
+            .validation(AgentTraceEntry.Kind.ValidationInfo(
                 result: .waived,
                 message: "validator unavailable",
                 validator: "ThrowingValidator",
@@ -135,24 +137,24 @@ struct ValidationPolicyTests {
         #expect(directTurnEntryKinds(in: await directTurnEntries(for: turn.id, on: session)) == [
             .turnStarted(UserMessage(text: "Hello")),
             .message(.assistant(AssistantMessage(text: "bad"))),
-            .validation(.init(
+            .validation(AgentTraceEntry.Kind.ValidationInfo(
                 result: .feedback,
                 message: "Response must be at least 10 characters.",
                 validator: "MinimumLengthValidator(10)",
             )),
             .message(.assistant(AssistantMessage(text: "tiny"))),
-            .validation(.init(
+            .validation(AgentTraceEntry.Kind.ValidationInfo(
                 result: .feedback,
                 message: "Response must be at least 10 characters.",
                 validator: "MinimumLengthValidator(10)",
             )),
-            .validation(.init(
+            .validation(AgentTraceEntry.Kind.ValidationInfo(
                 result: .fail,
                 message: "Response must be at least 10 characters.",
                 validator: "MinimumLengthValidator(10)",
             )),
-            .error(.init(description: "failed(\"Response must be at least 10 characters.\")")),
-            .turnCompleted(.failed(.init(
+            .error(AgentTraceEntry.Kind.ErrorInfo(description: "failed(\"Response must be at least 10 characters.\")")),
+            .turnCompleted(.failed(AgentTraceEntry.Kind.ErrorInfo(
                 description: "failed(\"Response must be at least 10 characters.\")",
             ))),
         ])
@@ -180,23 +182,23 @@ struct ValidationPolicyTests {
         #expect(directTurnEntryKinds(in: await directTurnEntries(for: turn.id, on: session)) == [
             .turnStarted(UserMessage(text: "Hello")),
             .message(.assistant(AssistantMessage(text: "just enough"))),
-            .validation(.init(
+            .validation(AgentTraceEntry.Kind.ValidationInfo(
                 result: .pass,
                 message: "Validation passed.",
                 validator: "MinimumLengthValidator(4)",
             )),
-            .validation(.init(
+            .validation(AgentTraceEntry.Kind.ValidationInfo(
                 result: .feedback,
                 message: "Response must be at least 20 characters.",
                 validator: "MinimumLengthValidator(20)",
             )),
-            .validation(.init(
+            .validation(AgentTraceEntry.Kind.ValidationInfo(
                 result: .fail,
                 message: "Response must be at least 20 characters.",
                 validator: "MinimumLengthValidator(20)",
             )),
-            .error(.init(description: "failed(\"Response must be at least 20 characters.\")")),
-            .turnCompleted(.failed(.init(
+            .error(AgentTraceEntry.Kind.ErrorInfo(description: "failed(\"Response must be at least 20 characters.\")")),
+            .turnCompleted(.failed(AgentTraceEntry.Kind.ErrorInfo(
                 description: "failed(\"Response must be at least 20 characters.\")",
             ))),
         ])

@@ -29,7 +29,12 @@ extension AnthropicInferenceSession: ContextCompactableSession {
         }
         cachedContextTokens = nil
         let usageAfter = (try? await uncheckedContextUsage()) ?? usageBefore
-        return .compacted(.init(usageBefore: usageBefore, usageAfter: usageAfter))
+        return .compacted(
+            ContextCompactionResult.Compacted(
+                usageBefore: usageBefore,
+                usageAfter: usageAfter,
+            ),
+        )
     }
 }
 

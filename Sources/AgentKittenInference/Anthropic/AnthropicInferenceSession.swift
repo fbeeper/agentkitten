@@ -43,7 +43,7 @@ public actor AnthropicInferenceSession: InferenceSession {
         toolRuntime: ToolRuntime,
         initialHistory: [AnthropicMessage] = [],
         maxEmptyToolUseFollowUps: Int = 8,
-        historyRenderingConfiguration: HistoryRenderingConfiguration = .init(),
+        historyRenderingConfiguration: HistoryRenderingConfiguration = HistoryRenderingConfiguration(),
         structuredOutputInstructionFormat: String = AnthropicInferenceProvider.defaultStructuredOutputInstructionFormat,
         clientFactory: @escaping @Sendable (String) -> any AnthropicHTTPStreaming = { AnthropicHTTPClient(apiKey: $0) },
     ) {

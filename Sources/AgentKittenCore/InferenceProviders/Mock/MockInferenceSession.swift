@@ -247,7 +247,7 @@ extension MockInferenceSession: ContextCompactableSession {
         let before = ContextUsage(contextTokens: estimatedContextTokens, contextSize: 100)
         estimatedContextTokens = min(estimatedContextTokens, max(0, preservedRecentTurnCount * 10))
         let after = ContextUsage(contextTokens: estimatedContextTokens, contextSize: 100)
-        return .compacted(.init(usageBefore: before, usageAfter: after))
+        return .compacted(ContextCompactionResult.Compacted(usageBefore: before, usageAfter: after))
     }
 }
 

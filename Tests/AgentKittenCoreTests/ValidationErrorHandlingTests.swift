@@ -32,7 +32,7 @@ struct ValidationErrorHandlingTests {
         #expect(directTurnEntryKinds(in: await directTurnEntries(for: turn.id, on: session)) == [
             .turnStarted(UserMessage(text: "Hello")),
             .message(.assistant(AssistantMessage(text: "stable response"))),
-            .validation(.init(
+            .validation(AgentTraceEntry.Kind.ValidationInfo(
                 result: .pass,
                 message: "Validation passed.",
                 validator: "FlakyValidator",

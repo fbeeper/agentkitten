@@ -10,7 +10,7 @@ public struct PhaseBehaviorSet: Sendable {
     /// Creates a phase-behavior set.
     ///
     /// - Parameter base: Default behavior used for phases without phase-specific behaviors.
-    public init(base: PhaseBehavior = .init()) {
+    public init(base: PhaseBehavior = PhaseBehavior()) {
         self.base = base
     }
 

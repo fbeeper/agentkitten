@@ -151,7 +151,7 @@ public actor AgentSession: ToolApproving {
         try await send(
             text,
             userID: userID,
-            turnOverrides: .init(),
+            turnOverrides: TurnOverrides(),
             validation: validation,
         )
     }
@@ -198,7 +198,7 @@ public actor AgentSession: ToolApproving {
         try await generate(
             prompt,
             userID: userID,
-            turnOverrides: .init(),
+            turnOverrides: TurnOverrides(),
             validation: validation,
         )
     }

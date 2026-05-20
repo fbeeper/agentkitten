@@ -293,9 +293,12 @@ extension Playground.Chat {
     }
 
     private func makeBehavior(compactionProvider: ProviderReference?) -> AgentBehavior {
-        var phaseBehaviors = PhaseBehaviorSet(base: .init())
+        var phaseBehaviors = PhaseBehaviorSet(base: PhaseBehavior())
         if let compactionProvider {
-            phaseBehaviors.set(.init(provider: compactionProvider), for: .compaction)
+            phaseBehaviors.set(
+                PhaseBehavior(provider: compactionProvider),
+                for: .compaction,
+            )
         }
         return AgentBehavior(
             systemPrompt: system,

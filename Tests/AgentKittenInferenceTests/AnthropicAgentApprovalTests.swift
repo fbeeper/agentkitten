@@ -116,7 +116,7 @@ private func makeAnthropicApprovalSession(
     let provider = TestAnthropicInferenceProvider(clientFactory: clientFactory)
     let agent = Agent(
         providerRegistry: ProviderRegistry(default: InferenceProvider(provider)),
-        behavior: .init(systemPrompt: "Test"),
+        behavior: AgentBehavior(systemPrompt: "Test"),
         toolDefinition: ToolDefinition(
             tools: [AnyAgentTool(InferenceEchoTool())],
             executionPolicy: AgentAnthropicRequiresApprovalPolicy(),

@@ -136,6 +136,6 @@ func assistantCompletions(in events: [AgentEvent<AssistantMessage>]) -> [String]
 
 extension AgentBehavior {
     static func test(_ systemPrompt: String = "Test") -> Self {
-        .init(systemPrompt: systemPrompt)
+        AgentBehavior(systemPrompt: systemPrompt)
     }
 }

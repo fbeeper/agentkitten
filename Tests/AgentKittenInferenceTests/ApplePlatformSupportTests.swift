@@ -306,7 +306,7 @@ private func makeAppleApprovalSession(
 ) -> AgentSession {
     let agent = Agent(
         providerRegistry: ProviderRegistry(default: InferenceProvider.apple()),
-        behavior: .init(systemPrompt: """
+        behavior: AgentBehavior(systemPrompt: """
         You must call the echo tool exactly once.
         Call it with message \(message).
         Do not provide any answer until after the tool call attempt completes.
