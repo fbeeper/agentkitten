@@ -55,7 +55,7 @@ enum ChickenWizardTurnStreamer {
             case .textDelta(let chunk):
                 printedText = true
                 print(chunk, terminator: "")
-                fflush(stdout)
+                flushStdout()
             case .result:
                 if printedText {
                     print()

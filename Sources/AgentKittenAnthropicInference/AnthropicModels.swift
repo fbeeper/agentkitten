@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import AgentKittenCore
+import CoreFoundation
 import Foundation
 
 // MARK: - Request

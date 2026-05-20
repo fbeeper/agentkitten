@@ -3,7 +3,6 @@
 
 import AgentKitten
 import ArgumentParser
-import Darwin
 
 extension Playground {
     /// Multi-turn conversation that exercises the Agent layer.
@@ -86,7 +85,7 @@ extension Playground {
             while true {
                 print()
                 print(PlaygroundChatOutputFormatter.userPrompt())
-                fflush(stdout)
+                flushStdout()
                 guard let line = readLine(), !line.isEmpty else {
                     break
                 }
@@ -100,7 +99,7 @@ extension Playground {
                 }
                 print()
                 print(PlaygroundChatOutputFormatter.assistantHeader(assistantLabel: "Assistant"))
-                fflush(stdout)
+                flushStdout()
                 do {
                     try await PlaygroundSessionFactory.streamTurn(
                         turn,

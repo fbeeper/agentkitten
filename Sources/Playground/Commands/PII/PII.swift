@@ -4,7 +4,6 @@
 import AgentKitten
 import AgentKittenCore
 import ArgumentParser
-import Darwin
 import Foundation
 
 extension Playground {
@@ -64,7 +63,7 @@ extension Playground {
             while true {
                 print()
                 print(PlaygroundChatOutputFormatter.userPrompt())
-                fflush(stdout)
+                flushStdout()
                 guard let line = readLine(), !line.isEmpty else {
                     break
                 }
@@ -75,7 +74,7 @@ extension Playground {
                 let turn = try await session.send(sanitized)
                 print()
                 print(PlaygroundChatOutputFormatter.assistantHeader(assistantLabel: "Assistant"))
-                fflush(stdout)
+                flushStdout()
                 do {
                     try await streamTurn(turn, vault: vault)
                 } catch {
@@ -99,7 +98,7 @@ extension Playground {
                     let safe = await rehydrator.feed(chunk, vault: vault)
                     if !safe.isEmpty {
                         print(safe, terminator: "")
-                        fflush(stdout)
+                        flushStdout()
                     }
                 case .result:
                     let remaining = await rehydrator.finalize(vault: vault)
@@ -109,7 +108,7 @@ extension Playground {
                     print()
                 case .toolCallStarted(let name, let id):
                     print("\n[tool:start] \(name) (\(id))", terminator: "")
-                    fflush(stdout)
+                    flushStdout()
                 case .toolApprovalRequired:
                     break
                 case .toolCallCompleted(let name, let id, let outcome):
@@ -119,7 +118,7 @@ extension Playground {
                     case .failure(let failure):
                         print("\n[tool:failed] \(name) (\(id)) \(failure.resultJSON)")
                     }
-                    fflush(stdout)
+                    flushStdout()
                 }
             }
         }

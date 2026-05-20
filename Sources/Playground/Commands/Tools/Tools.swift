@@ -6,7 +6,6 @@ import AgentKittenAnthropicInference
 import AgentKittenAppleInference
 import AgentKittenCore
 import ArgumentParser
-import Darwin
 import Foundation
 
 extension Playground {
@@ -84,7 +83,7 @@ extension Playground {
             let memory = PlaygroundToolApprovalMemory()
             let turn = await session.send(prompt)
             print("Assistant: ", terminator: "")
-            fflush(stdout)
+            flushStdout()
             try await PlaygroundSessionFactory.streamTurn(
                 turn,
                 session: session,
@@ -134,7 +133,7 @@ extension Playground {
                 let turn = await session.send(turnPrompt)
                 print("\nUser: \(turnPrompt)")
                 print("Assistant: ", terminator: "")
-                fflush(stdout)
+                flushStdout()
                 try await PlaygroundSessionFactory.streamTurn(
                     turn,
                     session: session,

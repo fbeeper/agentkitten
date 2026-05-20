@@ -3,6 +3,9 @@
 
 import AgentKittenCore
 import Foundation
+#if canImport(FoundationNetworking)
+import FoundationNetworking
+#endif
 
 /// Streams SSE events and counts tokens for Anthropic Messages API requests.
 protocol AnthropicHTTPStreaming: Sendable {
@@ -42,21 +45,7 @@ struct AnthropicHTTPClient: AnthropicHTTPStreaming {
             let task = Task {
                 do {
                     let urlRequest = try buildURLRequest(for: request)
-                    let (bytes, response) = try await urlSession.bytes(for: urlRequest)
-
-                    if let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode != 200 {
-                        var body = ""
-                        for try await line in bytes.lines {
-                            body += line
-                            if body.count > 512 { break }
-                        }
-                        throw Self.error(statusCode: httpResponse.statusCode, body: body)
-                    }
-
-                    for try await event in AnthropicSSEParser.events(from: bytes) {
-                        try Task.checkCancellation()
-                        continuation.yield(event)
-                    }
+                    try await streamSSEEvents(for: urlRequest, continuation: continuation)
                     continuation.finish()
                 } catch is CancellationError {
                     continuation.finish()
@@ -132,6 +121,41 @@ struct AnthropicHTTPClient: AnthropicHTTPStreaming {
             || normalized.contains("context window")
             || (normalized.contains("token") && normalized.contains("exceed"))
             || (normalized.contains("tokens") && normalized.contains("maximum"))
+    }
+
+    private func streamSSEEvents(
+        for request: URLRequest,
+        continuation: AsyncThrowingStream<SSEEvent, Error>.Continuation,
+    ) async throws {
+        #if canImport(Darwin)
+        let (bytes, response) = try await urlSession.bytes(for: request)
+
+        if let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode != 200 {
+            var body = ""
+            for try await line in bytes.lines {
+                body += line
+                if body.count > 512 { break }
+            }
+            throw Self.error(statusCode: httpResponse.statusCode, body: body)
+        }
+
+        for try await event in AnthropicSSEParser.events(from: bytes) {
+            try Task.checkCancellation()
+            continuation.yield(event)
+        }
+        #else
+        let (data, response) = try await urlSession.data(for: request)
+
+        if let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode != 200 {
+            let body = String(decoding: data.prefix(512), as: UTF8.self)
+            throw Self.error(statusCode: httpResponse.statusCode, body: body)
+        }
+
+        for try await event in AnthropicSSEParser.events(from: data) {
+            try Task.checkCancellation()
+            continuation.yield(event)
+        }
+        #endif
     }
 
     private func buildURLRequest(for request: AnthropicRequest) throws -> URLRequest {

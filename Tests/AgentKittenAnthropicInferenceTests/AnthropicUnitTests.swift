@@ -240,6 +240,7 @@ struct AnthropicFactoryTests {
         #expect(type(of: session) == AnthropicInferenceSession.self)
     }
 
+    #if canImport(Security)
     @Test func anthropic_keychainFactory_createsProvider() {
         let provider = InferenceProvider.anthropic(keychain: "com.example.app", account: "anthropic")
         let session = provider.makeSession(
@@ -250,4 +251,5 @@ struct AnthropicFactoryTests {
         )
         #expect(type(of: session) == AnthropicInferenceSession.self)
     }
+    #endif
 }
