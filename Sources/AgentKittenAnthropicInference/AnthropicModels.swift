@@ -1,9 +1,10 @@
 // SPDX-FileCopyrightText: 2026 AgentKitten Authors
 // SPDX-License-Identifier: Apache-2.0
 
+// Note: CoreFoundation needed for CFGetTypeID / CFBooleanGetTypeID when
+// distinguishing bridged NSNumber booleans from numeric values across platforms.
+
 import AgentKittenCore
-// Needed for CFGetTypeID / CFBooleanGetTypeID when distinguishing bridged
-// NSNumber booleans from numeric values across platforms.
 import CoreFoundation
 import Foundation
 
