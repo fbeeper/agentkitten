@@ -1,6 +1,7 @@
 # SPM
 .build/
 Packages/
+.swiftpm
 
 # Xcode
 .dependencies/
