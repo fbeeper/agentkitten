@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: 2026 AgentKitten Authors
 // SPDX-License-Identifier: Apache-2.0
 
-@testable import AgentKittenInference
+@testable import AgentKittenInferenceSupport
 import Foundation
 import Testing
 

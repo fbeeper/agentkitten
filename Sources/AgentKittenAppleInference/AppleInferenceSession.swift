@@ -3,6 +3,7 @@
 
 #if canImport(FoundationModels)
 import AgentKittenCore
+import AgentKittenInferenceSupport
 import Foundation
 import FoundationModels
 import os

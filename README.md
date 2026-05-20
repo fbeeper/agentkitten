@@ -82,6 +82,9 @@ And, of course, given the stochastic nature of LLMs, AgentKitten has also consid
 Here's a minimal sample of a simple but powerful auto-compacting search agent for your app:
 
 ```swift
+import AgentKitten
+import AgentKittenAnthropicInference
+
 let provider = InferenceProvider.anthropic()
 
 let toolConfig = ToolDefinition(tools: [
@@ -170,10 +173,9 @@ Gimmicky samples aside, here are some things that are simple to reach for with A
 
 Before dreaming of adding more features, after its initial pre-release, the most important milestones reside on:
 
-- [ ] Bring up documentation.
+- [ ] Improving documentation.
 - [ ] Improve the testing suite and Playground.
 - [ ] Try pursue symmetry between base Agent/Tools behavior and turn overrides (API breaking).
-- [ ] Split inference providers in independent targets (API breaking).
 
 Past that, there is a long list of possibilities to make AgentKitten better. Find an initial spill of ideas in [VISION.md](VISION.md).
 

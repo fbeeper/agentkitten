@@ -1,8 +1,8 @@
 // SPDX-FileCopyrightText: 2026 AgentKitten Authors
 // SPDX-License-Identifier: Apache-2.0
 
+@testable import AgentKittenAppleInference
 import AgentKittenCore
-@testable import AgentKittenInference
 import Testing
 
 #if canImport(FoundationModels)

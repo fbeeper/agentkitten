@@ -14,8 +14,10 @@ AgentKitten - Swift library for building AI agents on Apple platforms.
 Target Layering: 
 
 - `AgentKitten` → `AgentKittenCore` → `AgentKittenMacros` 
-- `AgentKittenInference` → `AgentKittenCore`
-- `Playground` → `AgentKitten` + `AgentKittenInference`
+- `AgentKittenInferenceSupport` → `AgentKittenCore`
+- `AgentKittenAnthropicInference` → `AgentKittenCore` + `AgentKittenInferenceSupport`
+- `AgentKittenAppleInference` → `AgentKittenCore` + `AgentKittenInferenceSupport`
+- `Playground` → `AgentKitten` + `AgentKittenAnthropicInference` + `AgentKittenAppleInference`
 
 Source Organization:
 
@@ -41,18 +43,18 @@ Source Organization:
     - `Resources/` - Bundled assets (localization).
     - `Shared` - Shared types and Protocols.
     - `Validation/` - Agent output validators.
-  - `AgentKittenInference/` - Concrete providers. One folder per provider:
-    - `Anthropic/` - HTTP + SSE adapter. Entry: `Anthropic/AnthropicInferenceProvider.swift`.
-    - `Apple/` - Apple Intelligence adapter. Entry: `Apple/AppleInferenceProvider.swift`.
+  - `AgentKittenInferenceSupport/` - Shared inference utilities.
     - `Credentials/` - Auth/token utility abstraction.
-    - `Localization` - Target-specific localization utils.
-    - `Resources/` - Bundled assets (localization).
+  - `AgentKittenAnthropicInference/` - Anthropic HTTP + SSE adapter. Entry: `AnthropicInferenceProvider.swift`.
+  - `AgentKittenAppleInference/` - Apple Intelligence adapter. Entry: `AppleInferenceProvider.swift`.
   - `AgentKittenMacros/` - Swift macro plugin. Compile-time codegen for `@Tool`, `@ParameterDescription`. Entry: `Plugin.swift`, `ToolMacro.swift`.
   - `Playground/` - CLI executable. Entry: `main.swift`. Subcommands: `generate`, `chat`, `tools`, `classify`, `chicken`, `pii`, `plan-mode`.
 - `Tests/`
   - `AgentKittenCoreTests/` - Covers `AgentKittenCore` (largest suite).
-  - `AgentKittenInferenceTests/` - Covers Anthropic + Apple providers.
-  - `AgentKittenTests/` - Umbrella surface.
+  - `AgentKittenInferenceSupportTests/` - Covers `AgentKittenInferenceSupport`.
+  - `AgentKittenAnthropicInferenceTests/` - Covers `AgentKittenAnthropicInference`.
+  - `AgentKittenAppleInferenceTests/` - Covers `AgentKittenAppleInference`.
+  - `AgentKittenTests/` - Covers umbrella surface.
   - `PlaygroundTests/` - CLI harness.
 - Root: `README.md`, `VISION.md`, `CONTRIBUTING.md`, `.swiftlint.yml`, `.github/` (General guidance & CI).
 

@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import AgentKittenCore
+import AgentKittenInferenceSupport
 
 extension AnthropicInferenceSession: ContextCompactableSession {
     public func compactionEntries() -> [RenderedSessionEntry] {

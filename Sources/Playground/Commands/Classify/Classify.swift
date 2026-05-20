@@ -2,8 +2,9 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import AgentKitten
+import AgentKittenAnthropicInference
+import AgentKittenAppleInference
 import AgentKittenCore
-import AgentKittenInference
 import ArgumentParser
 import Foundation
 
