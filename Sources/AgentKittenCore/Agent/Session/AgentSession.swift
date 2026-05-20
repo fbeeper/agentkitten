@@ -84,6 +84,12 @@ public actor AgentSession: ToolApproving {
     /// Internal for conversation-preparation helpers in the split AgentSession extension file.
     var conversationProvider: ConversationProvider
 
+    private enum TurnTerminalResult {
+        case success
+        case cancelled
+        case failure(Error, AgentTraceEntry.Kind.ErrorInfo)
+    }
+
     init(
         sessionID: AgentSessionID,
         agentID: AgentID,
@@ -235,6 +241,11 @@ public actor AgentSession: ToolApproving {
     /// This composes the user message, prepares the provider conversation,
     /// records trace lifecycle entries, delegates concrete execution to
     /// `executePreparedTurn`, and finishes the outer turn stream.
+    ///
+    /// For direct-session callers, exhaustion of `Turn.events` is the public
+    /// synchronization boundary for run completion. Session-owned cleanup must
+    /// finish before the turn stream terminates so follow-on context
+    /// operations observe an idle session immediately.
     private func performTurn<Result: Sendable>(
         _ turnRuntime: TurnRuntime<Result>,
         lease: SingleFlightOperationGate<InferenceSessionOperationKind>.Lease,
@@ -242,6 +253,7 @@ public actor AgentSession: ToolApproving {
     ) async {
         let userMessage = userMessage(for: turnRuntime)
         await state.beginTurn(invocationID: turnRuntime.id)
+        let terminalResult: TurnTerminalResult
         do {
             let conversation = try await conversation(
                 executionEnvironment: turnRuntime.executionEnvironment,
@@ -250,19 +262,29 @@ public actor AgentSession: ToolApproving {
             )
             record(kind: .turnStarted(userMessage), invocationID: turnRuntime.id)
             try await executePreparedTurn(userMessage, conversation)
-            record(kind: .turnCompleted(.completed), invocationID: turnRuntime.id)
-            turnRuntime.continuation.finish()
+            terminalResult = .success
         } catch is CancellationError {
-            record(kind: .turnCompleted(.cancelled), invocationID: turnRuntime.id)
-            turnRuntime.continuation.finish()
+            terminalResult = .cancelled
         } catch {
             let agentError = AgentTraceEntry.Kind.ErrorInfo(error)
+            terminalResult = .failure(error, agentError)
+        }
+
+        await state.endTurn()
+        lease.end()
+
+        switch terminalResult {
+        case .success:
+            record(kind: .turnCompleted(.completed), invocationID: turnRuntime.id)
+            turnRuntime.continuation.finish()
+        case .cancelled:
+            record(kind: .turnCompleted(.cancelled), invocationID: turnRuntime.id)
+            turnRuntime.continuation.finish()
+        case .failure(let error, let agentError):
             record(kind: .error(agentError), invocationID: turnRuntime.id)
             record(kind: .turnCompleted(.failed(agentError)), invocationID: turnRuntime.id)
             turnRuntime.continuation.finish(throwing: error)
         }
-        await state.endTurn()
-        lease.end()
     }
 
     /// Composes the outbound ``UserMessage`` for a turn.
