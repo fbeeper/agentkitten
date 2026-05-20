@@ -96,3 +96,31 @@ jobs:
         swift --version
     - name: Build ${{ matrix.platform.name }}
       run: make xcodebuild-for-platform PLATFORM=${{ matrix.platform.name }}
+
+  build-linux:
+    name: Test (Linux, Swift 6.3)
+    runs-on: ubuntu-latest
+    container:
+      image: swift:6.3
+    steps:
+    - uses: actions/checkout@v6
+    - name: Show versions
+      run: swift --version
+    - name: Build
+      run: swift build -Xswiftc -warnings-as-errors
+    - name: Test
+      run: swift test -Xswiftc -warnings-as-errors
+
+  build-android:
+    name: Build (Android)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      TARGET_TRIPLE: aarch64-unknown-linux-android28
+    steps:
+    - uses: actions/checkout@main
+    - uses: orchetect/setup-swift-android-sdk@v1
+      with:
+        target-triple: ${{ env.TARGET_TRIPLE }}
+    - name: Build
+      run: swift build --swift-sdk "$TARGET_TRIPLE" --static-swift-stdlib
