@@ -147,7 +147,7 @@ struct AnthropicHTTPClient: AnthropicHTTPStreaming {
         let (data, response) = try await urlSession.data(for: request)
 
         if let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode != 200 {
-            let body = String(decoding: data.prefix(512), as: UTF8.self)
+            let body = String(bytes: data, encoding: .utf8).map { String($0.prefix(512)) } ?? ""
             throw Self.error(statusCode: httpResponse.statusCode, body: body)
         }
 
