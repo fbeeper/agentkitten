@@ -33,7 +33,7 @@ extension Playground {
 
             let agent = try PlaygroundSessionFactory.makeAgent(
                 for: provider,
-                behavior: .init(systemPrompt: Self.systemPrompt),
+                behavior: AgentBehavior(systemPrompt: Self.systemPrompt),
                 toolDefinition: ToolDefinition(
                     tools: [
                         AnyAgentTool(ReadScratchpadTool(store: scratchpad)),

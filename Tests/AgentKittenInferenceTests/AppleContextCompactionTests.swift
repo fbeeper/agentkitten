@@ -33,13 +33,27 @@ private func makeSummaryGenerator(model: SystemLanguageModel) -> @Sendable (Stri
 @available(macOS 26.4, iOS 26.4, visionOS 26.4, macCatalyst 26.4, *)
 @Test func appleCompactedTranscript_excludesInstructionsAndSummarizesOlderTurns() async {
     let transcript = FoundationModels.Transcript(entries: [
-        .instructions(.init(segments: [.text(.init(content: "System instructions."))], toolDefinitions: [])),
-        .prompt(.init(segments: [.text(.init(content: "Old user request."))])),
-        .response(.init(assetIDs: [], segments: [.text(.init(content: "Old assistant answer."))])),
-        .prompt(.init(segments: [.text(.init(content: "Recent user request one."))])),
-        .response(.init(assetIDs: [], segments: [.text(.init(content: "Recent assistant answer one."))])),
-        .prompt(.init(segments: [.text(.init(content: "Recent user request two."))])),
-        .response(.init(assetIDs: [], segments: [.text(.init(content: "Recent assistant answer two."))])),
+        .instructions(FoundationModels.Transcript.Instructions(segments: [
+            .text(FoundationModels.Transcript.TextSegment(content: "System instructions.")),
+        ], toolDefinitions: [])),
+        .prompt(FoundationModels.Transcript.Prompt(segments: [
+            .text(FoundationModels.Transcript.TextSegment(content: "Old user request.")),
+        ])),
+        .response(FoundationModels.Transcript.Response(assetIDs: [], segments: [
+            .text(FoundationModels.Transcript.TextSegment(content: "Old assistant answer.")),
+        ])),
+        .prompt(FoundationModels.Transcript.Prompt(segments: [
+            .text(FoundationModels.Transcript.TextSegment(content: "Recent user request one.")),
+        ])),
+        .response(FoundationModels.Transcript.Response(assetIDs: [], segments: [
+            .text(FoundationModels.Transcript.TextSegment(content: "Recent assistant answer one.")),
+        ])),
+        .prompt(FoundationModels.Transcript.Prompt(segments: [
+            .text(FoundationModels.Transcript.TextSegment(content: "Recent user request two.")),
+        ])),
+        .response(FoundationModels.Transcript.Response(assetIDs: [], segments: [
+            .text(FoundationModels.Transcript.TextSegment(content: "Recent assistant answer two.")),
+        ])),
     ])
 
     let session = AppleInferenceSession(
@@ -49,9 +63,11 @@ private func makeSummaryGenerator(model: SystemLanguageModel) -> @Sendable (Stri
         toolSelection: .all,
     )
 
-    let result = await ContextCompactor().compact(session,
-                                                  options: .summarize(.init(preservedRecentTurnCount: 2)),
-                                                  summaryGenerator: makeSummaryGenerator(model: session.model))
+    let result = await ContextCompactor().compact(
+        session,
+        options: .summarize(ContextCompactionOptions.SummarizationOptions(preservedRecentTurnCount: 2)),
+        summaryGenerator: makeSummaryGenerator(model: session.model),
+    )
     #expect(result.didCompact)
 
     let compacted = await session.captureTranscript()
@@ -67,11 +83,21 @@ private func makeSummaryGenerator(model: SystemLanguageModel) -> @Sendable (Stri
 @available(macOS 26.4, iOS 26.4, visionOS 26.4, macCatalyst 26.4, *)
 @Test func appleCompactedTranscript_truncatesOldEntriesWithoutSummarizing() async {
     let transcript = FoundationModels.Transcript(entries: [
-        .instructions(.init(segments: [.text(.init(content: "System instructions."))], toolDefinitions: [])),
-        .prompt(.init(segments: [.text(.init(content: "Old user request."))])),
-        .response(.init(assetIDs: [], segments: [.text(.init(content: "Old assistant answer."))])),
-        .prompt(.init(segments: [.text(.init(content: "Recent user request."))])),
-        .response(.init(assetIDs: [], segments: [.text(.init(content: "Recent assistant answer."))])),
+        .instructions(FoundationModels.Transcript.Instructions(segments: [
+            .text(FoundationModels.Transcript.TextSegment(content: "System instructions.")),
+        ], toolDefinitions: [])),
+        .prompt(FoundationModels.Transcript.Prompt(segments: [
+            .text(FoundationModels.Transcript.TextSegment(content: "Old user request.")),
+        ])),
+        .response(FoundationModels.Transcript.Response(assetIDs: [], segments: [
+            .text(FoundationModels.Transcript.TextSegment(content: "Old assistant answer.")),
+        ])),
+        .prompt(FoundationModels.Transcript.Prompt(segments: [
+            .text(FoundationModels.Transcript.TextSegment(content: "Recent user request.")),
+        ])),
+        .response(FoundationModels.Transcript.Response(assetIDs: [], segments: [
+            .text(FoundationModels.Transcript.TextSegment(content: "Recent assistant answer.")),
+        ])),
     ])
 
     let session = AppleInferenceSession(
@@ -81,9 +107,11 @@ private func makeSummaryGenerator(model: SystemLanguageModel) -> @Sendable (Stri
         toolSelection: .all,
     )
 
-    let result = await ContextCompactor().compact(session,
-                                                  options: .truncate(.init(preservedRecentTurnCount: 1)),
-                                                  summaryGenerator: makeSummaryGenerator(model: session.model))
+    let result = await ContextCompactor().compact(
+        session,
+        options: .truncate(ContextCompactionOptions.TruncationOptions(preservedRecentTurnCount: 1)),
+        summaryGenerator: makeSummaryGenerator(model: session.model),
+    )
     #expect(result.didCompact)
 
     let compacted = await session.captureTranscript()

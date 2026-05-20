@@ -35,7 +35,12 @@ extension AppleInferenceSession: ContextCompactableSession {
             for: Array(languageSession.transcript),
             model: model,
         )) ?? usageBefore
-        return .compacted(.init(usageBefore: usageBefore, usageAfter: usageAfter))
+        return .compacted(
+            ContextCompactionResult.Compacted(
+                usageBefore: usageBefore,
+                usageAfter: usageAfter,
+            ),
+        )
     }
 }
 
@@ -89,11 +94,11 @@ extension AppleInferenceSession {
 
     private func summaryEntries(_ summary: String) -> [FoundationModels.Transcript.Entry] {
         [
-            .prompt(.init(segments: [
-                .text(.init(content: historyRenderingConfiguration.summaryMarker)),
+            .prompt(FoundationModels.Transcript.Prompt(segments: [
+                .text(FoundationModels.Transcript.TextSegment(content: historyRenderingConfiguration.summaryMarker)),
             ])),
-            .response(.init(assetIDs: [], segments: [
-                .text(.init(content: summary)),
+            .response(FoundationModels.Transcript.Response(assetIDs: [], segments: [
+                .text(FoundationModels.Transcript.TextSegment(content: summary)),
             ])),
         ]
     }

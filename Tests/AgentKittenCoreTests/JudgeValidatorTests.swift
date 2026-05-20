@@ -56,11 +56,13 @@ struct JudgeValidatorTests {
         #expect(directTurnEntryKinds(in: await directTurnEntries(for: turn.id, on: session)) == [
             .turnStarted(UserMessage(text: "Hi")),
             .message(.assistant(AssistantMessage(text: "Candidate response"))),
-            .validation(.init(
-                result: .pass,
-                message: "Validation passed.",
-                validator: "Policy Judge",
-            )),
+            .validation(
+                AgentTraceEntry.Kind.ValidationInfo(
+                    result: .pass,
+                    message: "Validation passed.",
+                    validator: "Policy Judge",
+                ),
+            ),
             .turnCompleted(.completed),
         ])
     }
@@ -132,15 +134,21 @@ struct JudgeValidatorTests {
         #expect(directTurnEntryKinds(in: await directTurnEntries(for: turn.id, on: session)) == [
             .turnStarted(UserMessage(text: "Hi")),
             .message(.assistant(AssistantMessage(text: "Candidate response"))),
-            .validation(.init(
-                result: .fail,
-                message: "The response is unacceptable.",
-                validator: "Rejecting Judge",
-            )),
-            .error(.init(description: "rejected(\"The response is unacceptable.\")")),
-            .turnCompleted(.failed(.init(
-                description: "rejected(\"The response is unacceptable.\")",
-            ))),
+            .validation(
+                AgentTraceEntry.Kind.ValidationInfo(
+                    result: .fail,
+                    message: "The response is unacceptable.",
+                    validator: "Rejecting Judge",
+                ),
+            ),
+            .error(AgentTraceEntry.Kind.ErrorInfo(description: "rejected(\"The response is unacceptable.\")")),
+            .turnCompleted(
+                .failed(
+                    AgentTraceEntry.Kind.ErrorInfo(
+                        description: "rejected(\"The response is unacceptable.\")",
+                    ),
+                ),
+            ),
         ])
     }
 

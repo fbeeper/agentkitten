@@ -87,7 +87,7 @@ private func makeConversation(
     provider: ProviderReference,
 ) throws -> AnyConversation {
     let factory = ConversationAssembler(
-        phaseBehaviors: .init(),
+        phaseBehaviors: PhaseBehaviorSet(),
         providerRegistry: registry,
         baseSystemPrompt: "Base prompt",
         toolDefinition: .noTools,

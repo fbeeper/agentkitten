@@ -162,7 +162,7 @@ struct TraceTests {
         let expectedInference = InferenceConfigurationSnapshot(temperature: 0.2, maxTokens: 128)
         #expect(preparation.turnOverrides?.inferenceConfiguration == expectedInference)
         #expect(preparation.inferenceContext == CustomContextSnapshot(entries: [
-            .init(key: TraceInferenceContextKey.id, valueSummary: "trace-model"),
+            CustomContextSnapshot.Entry(key: TraceInferenceContextKey.id, valueSummary: "trace-model"),
         ]))
     }
 

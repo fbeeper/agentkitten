@@ -167,7 +167,7 @@ struct AgentEventMetadataMapperTests {
         Self.expectToolEventMetadata(
             started: started,
             completed: completed,
-            expected: .init(
+            expected: ToolEventMetadataExpectation(
                 sessionID: sessionID,
                 invocationID: invocationID,
                 startTimestamp: startTimestamp,

@@ -39,7 +39,7 @@ public struct Agent: Sendable {
         providerRegistry: ProviderRegistry,
         behavior: AgentBehavior,
         toolDefinition: ToolDefinition = .noTools,
-        toolBehavior: ToolBehavior = .init(),
+        toolBehavior: ToolBehavior = ToolBehavior(),
         owner: UserID = .local,
         sessionState: SessionStateMode = .disabled,
         traceRetentionPolicy: TraceRetentionPolicy = .maxTurns(150),
@@ -94,7 +94,7 @@ public struct Agent: Sendable {
         provider: Provider,
         behavior: AgentBehavior,
         toolDefinition: ToolDefinition = .noTools,
-        toolBehavior: ToolBehavior = .init(),
+        toolBehavior: ToolBehavior = ToolBehavior(),
         owner: UserID = .local,
         sessionState: SessionStateMode = .disabled,
         traceRetentionPolicy: TraceRetentionPolicy = .maxTurns(150),
@@ -218,14 +218,14 @@ public struct Agent: Sendable {
             toolDefinition.registry.adding(
                 SessionStateBuiltins.makeReadOnlyTools(
                     state: state,
-                    config: sessionStateConfig ?? .init(),
+                    config: sessionStateConfig ?? SessionStateConfiguration(),
                 ),
             )
         case .enabled(let state):
             toolDefinition.registry.adding(
                 SessionStateBuiltins.makeTools(
                     state: state,
-                    config: sessionStateConfig ?? .init(),
+                    config: sessionStateConfig ?? SessionStateConfiguration(),
                 ),
             )
         }

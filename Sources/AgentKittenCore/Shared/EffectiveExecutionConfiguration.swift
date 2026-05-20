@@ -21,7 +21,7 @@ public struct EffectiveExecutionConfiguration: Sendable, Equatable, Hashable {
     public init(
         toolSelection: ToolSelection = .all,
         toolStepBudget: ToolStepBudget = .budget(20),
-        inferenceConfiguration: InferenceConfiguration = .init(),
+        inferenceConfiguration: InferenceConfiguration = InferenceConfiguration(),
         provider: ProviderReference = .default,
         inferenceContext: InferenceContext = .empty,
     ) {

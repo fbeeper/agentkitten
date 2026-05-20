@@ -49,7 +49,7 @@ extension ExecutionEnvironment {
     }
 
     private enum InferenceConfigurationKey: ExecutionEnvironmentKey {
-        static let defaultValue: InferenceConfiguration = .init()
+        static let defaultValue = InferenceConfiguration()
     }
 
     private enum ProviderKey: ExecutionEnvironmentKey {

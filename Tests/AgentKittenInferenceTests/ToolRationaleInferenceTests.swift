@@ -107,7 +107,10 @@ struct AnthropicSessionRationaleTests {
         let session = makeSession(toolRuntime: runtime, client: mock)
 
         var capturedCall: PendingToolCall?
-        for try await event in try await session.run(UserMessage(text: "Hi"), parameters: .init()) {
+        for try await event in try await session.run(
+            UserMessage(text: "Hi"),
+            parameters: InferenceRequestParameters(),
+        ) {
             if case .toolApprovalRequired(let call) = event {
                 capturedCall = call
                 try await runtime.approvalGate.approve(callID: call.id)
@@ -131,7 +134,10 @@ struct AnthropicSessionRationaleTests {
         )
 
         var requestedArgsJSON: String?
-        for try await event in try await session.run(UserMessage(text: "Hi"), parameters: .init()) {
+        for try await event in try await session.run(
+            UserMessage(text: "Hi"),
+            parameters: InferenceRequestParameters(),
+        ) {
             if case .toolCallRequested(_, _, let args) = event {
                 requestedArgsJSON = args
             }
@@ -154,7 +160,10 @@ struct AnthropicSessionRationaleTests {
         let session = makeSession(toolRuntime: runtime, client: mock)
 
         var capturedCall: PendingToolCall?
-        for try await event in try await session.run(UserMessage(text: "Hi"), parameters: .init()) {
+        for try await event in try await session.run(
+            UserMessage(text: "Hi"),
+            parameters: InferenceRequestParameters(),
+        ) {
             if case .toolApprovalRequired(let call) = event {
                 capturedCall = call
                 try await runtime.approvalGate.approve(callID: call.id)

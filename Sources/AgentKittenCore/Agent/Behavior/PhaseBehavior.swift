@@ -16,7 +16,7 @@ public struct PhaseBehavior: Sendable {
     ///   - inferenceConfiguration: Inference configuration for this phase.
     public init(
         provider: ProviderReference = .default,
-        inferenceConfiguration: InferenceConfiguration = .init(),
+        inferenceConfiguration: InferenceConfiguration = InferenceConfiguration(),
     ) {
         self.provider = provider
         self.inferenceConfiguration = inferenceConfiguration

@@ -1,5 +1,6 @@
 // SPDX-FileCopyrightText: 2026 AgentKitten Authors
 // SPDX-License-Identifier: Apache-2.0
+// swiftlint:disable file_length
 
 @testable import AgentKittenCore
 import Testing
@@ -8,7 +9,7 @@ import Testing
     let compactionConfig = InferenceConfiguration(temperature: 0.1, maxTokens: 512)
     let behavior = AgentBehavior(
         systemPrompt: "Test",
-        phaseBehaviors: .init(base: .init(inferenceConfiguration: compactionConfig)),
+        phaseBehaviors: PhaseBehaviorSet(base: PhaseBehavior(inferenceConfiguration: compactionConfig)),
     )
     let provider = CompactionConfigRecordingProvider()
     let agent = Agent(
@@ -16,10 +17,11 @@ import Testing
         behavior: behavior,
     )
     let session = agent.makeSession()
-
     let turn = try await session.send("Hello")
     _ = try await collectEvents(from: turn)
-    _ = try await session.compactContext(.summarize(.init(preservedRecentTurnCount: 0)))
+    _ = try await session.compactContext(
+        .summarize(ContextCompactionOptions.SummarizationOptions(preservedRecentTurnCount: 0)),
+    )
 
     let recorded = await provider.recordedCompactionConfigurations()
     #expect(recorded == [compactionConfig])
@@ -32,9 +34,9 @@ import Testing
 @Test func compactionPhaseBehavior_overridesInferenceConfiguration() async throws {
     let baseConfig = InferenceConfiguration(temperature: 0.1, maxTokens: 512)
     let compactionConfig = InferenceConfiguration(temperature: 0.2, maxTokens: 256)
-    var phaseBehaviors = PhaseBehaviorSet(base: .init(inferenceConfiguration: baseConfig))
+    var phaseBehaviors = PhaseBehaviorSet(base: PhaseBehavior(inferenceConfiguration: baseConfig))
     phaseBehaviors.set(
-        .init(inferenceConfiguration: compactionConfig),
+        PhaseBehavior(inferenceConfiguration: compactionConfig),
         for: .compaction,
     )
     let behavior = AgentBehavior(
@@ -47,13 +49,14 @@ import Testing
         behavior: behavior,
     )
     let session = agent.makeSession()
-
     let turn = try await session.send(
         "Hello",
         turnOverrides: TurnOverrides(inferenceConfiguration: InferenceConfiguration(temperature: 0.9)),
     )
     _ = try await collectEvents(from: turn)
-    _ = try await session.compactContext(.summarize(.init(preservedRecentTurnCount: 0)))
+    _ = try await session.compactContext(
+        .summarize(ContextCompactionOptions.SummarizationOptions(preservedRecentTurnCount: 0)),
+    )
 
     let recorded = await provider.recordedCompactionConfigurations()
     #expect(recorded == [compactionConfig])
@@ -67,7 +70,7 @@ import Testing
     let overrideProvider = CompactionConfigRecordingProvider()
     var phaseBehaviors = PhaseBehaviorSet()
     phaseBehaviors.set(
-        .init(
+        PhaseBehavior(
             provider: .ofType(CompactionOverrideProvider.self),
             inferenceConfiguration: InferenceConfiguration(temperature: 0.4, maxTokens: 111),
         ),
@@ -80,10 +83,11 @@ import Testing
         behavior: behavior,
     )
     let session = agent.makeSession()
-
     let turn = try await session.send("Hello")
     _ = try await collectEvents(from: turn)
-    _ = try await session.compactContext(.summarize(.init(preservedRecentTurnCount: 0)))
+    _ = try await session.compactContext(
+        .summarize(ContextCompactionOptions.SummarizationOptions(preservedRecentTurnCount: 0)),
+    )
 
     #expect(await defaultProvider.recordedCompactionConfigurations().isEmpty)
     #expect(await overrideProvider.recordedCompactionConfigurations() == [
@@ -111,7 +115,9 @@ import Testing
 
     let turn = try await session.send("Hello")
     _ = try await collectEvents(from: turn)
-    _ = try await session.compactContext(.summarize(.init(preservedRecentTurnCount: 0)))
+    _ = try await session.compactContext(
+        .summarize(ContextCompactionOptions.SummarizationOptions(preservedRecentTurnCount: 0)),
+    )
 
     let recorded = await provider.recordedSummaryContexts()
     #expect(recorded.count == 1)
@@ -119,8 +125,8 @@ import Testing
     #expect(recorded.first?[AnotherSentinelContextKey.self] == "another-value")
     let trace = try #require(await firstManualContextCompaction(on: session))
     #expect(trace.inferenceContext == CustomContextSnapshot(entries: [
-        .init(key: AnotherSentinelContextKey.id, valueSummary: "another-value"),
-        .init(key: SentinelContextKey.id, valueSummary: "sentinel-value"),
+        CustomContextSnapshot.Entry(key: AnotherSentinelContextKey.id, valueSummary: "another-value"),
+        CustomContextSnapshot.Entry(key: SentinelContextKey.id, valueSummary: "sentinel-value"),
     ]))
 }
 
@@ -134,7 +140,9 @@ import Testing
 
     let turn = try await session.send("Hello")
     _ = try await collectEvents(from: turn)
-    let result = try await session.compactContext(.summarize(.init(preservedRecentTurnCount: 0)))
+    let result = try await session.compactContext(
+        .summarize(ContextCompactionOptions.SummarizationOptions(preservedRecentTurnCount: 0)),
+    )
 
     #expect(result.didCompact)
     let callCount = await provider.summarizationCallCount()
@@ -213,7 +221,7 @@ extension CompactionConfigRecordingSession: ContextCompactableSession {
         summary: String?,
         preservedRecentTurnCount: Int,
     ) async throws -> ContextCompactionResult {
-        .compacted(.init(
+        .compacted(ContextCompactionResult.Compacted(
             usageBefore: ContextUsage(contextTokens: 90, contextSize: 100),
             usageAfter: ContextUsage(contextTokens: 10, contextSize: 100),
         ))
@@ -312,7 +320,7 @@ extension ContextRecordingSession: ContextCompactableSession {
     }
 
     func applyCompaction(summary: String?, preservedRecentTurnCount: Int) async throws -> ContextCompactionResult {
-        .compacted(.init(
+        .compacted(ContextCompactionResult.Compacted(
             usageBefore: ContextUsage(contextTokens: 90, contextSize: 100),
             usageAfter: ContextUsage(contextTokens: 10, contextSize: 100),
         ))
@@ -362,7 +370,9 @@ private actor SplittingCompactionSession: InferenceSession, StructuredInferenceS
         if isSummarySession {
             let call = await state.incrementAndReturn()
             if call == 1 {
-                throw InferenceError.contextWindowExceeded(.init(message: "too large for single batch"))
+                throw InferenceError.contextWindowExceeded(
+                    ContextWindowExceededInfo(message: "too large for single batch"),
+                )
             }
         }
         let (stream, continuation) = AsyncThrowingStream<InferenceEvent<String>, Error>.makeStream()
@@ -392,7 +402,7 @@ extension SplittingCompactionSession: ContextCompactableSession {
     }
 
     func applyCompaction(summary: String?, preservedRecentTurnCount: Int) async throws -> ContextCompactionResult {
-        .compacted(.init(
+        .compacted(ContextCompactionResult.Compacted(
             usageBefore: ContextUsage(contextTokens: 90, contextSize: 100),
             usageAfter: ContextUsage(contextTokens: 10, contextSize: 100),
         ))

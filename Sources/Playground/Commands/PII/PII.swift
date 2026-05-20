@@ -42,7 +42,7 @@ extension Playground {
 
             let agent = try PlaygroundSessionFactory.makeAgent(
                 for: provider,
-                behavior: .init(
+                behavior: AgentBehavior(
                     systemPrompt: """
                     You are an assistant that helps send notifications to contacts. \
                     When a user asks to notify or message someone at a given address, \

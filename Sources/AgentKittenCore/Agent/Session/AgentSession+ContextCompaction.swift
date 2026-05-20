@@ -20,7 +20,7 @@ extension AgentSession {
     /// - Returns: The compaction result. If there is no active provider conversation,
     ///   the result is ``ContextCompactionResult/skipped(_:)``.
     public func compactContext(
-        _ options: ContextCompactionOptions = .init(),
+        _ options: ContextCompactionOptions = ContextCompactionOptions(),
     ) async throws -> ContextCompactionResult {
         let lease = try operationGate.begin(InferenceSessionOperationKind.compactContext)
         defer {

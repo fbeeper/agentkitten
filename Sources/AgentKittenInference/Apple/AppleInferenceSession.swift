@@ -55,7 +55,7 @@ public actor AppleInferenceSession: InferenceSession {
         model: SystemLanguageModel,
         toolRuntime: ToolRuntime,
         toolSelection: ToolSelection,
-        historyRenderingConfiguration: HistoryRenderingConfiguration = .init(),
+        historyRenderingConfiguration: HistoryRenderingConfiguration = HistoryRenderingConfiguration(),
     ) {
         self.historyRenderingConfiguration = historyRenderingConfiguration
         let eventRelay = ToolEventRelay()
@@ -89,7 +89,7 @@ public actor AppleInferenceSession: InferenceSession {
         model: SystemLanguageModel,
         toolRuntime: ToolRuntime,
         toolSelection: ToolSelection,
-        historyRenderingConfiguration: HistoryRenderingConfiguration = .init(),
+        historyRenderingConfiguration: HistoryRenderingConfiguration = HistoryRenderingConfiguration(),
     ) {
         self.historyRenderingConfiguration = historyRenderingConfiguration
         let eventRelay = ToolEventRelay()

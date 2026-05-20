@@ -66,7 +66,7 @@ public enum ContextCompactionOptions: Sendable, Equatable, Hashable {
 
     /// Creates default compaction options.
     public init() {
-        self = .summarize(.init())
+        self = .summarize(SummarizationOptions())
     }
 }
 

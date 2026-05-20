@@ -65,7 +65,7 @@ private enum TestApprovalKey: ExecutionConfigurationKey {
     phaseBehaviors.base[TestModelKey.self] = "behavior-model"
     let behavior = AgentBehavior(systemPrompt: "Test", phaseBehaviors: phaseBehaviors)
 
-    let environment = ExecutionEnvironment(behavior: behavior, toolBehavior: .init())
+    let environment = ExecutionEnvironment(behavior: behavior, toolBehavior: ToolBehavior())
     let config = EffectiveExecutionConfiguration(environment: environment)
 
     #expect(config.inferenceContext[TestModelKey.self] == "behavior-model")
@@ -79,7 +79,7 @@ private enum TestApprovalKey: ExecutionConfigurationKey {
     var turn = TurnOverrides()
     turn[TestModelKey.self] = "turn-model"
 
-    let environment = ExecutionEnvironment(behavior: behavior, toolBehavior: .init()).overlaying(turn)
+    let environment = ExecutionEnvironment(behavior: behavior, toolBehavior: ToolBehavior()).overlaying(turn)
     let config = EffectiveExecutionConfiguration(environment: environment)
 
     #expect(config.inferenceContext[TestModelKey.self] == "turn-model")
@@ -90,7 +90,7 @@ private enum TestApprovalKey: ExecutionConfigurationKey {
     phaseBehaviors.base[TestApprovalKey.self] = "approval-value"
     let behavior = AgentBehavior(systemPrompt: "Test", phaseBehaviors: phaseBehaviors)
 
-    let environment = ExecutionEnvironment(behavior: behavior, toolBehavior: .init())
+    let environment = ExecutionEnvironment(behavior: behavior, toolBehavior: ToolBehavior())
     let config = EffectiveExecutionConfiguration(environment: environment)
 
     #expect(config.inferenceContext[TestApprovalKey.self] == nil)
@@ -102,7 +102,7 @@ private enum TestApprovalKey: ExecutionConfigurationKey {
     phaseBehaviors.base[TestApprovalKey.self] = "approval-value"
     let behavior = AgentBehavior(systemPrompt: "Test", phaseBehaviors: phaseBehaviors)
 
-    let environment = ExecutionEnvironment(behavior: behavior, toolBehavior: .init())
+    let environment = ExecutionEnvironment(behavior: behavior, toolBehavior: ToolBehavior())
     let context = ToolExecutionContext(customValues: environment.customValues(for: .toolApproval))
 
     #expect(context[TestApprovalKey.self] == "approval-value")

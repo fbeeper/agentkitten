@@ -145,11 +145,13 @@ public actor SessionState {
             return
         }
         trace.append(
-            kind: .stateMutation(.init(
-                operation: operation,
-                key: key,
-                valueType: valueType,
-            )),
+            kind: .stateMutation(
+                AgentTraceEntry.Kind.StateMutation(
+                    operation: operation,
+                    key: key,
+                    valueType: valueType,
+                ),
+            ),
             invocationID: activeInvocationID,
         )
     }

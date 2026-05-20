@@ -1,5 +1,6 @@
 // SPDX-FileCopyrightText: 2026 AgentKitten Authors
 // SPDX-License-Identifier: Apache-2.0
+// swiftlint:disable file_length
 
 @testable import AgentKittenCore
 import Foundation
@@ -112,9 +113,13 @@ struct AgentSessionTests {
         let provider = ConfigurationRecordingProvider()
         let behavior = AgentBehavior(
             systemPrompt: "Test",
-            phaseBehaviors: .init(base: .init(inferenceConfiguration: InferenceConfiguration(
-                temperature: 0.9,
-            ))),
+            phaseBehaviors: PhaseBehaviorSet(
+                base: PhaseBehavior(
+                    inferenceConfiguration: InferenceConfiguration(
+                        temperature: 0.9,
+                    ),
+                ),
+            ),
         )
         let agent = Agent(
             providerRegistry: ProviderRegistry(default: provider),
@@ -134,9 +139,13 @@ struct AgentSessionTests {
         let provider = ConfigurationRecordingProvider()
         let behavior = AgentBehavior(
             systemPrompt: "Test",
-            phaseBehaviors: .init(base: .init(inferenceConfiguration: InferenceConfiguration(
-                temperature: 0.1,
-            ))),
+            phaseBehaviors: PhaseBehaviorSet(
+                base: PhaseBehavior(
+                    inferenceConfiguration: InferenceConfiguration(
+                        temperature: 0.1,
+                    ),
+                ),
+            ),
         )
         let agent = Agent(
             providerRegistry: ProviderRegistry(default: provider),

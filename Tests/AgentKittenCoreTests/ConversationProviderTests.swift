@@ -197,7 +197,7 @@ private func makeConversationProvider(
     ConversationProvider(
         owner: .local,
         factory: ConversationAssembler(
-            phaseBehaviors: .init(),
+            phaseBehaviors: PhaseBehaviorSet(),
             providerRegistry: registry,
             baseSystemPrompt: "Base prompt",
             toolDefinition: toolDefinition,

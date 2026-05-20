@@ -134,7 +134,7 @@ struct ToolApprovalRuntimeTests {
         }
         #expect(info.call == approval)
         #expect(info.context == CustomContextSnapshot(entries: [
-            .init(key: TraceApprovalReasonKey.id, valueSummary: "requires human review"),
+            CustomContextSnapshot.Entry(key: TraceApprovalReasonKey.id, valueSummary: "requires human review"),
         ]))
 
         try await session.deny(callID: approval.id, reason: "blocked")

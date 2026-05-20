@@ -66,7 +66,7 @@ public actor AgentQueuedSession: ToolApproving {
         await send(
             text,
             userID: userID,
-            turnOverrides: .init(),
+            turnOverrides: TurnOverrides(),
             validation: validation,
         )
     }
@@ -114,7 +114,7 @@ public actor AgentQueuedSession: ToolApproving {
         await generate(
             prompt,
             userID: userID,
-            turnOverrides: .init(),
+            turnOverrides: TurnOverrides(),
             validation: validation,
         )
     }
@@ -182,7 +182,7 @@ public actor AgentQueuedSession: ToolApproving {
 
     /// Queues a manual context compaction.
     public func compactContext(
-        _ options: ContextCompactionOptions = .init(),
+        _ options: ContextCompactionOptions = ContextCompactionOptions(),
     ) async throws -> ContextCompactionResult {
         try await withCheckedThrowingContinuation { continuation in
             enqueue(

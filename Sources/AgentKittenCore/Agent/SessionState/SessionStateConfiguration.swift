@@ -64,10 +64,10 @@ public enum SessionStateMode: Sendable, Equatable {
     case enabled(SessionStateConfiguration)
 
     /// Expose read-only built-in session-state tools using AgentKitten's default guidance.
-    public static let readOnlyWithDefaultGuidance = Self.readOnly(.init())
+    public static let readOnlyWithDefaultGuidance = Self.readOnly(SessionStateConfiguration())
 
     /// Expose built-in session-state tools using AgentKitten's default guidance.
-    public static let enabledWithDefaultGuidance = Self.enabled(.init())
+    public static let enabledWithDefaultGuidance = Self.enabled(SessionStateConfiguration())
 }
 
 // MARK: - Defaults

@@ -81,8 +81,8 @@ public struct JudgeValidator<Result: Codable & Sendable>: Validator {
     public init(
         prompt: Prompt,
         providerRegistry: ProviderRegistry,
-        inferenceConfiguration: InferenceConfiguration = .init(),
-        toolBehavior: ToolBehavior = .init(),
+        inferenceConfiguration: InferenceConfiguration = InferenceConfiguration(),
+        toolBehavior: ToolBehavior = ToolBehavior(),
         toolDefinition: ToolDefinition = .noTools,
         sessionStateAccess: SessionStateAccess = .readOnlyTools,
         name: String = "JudgeValidator",
@@ -136,8 +136,8 @@ public struct JudgeValidator<Result: Codable & Sendable>: Validator {
     public init<Provider: InferenceProviding>(
         prompt: Prompt,
         provider: Provider,
-        inferenceConfiguration: InferenceConfiguration = .init(),
-        toolBehavior: ToolBehavior = .init(),
+        inferenceConfiguration: InferenceConfiguration = InferenceConfiguration(),
+        toolBehavior: ToolBehavior = ToolBehavior(),
         toolDefinition: ToolDefinition = .noTools,
         sessionStateAccess: SessionStateAccess = .readOnlyTools,
         name: String = "JudgeValidator",
@@ -199,7 +199,7 @@ public struct JudgeValidator<Result: Codable & Sendable>: Validator {
         let approvalGate = ToolApprovalGate()
         let behavior = AgentBehavior(
             systemPrompt: stateConfiguration.systemPrompt,
-            phaseBehaviors: .init(base: .init(inferenceConfiguration: inferenceConfiguration)),
+            phaseBehaviors: PhaseBehaviorSet(base: PhaseBehavior(inferenceConfiguration: inferenceConfiguration)),
         )
         return AgentSession(
             sessionID: .generate(),

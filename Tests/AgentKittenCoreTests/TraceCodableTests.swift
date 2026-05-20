@@ -36,7 +36,7 @@ struct TraceCodableTests {
                 resolutionKind: .replace,
             )),
             contextCompactionKind(mode: .manual),
-            .validation(.init(
+            .validation(AgentTraceEntry.Kind.ValidationInfo(
                 result: .feedback,
                 message: "Try again",
                 validator: "HashableValidator",
@@ -105,7 +105,7 @@ private func executionPreparationKind() -> AgentTraceEntry.Kind {
             maxTokens: 4096,
         ),
         inferenceContext: CustomContextSnapshot(entries: [
-            .init(key: "AnthropicModelKey", valueSummary: "claude-opus-4-5"),
+            CustomContextSnapshot.Entry(key: "AnthropicModelKey", valueSummary: "claude-opus-4-5"),
         ]),
         turnOverrides: TurnOverridesSnapshot(
             toolSelection: .disabled,
@@ -147,13 +147,13 @@ private func allTraceKinds() throws -> [AgentTraceEntry.Kind] {
             resolutionKind: .rebuildSession,
         )),
         contextCompactionKind(mode: .automatic),
-        .stateMutation(.init(
+        .stateMutation(AgentTraceEntry.Kind.StateMutation(
             operation: .set,
             key: "topic",
             valueType: "string",
         )),
         approvalRequiredKind(),
-        .validation(.init(
+        .validation(AgentTraceEntry.Kind.ValidationInfo(
             result: .feedback,
             message: "Try again",
             validator: "CodableValidator",
@@ -172,10 +172,10 @@ private func approvalPendingToolCall() -> PendingToolCall {
 }
 
 private func approvalRequiredInfo() -> AgentTraceEntry.Kind.ToolApprovalRequiredInfo {
-    .init(
+    AgentTraceEntry.Kind.ToolApprovalRequiredInfo(
         call: approvalPendingToolCall(),
         context: CustomContextSnapshot(entries: [
-            .init(key: "toolApprovalReason", valueSummary: "blocked by policy"),
+            CustomContextSnapshot.Entry(key: "toolApprovalReason", valueSummary: "blocked by policy"),
         ]),
     )
 }
@@ -187,7 +187,7 @@ private func approvalRequiredKind() -> AgentTraceEntry.Kind {
 private func contextCompactionKind(
     mode: AgentTraceEntry.Kind.ContextCompactionInfo.Mode,
 ) -> AgentTraceEntry.Kind {
-    .contextCompaction(.init(
+    .contextCompaction(AgentTraceEntry.Kind.ContextCompactionInfo(
         mode: mode,
         provider: .named("CompactionProvider"),
         inferenceConfiguration: InferenceConfigurationSnapshot(
@@ -195,12 +195,12 @@ private func contextCompactionKind(
             maxTokens: 256,
         ),
         inferenceContext: CustomContextSnapshot(entries: [
-            .init(key: "AnthropicModelKey", valueSummary: "claude-opus-4-5"),
-            .init(key: "SentinelContextKey", valueSummary: "sentinel-value"),
+            CustomContextSnapshot.Entry(key: "AnthropicModelKey", valueSummary: "claude-opus-4-5"),
+            CustomContextSnapshot.Entry(key: "SentinelContextKey", valueSummary: "sentinel-value"),
         ]),
-        result: .compacted(.init(
-            usageBefore: .init(contextTokens: 80, contextSize: 100),
-            usageAfter: .init(contextTokens: 20, contextSize: 100),
+        result: .compacted(ContextCompactionResult.Compacted(
+            usageBefore: ContextUsage(contextTokens: 80, contextSize: 100),
+            usageAfter: ContextUsage(contextTokens: 20, contextSize: 100),
         )),
     ))
 }
