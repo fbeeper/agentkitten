@@ -2,9 +2,9 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import Foundation
-import os
+import Logging
 
-private let logger = Logger(subsystem: "AgentKittenCore", category: "MockInferenceSession")
+private let logger = Logger(label: "agentKitten.core.mockInferenceSession")
 
 /// A mock ``InferenceSession`` that cycles through canned responses.
 ///

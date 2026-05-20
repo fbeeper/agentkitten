@@ -1,9 +1,9 @@
 // SPDX-FileCopyrightText: 2026 AgentKitten Authors
 // SPDX-License-Identifier: Apache-2.0
 
-import OSLog
+import Logging
 
-private let logger = Logger(subsystem: "AgentKittenCore", category: "ProviderRegistry")
+private let logger = Logger(label: "agentKitten.core.providerRegistry")
 
 /// A validated registry of inference providers available to an agent.
 ///
