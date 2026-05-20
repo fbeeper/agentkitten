@@ -33,6 +33,7 @@ extension InferenceProvider where Provider == AnthropicInferenceProvider {
         ))
     }
 
+    #if canImport(Security)
     /// Anthropic provider that reads the API key from the system Keychain.
     ///
     /// Recommended for app targets where storing secrets in environment variables
@@ -52,4 +53,5 @@ extension InferenceProvider where Provider == AnthropicInferenceProvider {
             model: model,
         ))
     }
+    #endif
 }

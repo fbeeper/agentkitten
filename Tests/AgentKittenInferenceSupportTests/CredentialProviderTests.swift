@@ -48,6 +48,7 @@ import Testing
 
 // MARK: - KeychainAPIKeyProvider
 
+#if canImport(Security)
 /// Keychain tests require a host process with Keychain entitlements.
 /// In a sandboxed test runner these will throw `errSecMissingEntitlement` or
 /// similar; we treat any thrown error as a skip rather than a failure.
@@ -64,3 +65,4 @@ import Testing
         withKnownIssue("Keychain unavailable in this test environment: \(error)") {}
     }
 }
+#endif
