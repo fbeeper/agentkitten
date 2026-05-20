@@ -1,6 +1,7 @@
 // SPDX-FileCopyrightText: 2026 AgentKitten Authors
 // SPDX-License-Identifier: Apache-2.0
 
+#if canImport(Security)
 import Foundation
 import Security
 
@@ -64,3 +65,4 @@ public struct KeychainAPIKeyProvider: APIKeyProviding {
         return key
     }
 }
+#endif
