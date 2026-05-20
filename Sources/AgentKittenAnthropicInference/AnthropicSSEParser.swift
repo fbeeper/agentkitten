@@ -33,6 +33,20 @@ enum AnthropicSSEParser {
             continuation.onTermination = { _ in task.cancel() }
         }
     }
+
+    /// Drives the parser from a plain string sequence. Package-internal for testing.
+    static func events(fromLines lines: [String]) -> AsyncThrowingStream<SSEEvent, Error> {
+        AsyncThrowingStream { continuation in
+            Task {
+                var state = ParserState()
+                for line in lines {
+                    state.consume(line: line, continuation: continuation)
+                }
+                state.flush(continuation: continuation)
+                continuation.finish()
+            }
+        }
+    }
 }
 
 // MARK: - Parser State
