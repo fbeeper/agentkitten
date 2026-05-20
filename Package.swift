@@ -21,8 +21,14 @@ let package = Package(
         .library(name: "AgentKittenCore", targets: [
             "AgentKittenCore",
         ]),
-        .library(name: "AgentKittenInference", targets: [
-            "AgentKittenInference",
+        .library(name: "AgentKittenInferenceSupport", targets: [
+            "AgentKittenInferenceSupport",
+        ]),
+        .library(name: "AgentKittenAnthropicInference", targets: [
+            "AgentKittenAnthropicInference",
+        ]),
+        .library(name: "AgentKittenAppleInference", targets: [
+            "AgentKittenAppleInference",
         ]),
     ],
     dependencies: [
@@ -45,8 +51,16 @@ let package = Package(
             ],
         ),
         .target(
-            name: "AgentKittenInference",
+            name: "AgentKittenInferenceSupport",
             dependencies: ["AgentKittenCore"],
+        ),
+        .target(
+            name: "AgentKittenAnthropicInference",
+            dependencies: ["AgentKittenCore", "AgentKittenInferenceSupport"],
+        ),
+        .target(
+            name: "AgentKittenAppleInference",
+            dependencies: ["AgentKittenCore", "AgentKittenInferenceSupport"],
         ),
         .macro(
             name: "AgentKittenMacros",
@@ -59,7 +73,8 @@ let package = Package(
             name: "Playground",
             dependencies: [
                 "AgentKitten",
-                "AgentKittenInference",
+                "AgentKittenAnthropicInference",
+                "AgentKittenAppleInference",
                 .product(name: "ArgumentParser", package: "swift-argument-parser"),
             ],
             resources: [
@@ -67,8 +82,16 @@ let package = Package(
             ],
         ),
         .testTarget(
-            name: "AgentKittenInferenceTests",
-            dependencies: ["AgentKittenInference"],
+            name: "AgentKittenInferenceSupportTests",
+            dependencies: ["AgentKittenInferenceSupport"],
+        ),
+        .testTarget(
+            name: "AgentKittenAnthropicInferenceTests",
+            dependencies: ["AgentKittenAnthropicInference", "AgentKittenInferenceSupport"],
+        ),
+        .testTarget(
+            name: "AgentKittenAppleInferenceTests",
+            dependencies: ["AgentKittenAppleInference"],
         ),
         .testTarget(
             name: "AgentKittenCoreTests",

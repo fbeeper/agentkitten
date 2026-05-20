@@ -3,6 +3,7 @@
 
 #if canImport(FoundationModels)
 import AgentKittenCore
+import AgentKittenInferenceSupport
 import FoundationModels
 
 /// Selects the Apple on-device language model for agent sessions.

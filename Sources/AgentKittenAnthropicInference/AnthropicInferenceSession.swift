@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import AgentKittenCore
+import AgentKittenInferenceSupport
 import Foundation
 
 /// A per-conversation session connected to Anthropic's Messages API.

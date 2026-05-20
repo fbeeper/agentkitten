@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import AgentKittenCore
+import AgentKittenInferenceSupport
 
 /// An ``InferenceProviding`` conformer backed by Anthropic's Messages API.
 ///

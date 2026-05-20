@@ -4,7 +4,9 @@ builder:
   - documentation_targets:
       - AgentKitten
       - AgentKittenCore
-      - AgentKittenInference
+      - AgentKittenInferenceSupport
+      - AgentKittenAnthropicInference
+      - AgentKittenAppleInference
       - AgentKittenMacros
     custom_documentation_parameters:
       - --enable-experimental-combined-documentation

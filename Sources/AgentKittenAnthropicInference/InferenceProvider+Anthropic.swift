@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import AgentKittenCore
+import AgentKittenInferenceSupport
 
 extension InferenceProvider where Provider == AnthropicInferenceProvider {
     /// Anthropic provider that reads the API key from the `ANTHROPIC_API_KEY` environment variable.

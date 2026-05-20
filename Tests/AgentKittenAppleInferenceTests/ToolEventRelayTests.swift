@@ -2,8 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #if canImport(FoundationModels)
+@testable import AgentKittenAppleInference
 import AgentKittenCore
-@testable import AgentKittenInference
 import Testing
 
 // MARK: - ToolEventRelay
