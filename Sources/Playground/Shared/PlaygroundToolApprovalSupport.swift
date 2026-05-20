@@ -4,7 +4,6 @@
 import AgentKitten
 import AgentKittenCore
 import ArgumentParser
-import Darwin
 import Foundation
 
 extension Playground {
@@ -117,7 +116,7 @@ enum PlaygroundToolApprovalPrompt {
             }
             print("Arguments: \(call.argumentsJSON)")
             print("Approve? [y]es / [a]lways / [n]o:", terminator: " ")
-            fflush(stdout)
+            flushStdout()
 
             guard let input = readLine() else {
                 await onEOF()

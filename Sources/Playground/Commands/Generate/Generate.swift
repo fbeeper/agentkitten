@@ -4,7 +4,6 @@
 import AgentKitten
 import AgentKittenCore
 import ArgumentParser
-import Darwin
 
 extension Playground {
     /// Single-turn inference that exercises the provider/session layer directly.
@@ -31,7 +30,7 @@ extension Playground {
             print("AgentKitten Playground v\(AgentKitten.version)")
             print("Prompt: \(prompt)")
             print("Response: ", terminator: "")
-            fflush(stdout)
+            flushStdout()
 
             let runtime = PlaygroundSessionFactory.makeToolRuntime(
                 policy: PlaygroundToolApprovalPrompt.configuredPolicy(for: toolPolicy),
@@ -56,12 +55,12 @@ extension Playground {
                 case .delta(let chunk):
                     receivedText = true
                     print(chunk, terminator: "")
-                    fflush(stdout)
+                    flushStdout()
                 case .result(_, let reason):
                     printFinishReasonIfNeeded(reason, receivedText: receivedText)
                 case .toolCallRequested(_, let name, _):
                     print("\n[Tool call: \(name)]", terminator: "")
-                    fflush(stdout)
+                    flushStdout()
                 case .toolApprovalRequired(let call):
                     if toolPolicy == .ask {
                         _ = try await PlaygroundToolApprovalPrompt.resolve(
@@ -71,7 +70,7 @@ extension Playground {
                         )
                     } else {
                         print("\n\(PlaygroundToolEventFormatter.approvalRequired(call))", terminator: "")
-                        fflush(stdout)
+                        flushStdout()
                     }
                 case .toolCallCompleted(_, let name, let outcome):
                     logToolCompletion(name: name, outcome: outcome)
@@ -91,7 +90,7 @@ extension Playground {
             if receivedText {
                 print()
             }
-            fputs("[finish reason: \(reason.rawValue)]\n", stderr)
+            writeToStderr("[finish reason: \(reason.rawValue)]\n")
         }
 
         private func logToolCompletion(name: String, outcome: ToolCallOutcome) {
@@ -101,7 +100,7 @@ extension Playground {
             case .failure(let failure):
                 print("\n[Tool failed: \(name) — \(failure.resultJSON)]", terminator: "")
             }
-            fflush(stdout)
+            flushStdout()
         }
     }
 }

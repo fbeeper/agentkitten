@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import AgentKittenCore
-import Darwin
 
 /// Presents a plan to the user for interactive approval before any scratchpad edits.
 struct ProposePlanTool: AgentTool {
@@ -38,7 +37,7 @@ struct ProposePlanTool: AgentTool {
         print("\n\n[plan proposed]")
         print(arguments.plan)
         print("\nApprove plan? [y]es / [n]o:", terminator: " ")
-        fflush(stdout)
+        flushStdout()
 
         guard let input = readLine() else {
             return Output(approved: false, message: "Plan rejected: no input received.")

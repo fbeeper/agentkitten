@@ -142,14 +142,14 @@ extension Playground {
                     }
                 }
                 guard let result else {
-                    fputs("[error: structured generation ended without a result]\n", stderr)
+                    writeToStderr("[error: structured generation ended without a result]\n")
                     return
                 }
                 printResult(result)
             } catch StructuredGenerationError.decodingFailed(let error) {
-                fputs("[error: failed to decode response — \(error)]\n", stderr)
+                writeToStderr("[error: failed to decode response — \(error)]\n")
             } catch StructuredGenerationError.generationFailed(let error) {
-                fputs("[error: generation failed — \(error)]\n", stderr)
+                writeToStderr("[error: generation failed — \(error)]\n")
             }
         }
 

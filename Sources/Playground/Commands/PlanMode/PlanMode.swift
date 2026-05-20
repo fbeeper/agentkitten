@@ -4,7 +4,6 @@
 import AgentKitten
 import AgentKittenCore
 import ArgumentParser
-import Darwin
 
 extension Playground {
     /// Demonstrates per-turn tool selection via a plan/code mode workflow.
@@ -69,7 +68,7 @@ extension Playground {
                     try await session.clearContext()
                     print()
                     print(PlaygroundChatOutputFormatter.assistantHeader(assistantLabel: "Assistant"))
-                    fflush(stdout)
+                    flushStdout()
                     let turn = try await session.send(
                         Self.planApprovedPrompt(plan: plan),
                         turnOverrides: Self.codeOverrides,
@@ -86,7 +85,7 @@ extension Playground {
                 let mode = await state.mode
                 print()
                 print(Self.userPrompt(mode: mode))
-                fflush(stdout)
+                flushStdout()
                 guard let line = readLine() else {
                     break
                 }
@@ -101,7 +100,7 @@ extension Playground {
                 let turn = try await session.send(line, turnOverrides: overrides)
                 print()
                 print(PlaygroundChatOutputFormatter.assistantHeader(assistantLabel: "Assistant"))
-                fflush(stdout)
+                flushStdout()
                 do {
                     try await streamTurn(turn)
                 } catch {
@@ -142,7 +141,7 @@ extension Playground {
                     }
                     streamedText = true
                     print(chunk, terminator: "")
-                    fflush(stdout)
+                    flushStdout()
                 case .result(let assistant):
                     if !streamedText, !suppressText {
                         print(assistant.text, terminator: "")
@@ -154,7 +153,7 @@ extension Playground {
                         break
                     }
                     print("\n[tool:start] \(name)", terminator: "")
-                    fflush(stdout)
+                    flushStdout()
                 case .toolApprovalRequired:
                     break
                 case .toolCallCompleted(let name, _, let outcome):
@@ -173,7 +172,7 @@ extension Playground {
             case .failure(let failure):
                 print("\n[tool:failed] \(name): \(failure.resultJSON)")
             }
-            fflush(stdout)
+            flushStdout()
         }
 
         private static func overrides(for mode: PlanModeState.Mode) -> TurnOverrides {

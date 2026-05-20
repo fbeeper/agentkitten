@@ -2,9 +2,13 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import Foundation
+#if canImport(FoundationNetworking)
+import FoundationNetworking
+#endif
 
 /// Parses Anthropic's Server-Sent Events stream into typed ``SSEEvent`` values.
 enum AnthropicSSEParser {
+    #if canImport(Darwin)
     /// Transforms raw `URLSession.AsyncBytes` into a stream of ``SSEEvent`` values.
     ///
     /// The parser accumulates `input_json_delta` fragments per block index until
@@ -18,7 +22,9 @@ enum AnthropicSSEParser {
                     var state = ParserState()
                     for try await line in bytes.lines {
                         try Task.checkCancellation()
-                        if debug { fputs("SSE< [\(line)]\n", stderr) }
+                        if debug {
+                            FileHandle.standardError.write(Data("SSE< [\(line)]\n".utf8))
+                        }
                         state.consume(line: line, continuation: continuation)
                     }
                     // Flush any event not terminated by a trailing blank line (EOF-terminated SSE).
@@ -32,6 +38,17 @@ enum AnthropicSSEParser {
             }
             continuation.onTermination = { _ in task.cancel() }
         }
+    }
+    #endif
+
+    /// Drives the parser from a full SSE payload encoded as UTF-8 text.
+    static func events(from data: Data) -> AsyncThrowingStream<SSEEvent, Error> {
+        // Split on `\n`, preserve blank lines for SSE event boundaries, then trim a
+        // trailing `\r` from each line so CRLF-delimited payloads normalize correctly.
+        let lines = (String(bytes: data, encoding: .utf8) ?? "")
+            .split(separator: "\n", omittingEmptySubsequences: false)
+            .map { $0.hasSuffix("\r") ? String($0.dropLast()) : String($0) }
+        return events(fromLines: lines)
     }
 
     /// Drives the parser from a plain string sequence. Package-internal for testing.

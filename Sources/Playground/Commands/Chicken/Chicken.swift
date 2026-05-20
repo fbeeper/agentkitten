@@ -4,7 +4,6 @@
 import AgentKitten
 import AgentKittenCore
 import ArgumentParser
-import Darwin
 
 extension Playground {
     /// Minimal role-playing chat with a reserved chicken wizard.
@@ -52,7 +51,7 @@ extension Playground {
             while true {
                 print()
                 print(PlaygroundChatOutputFormatter.userPrompt())
-                fflush(stdout)
+                flushStdout()
                 guard let line = readLine(), !line.isEmpty else {
                     break
                 }
@@ -64,7 +63,7 @@ extension Playground {
                         assistantLabel: ChickenWizardOutputFormatter.assistantLabel,
                     ),
                 )
-                fflush(stdout)
+                flushStdout()
                 try await ChickenWizardTurnStreamer.stream(turn)
                 print(PlaygroundChatOutputFormatter.separator)
             }

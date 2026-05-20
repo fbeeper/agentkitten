@@ -5,7 +5,6 @@ import AgentKitten
 import AgentKittenAnthropicInference
 import AgentKittenAppleInference
 import AgentKittenCore
-import Darwin
 
 /// Factories for creating inference sessions and agents in the Playground.
 ///
@@ -163,7 +162,7 @@ enum PlaygroundSessionFactory {
             case .textDelta(let chunk):
                 streamedAssistantText = true
                 print(chunk, terminator: "")
-                fflush(stdout)
+                flushStdout()
             case .result(let assistant):
                 if !streamedAssistantText {
                     print(assistant.text, terminator: "")
@@ -174,7 +173,7 @@ enum PlaygroundSessionFactory {
                     break
                 }
                 print("\n[tool:start] \(name) (\(id))", terminator: "")
-                fflush(stdout)
+                flushStdout()
             case .toolApprovalRequired(let call):
                 try await handleApproval(
                     call: call,
@@ -208,7 +207,7 @@ enum PlaygroundSessionFactory {
             )
         } else if verboseTools {
             print("\n\(PlaygroundToolEventFormatter.approvalRequired(call))", terminator: "")
-            fflush(stdout)
+            flushStdout()
         }
     }
 
@@ -228,6 +227,6 @@ enum PlaygroundSessionFactory {
                     PlaygroundTracePrinter.trim(failure.resultJSON),
             )
         }
-        fflush(stdout)
+        flushStdout()
     }
 }

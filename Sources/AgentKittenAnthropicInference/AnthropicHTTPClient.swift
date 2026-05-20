@@ -3,6 +3,9 @@
 
 import AgentKittenCore
 import Foundation
+#if canImport(FoundationNetworking)
+import FoundationNetworking
+#endif
 
 /// Streams SSE events and counts tokens for Anthropic Messages API requests.
 protocol AnthropicHTTPStreaming: Sendable {
@@ -37,26 +40,17 @@ struct AnthropicHTTPClient: AnthropicHTTPStreaming {
     ///
     /// - Parameter request: The fully constructed request body.
     /// - Returns: An async stream of ``SSEEvent`` values.
+    ///
+    /// On Darwin platforms this uses incremental byte streaming from `URLSession`.
+    /// On non-Darwin platforms it falls back to buffering the full response body
+    /// before parsing SSE lines because `FoundationNetworking` does not expose the
+    /// same streaming API surface.
     func stream(request: AnthropicRequest) -> AsyncThrowingStream<SSEEvent, Error> {
         AsyncThrowingStream { continuation in
             let task = Task {
                 do {
                     let urlRequest = try buildURLRequest(for: request)
-                    let (bytes, response) = try await urlSession.bytes(for: urlRequest)
-
-                    if let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode != 200 {
-                        var body = ""
-                        for try await line in bytes.lines {
-                            body += line
-                            if body.count > 512 { break }
-                        }
-                        throw Self.error(statusCode: httpResponse.statusCode, body: body)
-                    }
-
-                    for try await event in AnthropicSSEParser.events(from: bytes) {
-                        try Task.checkCancellation()
-                        continuation.yield(event)
-                    }
+                    try await streamSSEEvents(for: urlRequest, continuation: continuation)
                     continuation.finish()
                 } catch is CancellationError {
                     continuation.finish()
@@ -132,6 +126,45 @@ struct AnthropicHTTPClient: AnthropicHTTPStreaming {
             || normalized.contains("context window")
             || (normalized.contains("token") && normalized.contains("exceed"))
             || (normalized.contains("tokens") && normalized.contains("maximum"))
+    }
+
+    private func streamSSEEvents(
+        for request: URLRequest,
+        continuation: AsyncThrowingStream<SSEEvent, Error>.Continuation,
+    ) async throws {
+        #if canImport(Darwin)
+        let (bytes, response) = try await urlSession.bytes(for: request)
+
+        if let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode != 200 {
+            var body = ""
+            for try await line in bytes.lines {
+                body += line
+                if body.count > 512 { break }
+            }
+            throw Self.error(statusCode: httpResponse.statusCode, body: body)
+        }
+
+        for try await event in AnthropicSSEParser.events(from: bytes) {
+            try Task.checkCancellation()
+            continuation.yield(event)
+        }
+        #else
+        let (data, response) = try await urlSession.data(for: request)
+
+        if let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode != 200 {
+            let body = String(bytes: data, encoding: .utf8).map { String($0.prefix(512)) } ?? ""
+            throw Self.error(statusCode: httpResponse.statusCode, body: body)
+        }
+
+        // FoundationNetworking on non-Darwin platforms does not expose the same
+        // incremental byte-streaming API as Darwin URLSession, so this fallback buffers
+        // the full SSE response body before parsing it into lines. This preserves
+        // compatibility at the cost of true incremental streaming on Linux.
+        for try await event in AnthropicSSEParser.events(from: data) {
+            try Task.checkCancellation()
+            continuation.yield(event)
+        }
+        #endif
     }
 
     private func buildURLRequest(for request: AnthropicRequest) throws -> URLRequest {
