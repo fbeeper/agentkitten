@@ -6,9 +6,9 @@
 </p>
 
 ![Info:](https://img.shields.io/badge/Info:-2A2A2A.svg?style=flat)
-[![AgentKitten on Swift Package Manager](https://img.shields.io/badge/Swift%20Package%20Manager-Compatible-brightgreen.svg?style=flat)](https://swiftpackageindex.com/fbeeper/agentkitten)
+[![AgentKitten on Swift Package Manager](https://img.shields.io/badge/SPM-Compatible-brightgreen.svg?style=flat)](https://swiftpackageindex.com/fbeeper/agentkitten)
 [![Swift 6.1+](https://img.shields.io/badge/Swift-6.1+-orange.svg?style=flat)](https://developer.apple.com/swift/)
-[![iOS, macOS, visionOS, tvOS, watchOS](https://img.shields.io/badge/Platforms-iOS%20%7C%20macOS%20%7C%20visionOS%20%7C%20tvOS%20%7C%20watchOS-blue.svg?style=flat)](https://developer.apple.com/)
+[![iOS, macOS, visionOS, tvOS, watchOS, Linux, Android](https://img.shields.io/badge/Platforms-iOS%20%7C%20macOS%20%7C%20visionOS%20%7C%20tvOS%20%7C%20watchOS%20%7C%20Linux%20%7C%20Android-blue.svg?style=flat)](https://developer.apple.com/)
 [![Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-333333.svg?style=flat)](LICENSE)
 
 ![Status:](https://img.shields.io/badge/Status:-2A2A2A.svg?style=flat)
