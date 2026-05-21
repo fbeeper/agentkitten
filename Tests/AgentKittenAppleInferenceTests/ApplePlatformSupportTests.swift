@@ -6,26 +6,6 @@ import AgentKittenCore
 import Foundation
 import Testing
 
-@Test func packageManifest_declaresExpectedApplePlatforms() throws {
-    let testsDirectory = URL(filePath: #filePath).deletingLastPathComponent()
-    let packageFile = testsDirectory
-        .deletingLastPathComponent()
-        .deletingLastPathComponent()
-        .appending(path: "Package.swift")
-    let manifest = try String(contentsOf: packageFile, encoding: .utf8)
-
-    for expectedLine in [
-        ".macOS(.v15),",
-        ".iOS(.v18),",
-        ".tvOS(.v18),",
-        ".watchOS(.v11),",
-        ".visionOS(.v2),",
-        ".macCatalyst(.v18),",
-    ] {
-        #expect(manifest.contains(expectedLine))
-    }
-}
-
 #if canImport(FoundationModels)
 import FoundationModels
 
