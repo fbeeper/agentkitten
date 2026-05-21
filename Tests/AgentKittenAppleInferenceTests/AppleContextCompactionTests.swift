@@ -35,7 +35,7 @@ private func makeSummaryGenerator(model: SystemLanguageModel) -> @Sendable (Stri
     guard case .available = SystemLanguageModel.default.availability else {
         return
     }
-    
+
     let transcript = FoundationModels.Transcript(entries: [
         .instructions(FoundationModels.Transcript.Instructions(segments: [
             .text(FoundationModels.Transcript.TextSegment(content: "System instructions.")),
