@@ -52,8 +52,8 @@ extension Playground {
         @Option(name: .long, help: "The text to classify.")
         var prompt: String
 
-        @Option(name: .long, help: "Inference provider: mock, apple, anthropic.")
-        var provider: ProviderOption = .apple
+        @Option(name: .long, help: "Inference provider.")
+        var provider: ProviderOption = .preferred
 
         @Option(name: .long, help: "Tool execution policy: approve, ask, or deny.")
         var toolPolicy: ToolPolicyOption = .approve

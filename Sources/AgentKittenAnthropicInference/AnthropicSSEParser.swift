@@ -1,6 +1,7 @@
 // SPDX-FileCopyrightText: 2026 AgentKitten Authors
 // SPDX-License-Identifier: Apache-2.0
 
+#if canImport(Darwin) || canImport(FoundationNetworking)
 import Foundation
 #if canImport(FoundationNetworking)
 import FoundationNetworking
@@ -215,3 +216,4 @@ private struct ParserState {
         continuation.yield(.error(message ?? "Unknown Anthropic API error."))
     }
 }
+#endif

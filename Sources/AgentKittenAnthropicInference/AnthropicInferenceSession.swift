@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 // swiftlint:disable file_length
 
+#if canImport(Darwin) || canImport(FoundationNetworking)
 import AgentKittenCore
 import AgentKittenInferenceSupport
 import Foundation
@@ -405,3 +406,4 @@ extension AnthropicInferenceSession {
         }
     }
 }
+#endif

@@ -2,7 +2,9 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import AgentKitten
+#if canImport(Darwin) || canImport(FoundationNetworking)
 import AgentKittenAnthropicInference
+#endif
 import AgentKittenAppleInference
 
 /// Factory for building provider registries used by Playground commands.
@@ -25,11 +27,13 @@ enum PlaygroundProviderFactory {
         case .mock:
             updatedRegistry = registry.registering(InferenceProvider.mock())
             reference = .ofType(InferenceProvider<MockInferenceProvider>.self)
+        #if canImport(Darwin) || canImport(FoundationNetworking)
         case .anthropic:
             updatedRegistry = registry.registering(InferenceProvider.anthropic())
             reference = .ofType(InferenceProvider<AnthropicInferenceProvider>.self)
+        #endif
+        #if canImport(FoundationModels)
         case .apple:
-            #if canImport(FoundationModels)
             if #available(macOS 26, iOS 26, visionOS 26, macCatalyst 26, *) {
                 let provider = InferenceProvider.apple()
                 updatedRegistry = registry.registering(provider)
@@ -37,9 +41,7 @@ enum PlaygroundProviderFactory {
             } else {
                 throw PlaygroundError.appleIntelligenceRequiresMacOS26
             }
-            #else
-            throw PlaygroundError.appleIntelligenceNeedsFoundationModels
-            #endif
+        #endif
         }
         return (updatedRegistry, reference)
     }
@@ -53,17 +55,17 @@ enum PlaygroundProviderFactory {
         switch option {
         case .mock:
             return ProviderRegistry(default: InferenceProvider.mock())
+        #if canImport(Darwin) || canImport(FoundationNetworking)
         case .anthropic:
             return ProviderRegistry(default: InferenceProvider.anthropic())
+        #endif
+        #if canImport(FoundationModels)
         case .apple:
-            #if canImport(FoundationModels)
             if #available(macOS 26, iOS 26, visionOS 26, macCatalyst 26, *) {
                 return ProviderRegistry(default: InferenceProvider.apple())
             }
             throw PlaygroundError.appleIntelligenceRequiresMacOS26
-            #else
-            throw PlaygroundError.appleIntelligenceNeedsFoundationModels
-            #endif
+        #endif
         }
     }
 
@@ -77,17 +79,17 @@ enum PlaygroundProviderFactory {
             return ProviderRegistry(default: MockInferenceProvider(
                 structuredResponses: [#"{"verdict":"pass"}"#],
             ))
+        #if canImport(Darwin) || canImport(FoundationNetworking)
         case .anthropic:
             return ProviderRegistry(default: InferenceProvider.anthropic())
+        #endif
+        #if canImport(FoundationModels)
         case .apple:
-            #if canImport(FoundationModels)
             if #available(macOS 26, iOS 26, visionOS 26, macCatalyst 26, *) {
                 return ProviderRegistry(default: InferenceProvider.apple())
             }
             throw PlaygroundError.appleIntelligenceRequiresMacOS26
-            #else
-            throw PlaygroundError.appleIntelligenceNeedsFoundationModels
-            #endif
+        #endif
         }
     }
 }

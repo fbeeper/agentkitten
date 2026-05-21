@@ -2,7 +2,9 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import AgentKitten
+#if canImport(Darwin) || canImport(FoundationNetworking)
 import AgentKittenAnthropicInference
+#endif
 import AgentKittenAppleInference
 
 /// Factories for creating inference sessions and agents in the Playground.
@@ -51,6 +53,7 @@ enum PlaygroundSessionFactory {
                 toolSelection: .all,
                 inferenceContext: .empty,
             )
+        #if canImport(Darwin) || canImport(FoundationNetworking)
         case .anthropic:
             return InferenceProvider.anthropic().makeSession(
                 systemPrompt: systemPrompt,
@@ -58,8 +61,9 @@ enum PlaygroundSessionFactory {
                 toolSelection: .all,
                 inferenceContext: .empty,
             )
+        #endif
+        #if canImport(FoundationModels)
         case .apple:
-            #if canImport(FoundationModels)
             if #available(macOS 26, iOS 26, visionOS 26, macCatalyst 26, *) {
                 return InferenceProvider.apple().makeSession(
                     systemPrompt: systemPrompt,
@@ -69,9 +73,7 @@ enum PlaygroundSessionFactory {
                 )
             }
             throw PlaygroundError.appleIntelligenceRequiresMacOS26
-            #else
-            throw PlaygroundError.appleIntelligenceNeedsFoundationModels
-            #endif
+        #endif
         }
     }
 

@@ -11,8 +11,8 @@ extension Playground {
             abstract: "Chat with a reserved chicken wizard.",
         )
 
-        @Option(name: .long, help: "Inference provider: apple or anthropic.")
-        var provider: ProviderOption = .apple
+        @Option(name: .long, help: "Inference provider.")
+        var provider: ProviderOption = .preferred
 
         mutating func validate() throws {
             guard provider != .mock else {
