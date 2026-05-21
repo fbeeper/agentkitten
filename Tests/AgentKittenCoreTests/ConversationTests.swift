@@ -147,7 +147,7 @@ import Testing
     // NOTE: Does not seem to fail without it, I just got down this rabbit hole and felt proper.
     await Task.yield()
     #endif
-    
+
     let secondText = try await completedAssistantText(from: try await session.send("second"))
     #expect(secondText == "Safe response")
 }

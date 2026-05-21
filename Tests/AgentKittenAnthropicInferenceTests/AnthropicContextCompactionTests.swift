@@ -1,5 +1,6 @@
 // SPDX-FileCopyrightText: 2026 AgentKitten Authors
 // SPDX-License-Identifier: Apache-2.0
+// swiftlint:disable file_length
 
 #if canImport(Darwin) || canImport(FoundationNetworking)
 @testable import AgentKittenAnthropicInference
