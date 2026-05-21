@@ -1,11 +1,7 @@
 // SPDX-FileCopyrightText: 2026 AgentKitten Authors
 // SPDX-License-Identifier: Apache-2.0
 
-// Note: CoreFoundation needed for CFGetTypeID / CFBooleanGetTypeID when
-// distinguishing bridged NSNumber booleans from numeric values across platforms.
-
 import AgentKittenCore
-import CoreFoundation
 import Foundation
 
 // MARK: - Request
@@ -198,33 +194,13 @@ struct AnthropicTool: Encodable {
 /// Mirrors ``JSONSchema`` but serializes to the flat JSON format
 /// that the Anthropic API expects (e.g., `"type": "string"` rather than
 /// a Swift enum case).
-indirect enum AnthropicJSONValue: Encodable, Equatable {
+indirect enum AnthropicJSONValue: Codable, Equatable {
     case object([String: AnthropicJSONValue])
     case array([AnthropicJSONValue])
     case string(String)
     case number(Double)
     case bool(Bool)
     case null
-
-    /// Wraps a value produced by `JSONSerialization.jsonObject(with:)`.
-    init(_ raw: Any) {
-        switch raw {
-        case let dict as [String: Any]:
-            self = .object(dict.mapValues { AnthropicJSONValue($0) })
-        case let arr as [Any]:
-            self = .array(arr.map { AnthropicJSONValue($0) })
-        case let str as String:
-            self = .string(str)
-        case let num as NSNumber:
-            if CFGetTypeID(num) == CFBooleanGetTypeID() {
-                self = .bool(num.boolValue)
-            } else {
-                self = .number(num.doubleValue)
-            }
-        default:
-            self = .null
-        }
-    }
 
     func encode(to encoder: any Encoder) throws {
         switch self {
@@ -269,6 +245,25 @@ indirect enum AnthropicJSONValue: Encodable, Equatable {
 
         init?(intValue: Int) {
             nil
+        }
+    }
+
+    init(from decoder: any Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        if container.decodeNil() {
+            self = .null
+        } else if let value = try? container.decode(Bool.self) {
+            self = .bool(value)
+        } else if let value = try? container.decode(Double.self) {
+            self = .number(value)
+        } else if let value = try? container.decode(String.self) {
+            self = .string(value)
+        } else if let value = try? container.decode([AnthropicJSONValue].self) {
+            self = .array(value)
+        } else if let value = try? container.decode([String: AnthropicJSONValue].self) {
+            self = .object(value)
+        } else {
+            self = .null
         }
     }
 }

@@ -118,38 +118,40 @@ struct AnthropicToolBridgeSchemaTests {
     }
 }
 
-// MARK: - AnthropicJSONValue: init from raw Any
+// MARK: - AnthropicJSONValue: Decodable
 
-@Suite("AnthropicJSONValue init(raw:)")
-struct AnthropicJSONValueInitTests {
-    @Test func string_fromNSString() {
-        #expect(AnthropicJSONValue("hello" as NSString) == .string("hello"))
+@Suite("AnthropicJSONValue Decodable")
+struct AnthropicJSONValueDecodableTests {
+    private func decode(_ json: String) throws -> AnthropicJSONValue {
+        try JSONDecoder().decode(AnthropicJSONValue.self, from: Data(json.utf8))
     }
 
-    @Test func bool_fromNSNumber_true() {
-        #expect(AnthropicJSONValue(true as NSNumber) == .bool(true))
+    @Test func string() throws {
+        #expect(try decode(#""hello""#) == .string("hello"))
     }
 
-    @Test func bool_fromNSNumber_false() {
-        #expect(AnthropicJSONValue(false as NSNumber) == .bool(false))
+    @Test func bool_true() throws {
+        #expect(try decode("true") == .bool(true))
     }
 
-    @Test func number_fromNSNumber_double() {
-        #expect(AnthropicJSONValue(3.14 as NSNumber) == .number(3.14))
+    @Test func bool_false() throws {
+        #expect(try decode("false") == .bool(false))
     }
 
-    @Test func null_fromUnknownType() {
-        #expect(AnthropicJSONValue(NSObject()) == .null)
+    @Test func number_double() throws {
+        #expect(try decode("3.14") == .number(3.14))
     }
 
-    @Test func array_fromNSArray() {
-        let raw: [Any] = ["a", "b"]
-        #expect(AnthropicJSONValue(raw as NSArray) == .array([.string("a"), .string("b")]))
+    @Test func null() throws {
+        #expect(try decode("null") == .null)
     }
 
-    @Test func object_fromNSDictionary() {
-        let raw: [String: Any] = ["key": "val"]
-        #expect(AnthropicJSONValue(raw as NSDictionary) == .object(["key": .string("val")]))
+    @Test func array() throws {
+        #expect(try decode(#"["a","b"]"#) == .array([.string("a"), .string("b")]))
+    }
+
+    @Test func object() throws {
+        #expect(try decode(#"{"key":"val"}"#) == .object(["key": .string("val")]))
     }
 }
 
