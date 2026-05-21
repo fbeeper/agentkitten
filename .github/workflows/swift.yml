@@ -72,6 +72,8 @@ jobs:
         swift --version
     - name: Build
       run: make build
+    - name: Test
+      run: make test
 
   build-platforms:
     name: Build (${{ matrix.platform.name }}, Xcode ${{ matrix.xcode }})
