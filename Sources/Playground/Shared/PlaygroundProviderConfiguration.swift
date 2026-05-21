@@ -1,9 +1,9 @@
 // SPDX-FileCopyrightText: 2026 AgentKitten Authors
 // SPDX-License-Identifier: Apache-2.0
 
+import AgentKitten
 import AgentKittenAnthropicInference
 import AgentKittenAppleInference
-import AgentKittenCore
 
 /// Factory for building provider registries used by Playground commands.
 enum PlaygroundProviderFactory {

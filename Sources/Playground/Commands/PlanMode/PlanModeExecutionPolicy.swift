@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: 2026 AgentKitten Authors
 // SPDX-License-Identifier: Apache-2.0
 
-import AgentKittenCore
+import AgentKitten
 
 /// Fail-safe execution policy: auto-approves tools called in the correct mode,
 /// denies tools called in the wrong mode even if tool selection somehow allowed it.

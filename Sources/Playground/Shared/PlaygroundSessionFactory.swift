@@ -4,7 +4,6 @@
 import AgentKitten
 import AgentKittenAnthropicInference
 import AgentKittenAppleInference
-import AgentKittenCore
 
 /// Factories for creating inference sessions and agents in the Playground.
 ///
