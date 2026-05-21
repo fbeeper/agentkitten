@@ -262,10 +262,7 @@ actor PIIVault {
 
 struct PIIInputSanitizer {
     private let vault: PIIVault
-    // swiftlint:disable:next force_try
-    private let emailRegex = try! NSRegularExpression(
-        pattern: #"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b"#,
-    )
+    private let emailRegex = #/\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b/#
 
     init(vault: PIIVault) {
         self.vault = vault
@@ -273,16 +270,14 @@ struct PIIInputSanitizer {
 
     /// Returns input with email addresses replaced by opaque sentinel tokens.
     func sanitize(_ input: String) async -> String {
-        let nsInput = input as NSString
-        let range = NSRange(location: 0, length: nsInput.length)
-        let matches = emailRegex.matches(in: input, range: range)
+        let matches = input.matches(of: emailRegex)
         guard !matches.isEmpty else {
             return input
         }
         var seen = Set<String>()
         var emails = [String]()
         for match in matches {
-            let email = nsInput.substring(with: match.range)
+            let email = String(match.0)
             if seen.insert(email).inserted {
                 emails.append(email)
             }
