@@ -1,6 +1,7 @@
 // SPDX-FileCopyrightText: 2026 AgentKitten Authors
 // SPDX-License-Identifier: Apache-2.0
 
+#if canImport(Darwin) || canImport(FoundationNetworking)
 import AgentKittenCore
 import AgentKittenInferenceSupport
 
@@ -133,3 +134,4 @@ public actor AnthropicInferenceProvider: InferenceProviding {
     // ContextCompactableSession and can compact its own mutable history in place,
     // so the protocol default (compact then rebuild as two separate steps) is sufficient.
 }
+#endif

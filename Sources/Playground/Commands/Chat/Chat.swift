@@ -16,8 +16,8 @@ extension Playground {
         @Option(name: .long, help: "System prompt for the agent.")
         var system: String = "You are a helpful assistant."
 
-        @Option(name: .long, help: "Inference provider: mock, apple, anthropic.")
-        var provider: ProviderOption = .apple
+        @Option(name: .long, help: "Inference provider.")
+        var provider: ProviderOption = .preferred
 
         @Option(name: .long, help: "Tool execution policy: approve, ask, or deny.")
         var toolPolicy: ToolPolicyOption = .approve

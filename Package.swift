@@ -108,7 +108,9 @@ let package = Package(
         ),
         .testTarget(
             name: "PlaygroundTests",
-            dependencies: ["Playground"],
+            dependencies: [
+                .target(name: "Playground", condition: .when(platforms: [.macOS, .linux])),
+            ],
         ),
     ],
     swiftLanguageModes: [.v6],

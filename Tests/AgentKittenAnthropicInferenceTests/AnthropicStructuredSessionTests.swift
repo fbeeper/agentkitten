@@ -1,6 +1,7 @@
 // SPDX-FileCopyrightText: 2026 AgentKitten Authors
 // SPDX-License-Identifier: Apache-2.0
 
+#if canImport(Darwin) || canImport(FoundationNetworking)
 @testable import AgentKittenAnthropicInference
 @testable import AgentKittenCore
 import AgentKittenInferenceSupport
@@ -328,3 +329,4 @@ struct AnthropicStructuredSessionTests {
         #expect(request.tools?.map(\.name).sorted() == ["echo"])
     }
 }
+#endif

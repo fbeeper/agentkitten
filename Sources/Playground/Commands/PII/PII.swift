@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import AgentKitten
-import AgentKittenCore
 import ArgumentParser
 import Foundation
 
@@ -17,8 +16,8 @@ extension Playground {
             abstract: "PII-safe tool demo: emails are tokenized before reaching the model.",
         )
 
-        @Option(name: .long, help: "Inference provider: anthropic, apple.")
-        var provider: ProviderOption = .anthropic
+        @Option(name: .long, help: "Inference provider.")
+        var provider: ProviderOption = .preferred
 
         @Flag(name: .long, help: "Print trace entries (including hook invocations) after each turn.")
         var trace = false

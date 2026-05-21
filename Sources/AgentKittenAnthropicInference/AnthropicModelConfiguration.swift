@@ -1,6 +1,7 @@
 // SPDX-FileCopyrightText: 2026 AgentKitten Authors
 // SPDX-License-Identifier: Apache-2.0
 
+#if canImport(Darwin) || canImport(FoundationNetworking)
 import AgentKittenCore
 
 /// A pending tool call captured from the SSE stream.
@@ -26,3 +27,4 @@ public struct AnthropicModelKey: ExecutionConfigurationKey {
     public typealias Value = String
     public static let domains: Set<ExecutionConfigurationDomain> = [.inference]
 }
+#endif

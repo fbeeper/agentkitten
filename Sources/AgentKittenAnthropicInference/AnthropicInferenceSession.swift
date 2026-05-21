@@ -1,6 +1,8 @@
 // SPDX-FileCopyrightText: 2026 AgentKitten Authors
 // SPDX-License-Identifier: Apache-2.0
+// swiftlint:disable file_length
 
+#if canImport(Darwin) || canImport(FoundationNetworking)
 import AgentKittenCore
 import AgentKittenInferenceSupport
 import Foundation
@@ -215,18 +217,22 @@ public actor AnthropicInferenceSession: InferenceSession {
             content.append(.text(text))
         }
         for call in toolCalls {
-            // Parse argsJSON once here; fall back to an empty object so history
-            // re-encoding never throws if the model emitted malformed JSON.
-            let inputValue: AnthropicJSONValue = if let data = call.argsJSON.data(using: .utf8),
-                                                    let raw = try? JSONSerialization.jsonObject(with: data) {
-                AnthropicJSONValue(raw)
-            } else {
-                .object([:])
-            }
+            let inputValue: AnthropicJSONValue = anthropicJSONValue(from: call.argsJSON)
             content.append(.toolUse(id: call.id, name: call.name, input: inputValue))
         }
         if !content.isEmpty {
             turnHistory.append(AnthropicMessage(role: .assistant, content: content))
+        }
+    }
+
+    /// Parse argsJSON once here; fall back to an empty object so history
+    /// re-encoding never throws if the model emitted malformed JSON.
+    private func anthropicJSONValue(from argsJSONString: String) -> AnthropicJSONValue {
+        if let data = argsJSONString.data(using: .utf8),
+           let value = try? JSONDecoder().decode(AnthropicJSONValue.self, from: data) {
+            value
+        } else {
+            .object([:])
         }
     }
 
@@ -400,3 +406,4 @@ extension AnthropicInferenceSession {
         }
     }
 }
+#endif

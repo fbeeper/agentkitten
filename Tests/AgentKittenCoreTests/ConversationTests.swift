@@ -127,9 +127,26 @@ import Testing
     for try await event in turn1.events {
         if case .textDelta = event.kind {
             await turn1.cancel()
+            #if os(WASI)
+            // WASI: performTurn may need multiple scheduling turns to unwind through
+            // its own async call stack before reaching lease.end().
+            // No fixed number of Task.yield() calls after breaking would be reliable.
+            #else
             break
+            #endif
         }
     }
+
+    #if os(WASI)
+    // In performTurn, lease.end() is called before turnRuntime.continuation.finish().
+    // By the time the for loop exits (stream finished), the lease is guaranteed to be released.
+    #else
+    // Alternatively, performTurn should be executing concurrently on a different thread, and
+    // by the time the test task reaches Task.yield(), the lease.end() should have already run.
+    // The yield is a courtesy pause to give the scheduler a turn to run the cancelled task's cleanup.
+    // NOTE: Does not seem to fail without it, I just got down this rabbit hole and felt proper.
+    await Task.yield()
+    #endif
 
     let secondText = try await completedAssistantText(from: try await session.send("second"))
     #expect(secondText == "Safe response")

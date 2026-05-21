@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import AgentKitten
-import AgentKittenCore
 import ArgumentParser
 
 extension Playground {
@@ -20,8 +19,8 @@ extension Playground {
         @Option(name: .long, help: "System prompt for the session.")
         var system: String?
 
-        @Option(name: .long, help: "Inference provider: mock, apple, anthropic.")
-        var provider: ProviderOption = .apple
+        @Option(name: .long, help: "Inference provider.")
+        var provider: ProviderOption = .preferred
 
         @Option(name: .long, help: "Tool execution policy: approve, ask, or deny.")
         var toolPolicy: ToolPolicyOption = .approve

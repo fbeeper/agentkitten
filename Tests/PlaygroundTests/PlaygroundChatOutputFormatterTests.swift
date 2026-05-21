@@ -1,6 +1,7 @@
 // SPDX-FileCopyrightText: 2026 AgentKitten Authors
 // SPDX-License-Identifier: Apache-2.0
 
+#if os(macOS) || os(Linux)
 import AgentKittenCore
 import Foundation
 @testable import Playground
@@ -111,3 +112,4 @@ private enum PlaygroundFormatterTestError: Error, LocalizedError {
         }
     }
 }
+#endif

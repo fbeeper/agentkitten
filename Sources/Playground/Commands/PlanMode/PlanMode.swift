@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import AgentKitten
-import AgentKittenCore
 import ArgumentParser
 
 extension Playground {
@@ -17,8 +16,8 @@ extension Playground {
             abstract: "Plan/code mode demo: read-only tools in plan, write tools in code.",
         )
 
-        @Option(name: .long, help: "Inference provider: apple or anthropic.")
-        var provider: ProviderOption = .apple
+        @Option(name: .long, help: "Inference provider.")
+        var provider: ProviderOption = .preferred
 
         mutating func validate() throws {
             guard provider != .mock else {

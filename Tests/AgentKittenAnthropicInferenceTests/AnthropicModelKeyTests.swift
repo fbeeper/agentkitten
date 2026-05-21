@@ -1,6 +1,7 @@
 // SPDX-FileCopyrightText: 2026 AgentKitten Authors
 // SPDX-License-Identifier: Apache-2.0
 
+#if canImport(Darwin) || canImport(FoundationNetworking)
 @testable import AgentKittenAnthropicInference
 @testable import AgentKittenCore
 import AgentKittenInferenceSupport
@@ -49,3 +50,4 @@ import Testing
     let request = try #require(client.capturedRequest)
     #expect(request.model == "default-model")
 }
+#endif

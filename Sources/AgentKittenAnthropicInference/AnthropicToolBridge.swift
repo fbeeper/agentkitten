@@ -1,6 +1,7 @@
 // SPDX-FileCopyrightText: 2026 AgentKitten Authors
 // SPDX-License-Identifier: Apache-2.0
 
+#if canImport(Darwin) || canImport(FoundationNetworking)
 import AgentKittenCore
 
 /// Converts AgentKitten tool definitions into the Anthropic API wire format.
@@ -94,3 +95,4 @@ enum AnthropicToolBridge {
         return .object(dict)
     }
 }
+#endif

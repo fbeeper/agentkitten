@@ -2,9 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import AgentKitten
-import AgentKittenAnthropicInference
-import AgentKittenAppleInference
-import AgentKittenCore
 import ArgumentParser
 import Foundation
 
@@ -32,8 +29,8 @@ extension Playground {
         @Option(name: .long, help: "System prompt for the agent.")
         var system: String = "You are a helpful assistant. Use the provided tools when relevant."
 
-        @Option(name: .long, help: "Inference provider: mock, apple, anthropic.")
-        var provider: ProviderOption = .apple
+        @Option(name: .long, help: "Inference provider.")
+        var provider: ProviderOption = .preferred
 
         @Option(name: .long, help: "Tool execution policy: approve, ask, or deny.")
         var toolPolicy: ToolPolicyOption = .approve
@@ -68,13 +65,24 @@ extension Playground {
             switch provider {
             case .mock:
                 try await runMock(toolDefinition: toolDefinition)
-            case .anthropic, .apple:
+            #if canImport(Darwin) || canImport(FoundationNetworking)
+            case .anthropic:
                 let agent = try PlaygroundSessionFactory.makeAgent(
                     for: provider,
                     behavior: AgentBehavior(systemPrompt: system),
                     toolDefinition: toolDefinition,
                 )
                 try await runConversation(agent: agent, prompt: effectivePrompt)
+            #endif
+            #if canImport(FoundationModels)
+            case .apple:
+                let agent = try PlaygroundSessionFactory.makeAgent(
+                    for: provider,
+                    behavior: AgentBehavior(systemPrompt: system),
+                    toolDefinition: toolDefinition,
+                )
+                try await runConversation(agent: agent, prompt: effectivePrompt)
+            #endif
             }
         }
 
