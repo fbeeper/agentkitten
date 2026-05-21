@@ -1,6 +1,7 @@
 // SPDX-FileCopyrightText: 2026 AgentKitten Authors
 // SPDX-License-Identifier: Apache-2.0
 
+#if canImport(Darwin) || canImport(FoundationNetworking)
 @testable import AgentKittenAnthropicInference
 @testable import AgentKittenCore
 import AgentKittenInferenceSupport
@@ -401,3 +402,4 @@ private func observeStructuredToolStream(
     #expect(source["media_type"] as? String == "image/png")
     #expect(source["data"] as? String == Data([0x89, 0x50, 0x4E, 0x47]).base64EncodedString())
 }
+#endif
