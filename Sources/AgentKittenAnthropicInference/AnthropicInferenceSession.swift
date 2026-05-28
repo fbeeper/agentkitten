@@ -132,10 +132,10 @@ public actor AnthropicInferenceSession: InferenceSession {
         var turnHistory = history + [userMessage]
         do {
             var stopReason = "end_turn"
-            var toolUseResponsesSeen = 0
+            var toolUseResponsesSeen = 0 // Tracks consecutive empty tool call cycles. Orthogonal to per-call budget.
             repeat {
                 try Task.checkCancellation()
-                stopReason = try await runSingleRequest(
+                let outcome = try await runSingleRequest(
                     client: client,
                     parameters: parameters,
                     toolTurnRuntime: toolTurnRuntime,
@@ -143,7 +143,8 @@ public actor AnthropicInferenceSession: InferenceSession {
                     continuation: continuation,
                 )
                 stopReason = stopReasonAfterRequest(
-                    stopReason: stopReason,
+                    stopReason: outcome.stopReason,
+                    hasToolCalls: outcome.hasToolCalls,
                     toolUseResponsesSeen: &toolUseResponsesSeen,
                 )
             } while stopReason == "tool_use"
@@ -163,6 +164,11 @@ public actor AnthropicInferenceSession: InferenceSession {
         }
     }
 
+    private struct RequestOutcome {
+        let stopReason: String
+        let hasToolCalls: Bool
+    }
+
     /// Sends one HTTP request, streams events, appends to `turnHistory`, and returns the stop reason.
     private func runSingleRequest(
         client: any AnthropicHTTPStreaming,
@@ -170,7 +176,7 @@ public actor AnthropicInferenceSession: InferenceSession {
         toolTurnRuntime: ToolTurnRuntime,
         turnHistory: inout [AnthropicMessage],
         continuation: InferenceStream.Continuation,
-    ) async throws -> String {
+    ) async throws -> RequestOutcome {
         let request = buildRequest(from: turnHistory, parameters: parameters)
         var textAccumulated = ""
         var pendingCalls: [PendingSSEToolCall] = []
@@ -203,7 +209,7 @@ public actor AnthropicInferenceSession: InferenceSession {
             turnHistory: &turnHistory,
             continuation: continuation,
         )
-        return stopReason
+        return RequestOutcome(stopReason: stopReason, hasToolCalls: !pendingCalls.isEmpty)
     }
 
     func appendAssistantTurn(

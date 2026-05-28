@@ -52,6 +52,11 @@ extension AnthropicInferenceSession: StructuredInferenceSession {
         }
     }
 
+    private struct LoopOutcome {
+        let stopReason: String
+        let text: String
+    }
+
     // swiftlint:disable:next function_parameter_count
     private func runStructuredLoop<T: Sendable>(
         client: any AnthropicHTTPStreaming,
@@ -60,10 +65,10 @@ extension AnthropicInferenceSession: StructuredInferenceSession {
         toolTurnRuntime: ToolTurnRuntime,
         turnHistory: inout [AnthropicMessage],
         continuation: StructuredInferenceStream<T>.Continuation,
-    ) async throws -> (stopReason: String, text: String) {
+    ) async throws -> LoopOutcome {
         var stopReason = "end_turn"
         var accumulated = ""
-        var toolUseResponsesSeen = 0
+        var toolUseResponsesSeen = 0 // Tracks consecutive empty tool call cycles. Orthogonal to per-call budget.
         repeat {
             let outcome = try await runStructuredRequest(
                 client: client,
@@ -75,11 +80,18 @@ extension AnthropicInferenceSession: StructuredInferenceSession {
             )
             stopReason = stopReasonAfterRequest(
                 stopReason: outcome.stopReason,
+                hasToolCalls: outcome.hasToolCalls,
                 toolUseResponsesSeen: &toolUseResponsesSeen,
             )
             accumulated = outcome.text
         } while stopReason == "tool_use"
-        return (stopReason, accumulated)
+        return LoopOutcome(stopReason: stopReason, text: accumulated)
+    }
+
+    private struct RequestOutcome {
+        let stopReason: String
+        let text: String
+        let hasToolCalls: Bool
     }
 
     // swiftlint:disable:next function_parameter_count
@@ -90,7 +102,7 @@ extension AnthropicInferenceSession: StructuredInferenceSession {
         toolTurnRuntime: ToolTurnRuntime,
         turnHistory: inout [AnthropicMessage],
         continuation: StructuredInferenceStream<T>.Continuation,
-    ) async throws -> (stopReason: String, text: String) {
+    ) async throws -> RequestOutcome {
         let effectiveTools: [AnthropicTool]?
         let selectedTools = tools.filter {
             parameters.toolSelection.allows(toolName: $0.name)
@@ -136,7 +148,7 @@ extension AnthropicInferenceSession: StructuredInferenceSession {
             turnHistory: &turnHistory,
             continuation: continuation,
         )
-        return (stopReason, textAccumulated)
+        return RequestOutcome(stopReason: stopReason, text: textAccumulated, hasToolCalls: !pendingCalls.isEmpty)
     }
 
     private func executeStructuredToolCalls<T: Sendable>(

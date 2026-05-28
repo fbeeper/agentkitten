@@ -87,19 +87,37 @@ extension AnthropicInferenceSession {
 
     func stopReasonAfterRequest(
         stopReason: String,
-        toolUseResponsesSeen: inout Int,
+        hasToolCalls: Bool,
+        toolUseResponsesSeen: inout Int, // Tracks consecutive empty tool call cycles. Orthogonal to per-call budget.
     ) -> String {
         guard stopReason == "tool_use" else {
+            // The model finished normally (end_turn, max_tokens, etc.).
+            // Reset counter to 0.
+            // Loop expected to exit.
+            toolUseResponsesSeen = 0
             return stopReason
         }
-        toolUseResponsesSeen += 1
-        // Anthropic can return repeated `tool_use` stop reasons without yielding any
-        // executable tool calls. We cap those follow-up cycles separately from
-        // per-call execution budgeting, which is enforced in `executeToolCalls`.
-        if toolUseResponsesSeen > maxEmptyToolUseFollowUps {
-            return "end_turn"
+        guard !hasToolCalls else {
+            // Legitimate tool round-trip.
+            // Reset counter to 0, return "tool_use".
+            // Loop expected to continue.
+            toolUseResponsesSeen = 0
+            return "tool_use"
         }
-        return "tool_use"
+
+        // Anthropic can return repeated `tool_use` stop reasons without yielding any
+        // executable tool calls. Increment this local counter.
+        toolUseResponsesSeen += 1
+
+        // We cap those follow-up cycles separately from per-call execution budgeting,
+        // which is enforced in `executeToolCalls`.
+        if toolUseResponsesSeen >= maxEmptyToolUseFollowUps {
+            // Loop expected to exit.
+            return "end_turn"
+        } else {
+            // Expected to retry otherwise.
+            return "tool_use"
+        }
     }
 
     func finishReason(from stopReason: String) -> FinishReason {
