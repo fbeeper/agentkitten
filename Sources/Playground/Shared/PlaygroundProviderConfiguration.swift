@@ -2,8 +2,10 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import AgentKitten
+import Foundation
 #if canImport(Darwin) || canImport(FoundationNetworking)
 import AgentKittenAnthropicInference
+import AgentKittenOpenAIInference
 #endif
 import AgentKittenAppleInference
 
@@ -16,8 +18,14 @@ enum PlaygroundProviderFactory {
     static func makeRegistry(
         default defaultOption: ProviderOption,
         compaction compactionOption: ProviderOption?,
+        openAIBaseURL: URL? = nil,
+        openAIModel: String = "gpt-4o",
     ) throws -> (registry: ProviderRegistry, compactionProvider: ProviderReference?) {
-        let registry = try makeRegistry(for: defaultOption)
+        let registry = try makeRegistry(
+            for: defaultOption,
+            openAIBaseURL: openAIBaseURL,
+            openAIModel: openAIModel,
+        )
         guard let compactionOption, compactionOption != defaultOption else {
             return (registry, nil)
         }
@@ -31,6 +39,10 @@ enum PlaygroundProviderFactory {
         case .anthropic:
             updatedRegistry = registry.registering(InferenceProvider.anthropic())
             reference = .ofType(InferenceProvider<AnthropicInferenceProvider>.self)
+        case .openai:
+            let provider = openAIInferenceProvider(baseURL: openAIBaseURL, model: openAIModel)
+            updatedRegistry = registry.registering(provider)
+            reference = .ofType(InferenceProvider<OpenAIInferenceProvider>.self)
         #endif
         #if canImport(FoundationModels)
         case .apple:
@@ -51,13 +63,19 @@ enum PlaygroundProviderFactory {
     /// Throws ``PlaygroundError`` when the Apple provider is requested but unavailable.
     ///
     /// - Parameter option: The provider to use.
-    static func makeRegistry(for option: ProviderOption) throws -> ProviderRegistry {
+    static func makeRegistry(
+        for option: ProviderOption,
+        openAIBaseURL: URL? = nil,
+        openAIModel: String = "gpt-4o",
+    ) throws -> ProviderRegistry {
         switch option {
         case .mock:
             return ProviderRegistry(default: InferenceProvider.mock())
         #if canImport(Darwin) || canImport(FoundationNetworking)
         case .anthropic:
             return ProviderRegistry(default: InferenceProvider.anthropic())
+        case .openai:
+            return ProviderRegistry(default: openAIInferenceProvider(baseURL: openAIBaseURL, model: openAIModel))
         #endif
         #if canImport(FoundationModels)
         case .apple:
@@ -73,7 +91,11 @@ enum PlaygroundProviderFactory {
     ///
     /// The mock judge provider uses a canned structured pass verdict so Playground
     /// can demonstrate `JudgeValidator` without requiring a network provider.
-    static func makeJudgeRegistry(for option: ProviderOption) throws -> ProviderRegistry {
+    static func makeJudgeRegistry(
+        for option: ProviderOption,
+        openAIBaseURL: URL? = nil,
+        openAIModel: String = "gpt-4o",
+    ) throws -> ProviderRegistry {
         switch option {
         case .mock:
             return ProviderRegistry(default: MockInferenceProvider(
@@ -82,6 +104,8 @@ enum PlaygroundProviderFactory {
         #if canImport(Darwin) || canImport(FoundationNetworking)
         case .anthropic:
             return ProviderRegistry(default: InferenceProvider.anthropic())
+        case .openai:
+            return ProviderRegistry(default: openAIInferenceProvider(baseURL: openAIBaseURL, model: openAIModel))
         #endif
         #if canImport(FoundationModels)
         case .apple:
@@ -92,4 +116,16 @@ enum PlaygroundProviderFactory {
         #endif
         }
     }
+
+    #if canImport(Darwin) || canImport(FoundationNetworking)
+    static func openAIInferenceProvider(
+        baseURL: URL?,
+        model: String,
+    ) -> InferenceProvider<OpenAIInferenceProvider> {
+        if let url = baseURL {
+            return InferenceProvider.lmStudio(baseURL: url, model: model)
+        }
+        return InferenceProvider.openAI(model: model)
+    }
+    #endif
 }

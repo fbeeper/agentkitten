@@ -14,6 +14,8 @@ extension Playground {
         @Option(name: .long, help: "Inference provider.")
         var provider: ProviderOption = .preferred
 
+        @OptionGroup var openAIOptions: OpenAIProviderOptions
+
         mutating func validate() throws {
             guard provider != .mock else {
                 throw ValidationError("--provider mock is not supported for chicken chat.")
@@ -25,7 +27,11 @@ extension Playground {
             let brewGuard = ChickenWizardBrewGuard()
             let behavior = AgentBehavior(systemPrompt: Self.systemPrompt)
             let agent = Agent(
-                providerRegistry: try PlaygroundProviderFactory.makeRegistry(for: provider),
+                providerRegistry: try PlaygroundProviderFactory.makeRegistry(
+                    for: provider,
+                    openAIBaseURL: openAIOptions.baseURL,
+                    openAIModel: openAIOptions.model,
+                ),
                 behavior: behavior,
                 toolDefinition: ToolDefinition(
                     tools: [

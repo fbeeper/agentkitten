@@ -30,6 +30,9 @@ let package = Package(
         .library(name: "AgentKittenAppleInference", targets: [
             "AgentKittenAppleInference",
         ]),
+        .library(name: "AgentKittenOpenAIInference", targets: [
+            "AgentKittenOpenAIInference",
+        ]),
     ],
     dependencies: [
         .package(url: "https://github.com/apple/swift-argument-parser", from: "1.3.0"),
@@ -63,6 +66,10 @@ let package = Package(
             name: "AgentKittenAppleInference",
             dependencies: ["AgentKittenCore", "AgentKittenInferenceSupport"],
         ),
+        .target(
+            name: "AgentKittenOpenAIInference",
+            dependencies: ["AgentKittenCore", "AgentKittenInferenceSupport"],
+        ),
         .macro(
             name: "AgentKittenMacros",
             dependencies: [
@@ -76,6 +83,7 @@ let package = Package(
                 "AgentKitten",
                 "AgentKittenAnthropicInference",
                 "AgentKittenAppleInference",
+                "AgentKittenOpenAIInference",
                 .product(name: "ArgumentParser", package: "swift-argument-parser"),
             ],
             resources: [
@@ -89,6 +97,10 @@ let package = Package(
         .testTarget(
             name: "AgentKittenAnthropicInferenceTests",
             dependencies: ["AgentKittenAnthropicInference", "AgentKittenInferenceSupport"],
+        ),
+        .testTarget(
+            name: "AgentKittenOpenAIInferenceTests",
+            dependencies: ["AgentKittenOpenAIInference", "AgentKittenInferenceSupport"],
         ),
         .testTarget(
             name: "AgentKittenAppleInferenceTests",

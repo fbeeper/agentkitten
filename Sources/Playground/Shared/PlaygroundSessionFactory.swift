@@ -2,8 +2,10 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import AgentKitten
+import Foundation
 #if canImport(Darwin) || canImport(FoundationNetworking)
 import AgentKittenAnthropicInference
+import AgentKittenOpenAIInference
 #endif
 import AgentKittenAppleInference
 
@@ -44,6 +46,8 @@ enum PlaygroundSessionFactory {
         for option: ProviderOption,
         systemPrompt: String? = nil,
         runtime: ToolRuntime,
+        openAIBaseURL: URL? = nil,
+        openAIModel: String = "gpt-4o",
     ) throws -> any InferenceSession & StructuredInferenceSession {
         switch option {
         case .mock:
@@ -56,6 +60,17 @@ enum PlaygroundSessionFactory {
         #if canImport(Darwin) || canImport(FoundationNetworking)
         case .anthropic:
             return InferenceProvider.anthropic().makeSession(
+                systemPrompt: systemPrompt,
+                toolRuntime: runtime,
+                toolSelection: .all,
+                inferenceContext: .empty,
+            )
+        case .openai:
+            let provider = PlaygroundProviderFactory.openAIInferenceProvider(
+                baseURL: openAIBaseURL,
+                model: openAIModel,
+            )
+            return provider.makeSession(
                 systemPrompt: systemPrompt,
                 toolRuntime: runtime,
                 toolSelection: .all,
@@ -89,9 +104,15 @@ enum PlaygroundSessionFactory {
         for option: ProviderOption,
         behavior: AgentBehavior,
         toolDefinition: ToolDefinition = ToolDefinition(),
+        openAIBaseURL: URL? = nil,
+        openAIModel: String = "gpt-4o",
     ) throws -> Agent {
         Agent(
-            providerRegistry: try PlaygroundProviderFactory.makeRegistry(for: option),
+            providerRegistry: try PlaygroundProviderFactory.makeRegistry(
+                for: option,
+                openAIBaseURL: openAIBaseURL,
+                openAIModel: openAIModel,
+            ),
             behavior: behavior,
             toolDefinition: toolDefinition,
         )
@@ -127,9 +148,15 @@ enum PlaygroundSessionFactory {
         behavior: AgentBehavior,
         toolDefinition: ToolDefinition = ToolDefinition(),
         sessionState: SessionStateMode = .disabled,
+        openAIBaseURL: URL? = nil,
+        openAIModel: String = "gpt-4o",
     ) throws -> Agent {
         Agent(
-            providerRegistry: try PlaygroundProviderFactory.makeRegistry(for: provider),
+            providerRegistry: try PlaygroundProviderFactory.makeRegistry(
+                for: provider,
+                openAIBaseURL: openAIBaseURL,
+                openAIModel: openAIModel,
+            ),
             behavior: behavior,
             toolDefinition: toolDefinition,
             sessionState: sessionState,

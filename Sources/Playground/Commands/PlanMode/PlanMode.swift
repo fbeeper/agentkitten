@@ -19,6 +19,8 @@ extension Playground {
         @Option(name: .long, help: "Inference provider.")
         var provider: ProviderOption = .preferred
 
+        @OptionGroup var openAIOptions: OpenAIProviderOptions
+
         mutating func validate() throws {
             guard provider != .mock else {
                 throw ValidationError("--provider mock is not supported for plan-mode.")
@@ -40,6 +42,8 @@ extension Playground {
                     ],
                     executionPolicy: PlanModeExecutionPolicy(state: modeState),
                 ),
+                openAIBaseURL: openAIOptions.baseURL,
+                openAIModel: openAIOptions.model,
             )
             print(
                 PlaygroundChatOutputFormatter.sessionHeader(

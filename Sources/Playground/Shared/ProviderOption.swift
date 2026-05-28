@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import ArgumentParser
+import Foundation
 
 /// The inference provider to use for a Playground command.
 enum ProviderOption: String, CaseIterable, ExpressibleByArgument {
@@ -16,6 +17,8 @@ enum ProviderOption: String, CaseIterable, ExpressibleByArgument {
     #if canImport(Darwin) || canImport(FoundationNetworking)
     /// Anthropic API
     case anthropic
+    /// OpenAI-compatible API (OpenAI, LM Studio, Ollama, …)
+    case openai
     #endif
 
     /// The appropiate default provider.
@@ -31,5 +34,28 @@ enum ProviderOption: String, CaseIterable, ExpressibleByArgument {
         #else
         .mock
         #endif
+    }
+}
+
+/// OpenAI-specific CLI options shared across Playground commands.
+///
+/// Add `@OptionGroup var openAIOptions: OpenAIProviderOptions` to any command that
+/// exposes `--provider openai`. Pass `--openai-base-url` to target LM Studio or another
+/// local server. Pass `--openai-model` to override the default model identifier.
+struct OpenAIProviderOptions: ParsableArguments {
+    @Option(
+        name: .customLong("openai-model"),
+        help: "Model identifier for --provider openai (or local model name for LM Studio).",
+    )
+    var model: String = "gpt-4o"
+
+    @Option(
+        name: .customLong("openai-base-url"),
+        help: "API base URL for --provider openai. Use to point at LM Studio or another local server.",
+    )
+    var baseURLString: String?
+
+    var baseURL: URL? {
+        baseURLString.flatMap { URL(string: $0) }
     }
 }

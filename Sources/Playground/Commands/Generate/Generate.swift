@@ -22,6 +22,8 @@ extension Playground {
         @Option(name: .long, help: "Inference provider.")
         var provider: ProviderOption = .preferred
 
+        @OptionGroup var openAIOptions: OpenAIProviderOptions
+
         @Option(name: .long, help: "Tool execution policy: approve, ask, or deny.")
         var toolPolicy: ToolPolicyOption = .approve
 
@@ -38,6 +40,8 @@ extension Playground {
                 for: provider,
                 systemPrompt: system,
                 runtime: runtime,
+                openAIBaseURL: openAIOptions.baseURL,
+                openAIModel: openAIOptions.model,
             )
             try await stream(session: session, gate: runtime.approvalGate)
         }
