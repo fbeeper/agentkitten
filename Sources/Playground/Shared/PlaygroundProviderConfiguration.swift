@@ -2,8 +2,11 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import AgentKitten
+import Foundation
 #if canImport(Darwin) || canImport(FoundationNetworking)
 import AgentKittenAnthropicInference
+import AgentKittenInferenceSupport
+import AgentKittenOpenAIInference
 #endif
 import AgentKittenAppleInference
 
@@ -16,8 +19,12 @@ enum PlaygroundProviderFactory {
     static func makeRegistry(
         default defaultOption: ProviderOption,
         compaction compactionOption: ProviderOption?,
+        endpoint: ProviderEndpointConfiguration = .default,
     ) throws -> (registry: ProviderRegistry, compactionProvider: ProviderReference?) {
-        let registry = try makeRegistry(for: defaultOption)
+        let registry = try makeRegistry(
+            for: defaultOption,
+            endpoint: endpoint,
+        )
         guard let compactionOption, compactionOption != defaultOption else {
             return (registry, nil)
         }
@@ -25,12 +32,18 @@ enum PlaygroundProviderFactory {
         let reference: ProviderReference
         switch compactionOption {
         case .mock:
+            try validateEndpointOptions(endpoint, for: compactionOption, allowingModel: false)
             updatedRegistry = registry.registering(InferenceProvider.mock())
             reference = .ofType(InferenceProvider<MockInferenceProvider>.self)
         #if canImport(Darwin) || canImport(FoundationNetworking)
         case .anthropic:
-            updatedRegistry = registry.registering(InferenceProvider.anthropic())
+            try validateEndpointOptions(endpoint, for: compactionOption, allowingModel: true)
+            updatedRegistry = registry.registering(anthropicInferenceProvider(configuration: endpoint))
             reference = .ofType(InferenceProvider<AnthropicInferenceProvider>.self)
+        case .openai:
+            let provider = openAIInferenceProvider(configuration: endpoint)
+            updatedRegistry = registry.registering(provider)
+            reference = .ofType(InferenceProvider<OpenAIInferenceProvider>.self)
         #endif
         #if canImport(FoundationModels)
         case .apple:
@@ -51,16 +64,24 @@ enum PlaygroundProviderFactory {
     /// Throws ``PlaygroundError`` when the Apple provider is requested but unavailable.
     ///
     /// - Parameter option: The provider to use.
-    static func makeRegistry(for option: ProviderOption) throws -> ProviderRegistry {
+    static func makeRegistry(
+        for option: ProviderOption,
+        endpoint: ProviderEndpointConfiguration = .default,
+    ) throws -> ProviderRegistry {
         switch option {
         case .mock:
+            try validateEndpointOptions(endpoint, for: option, allowingModel: false)
             return ProviderRegistry(default: InferenceProvider.mock())
         #if canImport(Darwin) || canImport(FoundationNetworking)
         case .anthropic:
-            return ProviderRegistry(default: InferenceProvider.anthropic())
+            try validateEndpointOptions(endpoint, for: option, allowingModel: true)
+            return ProviderRegistry(default: anthropicInferenceProvider(configuration: endpoint))
+        case .openai:
+            return ProviderRegistry(default: openAIInferenceProvider(configuration: endpoint))
         #endif
         #if canImport(FoundationModels)
         case .apple:
+            try validateEndpointOptions(endpoint, for: option, allowingModel: false)
             if #available(macOS 26, iOS 26, visionOS 26, macCatalyst 26, *) {
                 return ProviderRegistry(default: InferenceProvider.apple())
             }
@@ -73,23 +94,84 @@ enum PlaygroundProviderFactory {
     ///
     /// The mock judge provider uses a canned structured pass verdict so Playground
     /// can demonstrate `JudgeValidator` without requiring a network provider.
-    static func makeJudgeRegistry(for option: ProviderOption) throws -> ProviderRegistry {
+    static func makeJudgeRegistry(
+        for option: ProviderOption,
+        endpoint: ProviderEndpointConfiguration = .default,
+    ) throws -> ProviderRegistry {
         switch option {
         case .mock:
+            try validateEndpointOptions(endpoint, for: option, allowingModel: false)
             return ProviderRegistry(default: MockInferenceProvider(
                 structuredResponses: [#"{"verdict":"pass"}"#],
             ))
         #if canImport(Darwin) || canImport(FoundationNetworking)
         case .anthropic:
-            return ProviderRegistry(default: InferenceProvider.anthropic())
+            try validateEndpointOptions(endpoint, for: option, allowingModel: true)
+            return ProviderRegistry(default: anthropicInferenceProvider(configuration: endpoint))
+        case .openai:
+            return ProviderRegistry(default: openAIInferenceProvider(configuration: endpoint))
         #endif
         #if canImport(FoundationModels)
         case .apple:
+            try validateEndpointOptions(endpoint, for: option, allowingModel: false)
             if #available(macOS 26, iOS 26, visionOS 26, macCatalyst 26, *) {
                 return ProviderRegistry(default: InferenceProvider.apple())
             }
             throw PlaygroundError.appleIntelligenceRequiresMacOS26
         #endif
+        }
+    }
+
+    #if canImport(Darwin) || canImport(FoundationNetworking)
+    static func anthropicInferenceProvider(
+        configuration: ProviderEndpointConfiguration,
+    ) -> InferenceProvider<AnthropicInferenceProvider> {
+        InferenceProvider.anthropic(model: configuration.model(default: "claude-sonnet-4-5"))
+    }
+
+    static func openAIInferenceProvider(
+        configuration: ProviderEndpointConfiguration,
+    ) -> InferenceProvider<OpenAIInferenceProvider> {
+        if configuration.skipCredential {
+            return InferenceProvider(
+                OpenAIInferenceProvider(
+                    credentials: .noCredential,
+                    model: configuration.model(default: "gpt-4o"),
+                    baseURL: configuration.baseURL ?? OpenAIInferenceProvider.defaultBaseURL,
+                ),
+            )
+        }
+        if let url = configuration.baseURL {
+            return InferenceProvider.openAI(
+                credentials: EnvironmentAPIKeyProvider("OPENAI_API_KEY"),
+                model: configuration.model(default: "gpt-4o"),
+                baseURL: url,
+            )
+        }
+        return InferenceProvider.openAI(model: configuration.model(default: "gpt-4o"))
+    }
+    #endif
+
+    static func validateEndpointOptions(
+        _ configuration: ProviderEndpointConfiguration,
+        for provider: ProviderOption,
+        allowingModel: Bool,
+    ) throws {
+        var unsupported: [String] = []
+        if !allowingModel, configuration.model != nil {
+            unsupported.append("--model")
+        }
+        if configuration.baseURL != nil {
+            unsupported.append("--base-url")
+        }
+        if configuration.skipCredential {
+            unsupported.append("--skip-credential")
+        }
+        if !unsupported.isEmpty {
+            throw PlaygroundError.unsupportedProviderEndpointOptions(
+                provider: provider.rawValue,
+                options: unsupported,
+            )
         }
     }
 }

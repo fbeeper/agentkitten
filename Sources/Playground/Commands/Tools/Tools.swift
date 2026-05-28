@@ -32,6 +32,8 @@ extension Playground {
         @Option(name: .long, help: "Inference provider.")
         var provider: ProviderOption = .preferred
 
+        @OptionGroup var providerOptions: ProviderEndpointOptions
+
         @Option(name: .long, help: "Tool execution policy: approve, ask, or deny.")
         var toolPolicy: ToolPolicyOption = .approve
 
@@ -71,6 +73,15 @@ extension Playground {
                     for: provider,
                     behavior: AgentBehavior(systemPrompt: system),
                     toolDefinition: toolDefinition,
+                    endpoint: providerOptions.configuration,
+                )
+                try await runConversation(agent: agent, prompt: effectivePrompt)
+            case .openai:
+                let agent = try PlaygroundSessionFactory.makeAgent(
+                    for: provider,
+                    behavior: AgentBehavior(systemPrompt: system),
+                    toolDefinition: toolDefinition,
+                    endpoint: providerOptions.configuration,
                 )
                 try await runConversation(agent: agent, prompt: effectivePrompt)
             #endif

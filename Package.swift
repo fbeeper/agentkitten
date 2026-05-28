@@ -90,6 +90,7 @@ let package = Package(
                 "AgentKitten",
                 "AgentKittenAnthropicInference",
                 "AgentKittenAppleInference",
+                "AgentKittenOpenAIInference",
                 .product(name: "ArgumentParser", package: "swift-argument-parser"),
             ],
             resources: [

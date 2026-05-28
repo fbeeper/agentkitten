@@ -19,6 +19,8 @@ extension Playground {
         @Option(name: .long, help: "Inference provider.")
         var provider: ProviderOption = .preferred
 
+        @OptionGroup var providerOptions: ProviderEndpointOptions
+
         @Flag(name: .long, help: "Print trace entries (including hook invocations) after each turn.")
         var trace = false
 
@@ -51,6 +53,7 @@ extension Playground {
                     tools: [AnyAgentTool(NotifyContactTool())],
                     hooks: [AnyToolHook(rehydrationHook)],
                 ),
+                endpoint: providerOptions.configuration,
             )
             let session = agent.makeSession()
             try await chat(session: session, sanitizer: sanitizer, vault: vault)

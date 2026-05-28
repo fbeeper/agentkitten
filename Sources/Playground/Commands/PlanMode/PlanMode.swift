@@ -19,6 +19,8 @@ extension Playground {
         @Option(name: .long, help: "Inference provider.")
         var provider: ProviderOption = .preferred
 
+        @OptionGroup var providerOptions: ProviderEndpointOptions
+
         mutating func validate() throws {
             guard provider != .mock else {
                 throw ValidationError("--provider mock is not supported for plan-mode.")
@@ -40,6 +42,7 @@ extension Playground {
                     ],
                     executionPolicy: PlanModeExecutionPolicy(state: modeState),
                 ),
+                endpoint: providerOptions.configuration,
             )
             print(
                 PlaygroundChatOutputFormatter.sessionHeader(

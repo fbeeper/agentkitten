@@ -19,6 +19,8 @@ extension Playground {
         @Option(name: .long, help: "Inference provider.")
         var provider: ProviderOption = .preferred
 
+        @OptionGroup var providerOptions: ProviderEndpointOptions
+
         @Option(name: .long, help: "Tool execution policy: approve, ask, or deny.")
         var toolPolicy: ToolPolicyOption = .approve
 
@@ -227,6 +229,7 @@ extension Playground {
                 prompt: .criteria(trimmedJudgeCriteria),
                 providerRegistry: try PlaygroundProviderFactory.makeJudgeRegistry(
                     for: judgeProvider,
+                    endpoint: providerOptions.configuration,
                 ),
                 name: "PlaygroundJudge",
             )
@@ -282,6 +285,7 @@ extension Playground.Chat {
         let providerConfiguration = try PlaygroundProviderFactory.makeRegistry(
             default: provider,
             compaction: compactionProvider,
+            endpoint: providerOptions.configuration,
         )
         return PlaygroundSessionFactory.makeAgent(
             providerRegistry: providerConfiguration.registry,

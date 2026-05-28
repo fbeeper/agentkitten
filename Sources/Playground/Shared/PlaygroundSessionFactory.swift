@@ -2,8 +2,10 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import AgentKitten
+import Foundation
 #if canImport(Darwin) || canImport(FoundationNetworking)
 import AgentKittenAnthropicInference
+import AgentKittenOpenAIInference
 #endif
 import AgentKittenAppleInference
 
@@ -44,9 +46,11 @@ enum PlaygroundSessionFactory {
         for option: ProviderOption,
         systemPrompt: String? = nil,
         runtime: ToolRuntime,
+        endpoint: ProviderEndpointConfiguration = .default,
     ) throws -> any InferenceSession & StructuredInferenceSession {
         switch option {
         case .mock:
+            try PlaygroundProviderFactory.validateEndpointOptions(endpoint, for: option, allowingModel: false)
             return InferenceProvider.mock().makeSession(
                 systemPrompt: systemPrompt,
                 toolRuntime: runtime,
@@ -55,7 +59,16 @@ enum PlaygroundSessionFactory {
             )
         #if canImport(Darwin) || canImport(FoundationNetworking)
         case .anthropic:
-            return InferenceProvider.anthropic().makeSession(
+            try PlaygroundProviderFactory.validateEndpointOptions(endpoint, for: option, allowingModel: true)
+            return PlaygroundProviderFactory.anthropicInferenceProvider(configuration: endpoint).makeSession(
+                systemPrompt: systemPrompt,
+                toolRuntime: runtime,
+                toolSelection: .all,
+                inferenceContext: .empty,
+            )
+        case .openai:
+            let provider = PlaygroundProviderFactory.openAIInferenceProvider(configuration: endpoint)
+            return provider.makeSession(
                 systemPrompt: systemPrompt,
                 toolRuntime: runtime,
                 toolSelection: .all,
@@ -64,6 +77,7 @@ enum PlaygroundSessionFactory {
         #endif
         #if canImport(FoundationModels)
         case .apple:
+            try PlaygroundProviderFactory.validateEndpointOptions(endpoint, for: option, allowingModel: false)
             if #available(macOS 26, iOS 26, visionOS 26, macCatalyst 26, *) {
                 return InferenceProvider.apple().makeSession(
                     systemPrompt: systemPrompt,
@@ -89,9 +103,13 @@ enum PlaygroundSessionFactory {
         for option: ProviderOption,
         behavior: AgentBehavior,
         toolDefinition: ToolDefinition = ToolDefinition(),
+        endpoint: ProviderEndpointConfiguration = .default,
     ) throws -> Agent {
         Agent(
-            providerRegistry: try PlaygroundProviderFactory.makeRegistry(for: option),
+            providerRegistry: try PlaygroundProviderFactory.makeRegistry(
+                for: option,
+                endpoint: endpoint,
+            ),
             behavior: behavior,
             toolDefinition: toolDefinition,
         )
@@ -127,9 +145,13 @@ enum PlaygroundSessionFactory {
         behavior: AgentBehavior,
         toolDefinition: ToolDefinition = ToolDefinition(),
         sessionState: SessionStateMode = .disabled,
+        endpoint: ProviderEndpointConfiguration = .default,
     ) throws -> Agent {
         Agent(
-            providerRegistry: try PlaygroundProviderFactory.makeRegistry(for: provider),
+            providerRegistry: try PlaygroundProviderFactory.makeRegistry(
+                for: provider,
+                endpoint: endpoint,
+            ),
             behavior: behavior,
             toolDefinition: toolDefinition,
             sessionState: sessionState,
