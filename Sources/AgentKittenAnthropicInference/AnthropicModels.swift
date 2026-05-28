@@ -3,6 +3,7 @@
 
 #if canImport(Darwin) || canImport(FoundationNetworking)
 import AgentKittenCore
+import AgentKittenInferenceSupport
 import Foundation
 
 // MARK: - Request
@@ -82,7 +83,7 @@ struct AnthropicMessage: Encodable {
 enum AnthropicContent: Encodable {
     case text(String)
     /// `input` is pre-parsed at construction time; encoding never throws due to malformed JSON.
-    case toolUse(id: String, name: String, input: AnthropicJSONValue)
+    case toolUse(id: String, name: String, input: InferenceProviderJSONValue)
     case toolResult(toolUseID: String, content: [ToolResultContent], isError: Bool)
 
     func encode(to encoder: any Encoder) throws {
@@ -179,93 +180,12 @@ private enum AnthropicToolResultBlock: Encodable {
 struct AnthropicTool: Encodable {
     let name: String
     let description: String
-    let inputSchema: AnthropicJSONValue
+    let inputSchema: InferenceProviderJSONValue
 
     enum CodingKeys: String, CodingKey {
         case name
         case description
         case inputSchema = "input_schema"
-    }
-}
-
-// MARK: - JSON Value
-
-/// A recursive JSON value used for tool input schemas.
-///
-/// Mirrors ``JSONSchema`` but serializes to the flat JSON format
-/// that the Anthropic API expects (e.g., `"type": "string"` rather than
-/// a Swift enum case).
-indirect enum AnthropicJSONValue: Codable, Equatable {
-    case object([String: AnthropicJSONValue])
-    case array([AnthropicJSONValue])
-    case string(String)
-    case number(Double)
-    case bool(Bool)
-    case null
-
-    func encode(to encoder: any Encoder) throws {
-        switch self {
-        case .object(let dict):
-            var container = encoder.container(keyedBy: StringKey.self)
-            for (key, value) in dict {
-                try container.encode(value, forKey: StringKey(key))
-            }
-        case .array(let arr):
-            var container = encoder.unkeyedContainer()
-            for item in arr {
-                try container.encode(item)
-            }
-        case .string(let str):
-            var container = encoder.singleValueContainer()
-            try container.encode(str)
-        case .number(let num):
-            var container = encoder.singleValueContainer()
-            try container.encode(num)
-        case .bool(let flag):
-            var container = encoder.singleValueContainer()
-            try container.encode(flag)
-        case .null:
-            var container = encoder.singleValueContainer()
-            try container.encodeNil()
-        }
-    }
-
-    private struct StringKey: CodingKey {
-        var stringValue: String
-        var intValue: Int? {
-            nil
-        }
-
-        init(_ string: String) {
-            stringValue = string
-        }
-
-        init?(stringValue: String) {
-            self.stringValue = stringValue
-        }
-
-        init?(intValue: Int) {
-            nil
-        }
-    }
-
-    init(from decoder: any Decoder) throws {
-        let container = try decoder.singleValueContainer()
-        if container.decodeNil() {
-            self = .null
-        } else if let value = try? container.decode(Bool.self) {
-            self = .bool(value)
-        } else if let value = try? container.decode(Double.self) {
-            self = .number(value)
-        } else if let value = try? container.decode(String.self) {
-            self = .string(value)
-        } else if let value = try? container.decode([AnthropicJSONValue].self) {
-            self = .array(value)
-        } else if let value = try? container.decode([String: AnthropicJSONValue].self) {
-            self = .object(value)
-        } else {
-            self = .null
-        }
     }
 }
 

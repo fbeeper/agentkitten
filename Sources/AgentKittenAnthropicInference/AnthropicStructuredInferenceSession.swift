@@ -3,6 +3,7 @@
 
 #if canImport(Darwin) || canImport(FoundationNetworking)
 import AgentKittenCore
+import AgentKittenInferenceSupport
 import Foundation
 
 extension AnthropicInferenceSession: StructuredInferenceSession {
@@ -198,7 +199,7 @@ extension AnthropicInferenceSession: StructuredInferenceSession {
     }
 
     private func encodeStructuredSchema(_ schema: JSONSchema) -> String {
-        let value = AnthropicToolBridge.anthropicJSONValue(from: schema)
+        let value = InferenceProviderJSONValue.encoding(schema)
         guard let data = try? JSONEncoder().encode(value),
               let str = String(data: data, encoding: .utf8) else {
             return "{}"
