@@ -142,18 +142,20 @@ struct AppleToolResultSupportTests {
     }
 }
 
-// MARK: - AppleTranscriptCompactionPlan
+// MARK: - TurnPreservationPlan
 
-@Suite("AppleTranscriptCompactionPlan")
-struct AppleTranscriptCompactionPlanTests {
+@Suite("TurnPreservationPlan for Apple transcript entries")
+struct AppleTranscriptTurnPreservationPlanTests {
     @available(macOS 26, iOS 26, visionOS 26, macCatalyst 26, *)
     @Test func emptyTranscript_bothArraysEmpty() {
-        let plan = AppleTranscriptCompactionPlan(
-            transcript: Transcript(entries: []),
+        let entries = compactableEntries(from: Transcript(entries: []))
+        let plan = TurnPreservationPlan(
+            entries: entries,
             preservedRecentTurnCount: 1,
+            isTurnStart: isTurnStarter,
         )
-        #expect(plan.summarizedEntries.isEmpty)
-        #expect(plan.recentEntries.isEmpty)
+        #expect(plan.olderEntries(from: entries).isEmpty)
+        #expect(plan.recentEntries(from: entries).isEmpty)
     }
 
     @available(macOS 26, iOS 26, visionOS 26, macCatalyst 26, *)
@@ -162,9 +164,14 @@ struct AppleTranscriptCompactionPlanTests {
             makePrompt("q1"), makeResponse("a1"),
             makePrompt("q2"), makeResponse("a2"),
         ])
-        let plan = AppleTranscriptCompactionPlan(transcript: transcript, preservedRecentTurnCount: 0)
-        #expect(plan.summarizedEntries.count == 4)
-        #expect(plan.recentEntries.isEmpty)
+        let entries = compactableEntries(from: transcript)
+        let plan = TurnPreservationPlan(
+            entries: entries,
+            preservedRecentTurnCount: 0,
+            isTurnStart: isTurnStarter,
+        )
+        #expect(plan.olderEntries(from: entries).count == 4)
+        #expect(plan.recentEntries(from: entries).isEmpty)
     }
 
     @available(macOS 26, iOS 26, visionOS 26, macCatalyst 26, *)
@@ -174,8 +181,13 @@ struct AppleTranscriptCompactionPlanTests {
             makePrompt("q1"),
             makeResponse("a1"),
         ])
-        let plan = AppleTranscriptCompactionPlan(transcript: transcript, preservedRecentTurnCount: 1)
-        let allEntries = plan.summarizedEntries + plan.recentEntries
+        let entries = compactableEntries(from: transcript)
+        let plan = TurnPreservationPlan(
+            entries: entries,
+            preservedRecentTurnCount: 1,
+            isTurnStart: isTurnStarter,
+        )
+        let allEntries = plan.olderEntries(from: entries) + plan.recentEntries(from: entries)
         let hasInstructions = allEntries.contains {
             if case .instructions = $0 { return true }
             return false
@@ -186,9 +198,14 @@ struct AppleTranscriptCompactionPlanTests {
     @available(macOS 26, iOS 26, visionOS 26, macCatalyst 26, *)
     @Test func preservedCountExceedsActualTurns_allEntriesInRecent() {
         let transcript = Transcript(entries: [makePrompt("q1"), makeResponse("a1")])
-        let plan = AppleTranscriptCompactionPlan(transcript: transcript, preservedRecentTurnCount: 99)
-        #expect(plan.summarizedEntries.isEmpty)
-        #expect(plan.recentEntries.count == 2)
+        let entries = compactableEntries(from: transcript)
+        let plan = TurnPreservationPlan(
+            entries: entries,
+            preservedRecentTurnCount: 99,
+            isTurnStart: isTurnStarter,
+        )
+        #expect(plan.olderEntries(from: entries).isEmpty)
+        #expect(plan.recentEntries(from: entries).count == 2)
     }
 
     @available(macOS 26, iOS 26, visionOS 26, macCatalyst 26, *)
@@ -197,9 +214,14 @@ struct AppleTranscriptCompactionPlanTests {
             makePrompt("old-q"), makeResponse("old-a"),
             makePrompt("recent-q"), makeResponse("recent-a"),
         ])
-        let plan = AppleTranscriptCompactionPlan(transcript: transcript, preservedRecentTurnCount: 1)
-        #expect(plan.summarizedEntries.count == 2)
-        #expect(plan.recentEntries.count == 2)
+        let entries = compactableEntries(from: transcript)
+        let plan = TurnPreservationPlan(
+            entries: entries,
+            preservedRecentTurnCount: 1,
+            isTurnStart: isTurnStarter,
+        )
+        #expect(plan.olderEntries(from: entries).count == 2)
+        #expect(plan.recentEntries(from: entries).count == 2)
     }
 
     @available(macOS 26, iOS 26, visionOS 26, macCatalyst 26, *)
@@ -209,9 +231,27 @@ struct AppleTranscriptCompactionPlanTests {
             makePrompt("middle-q"), makeResponse("middle-a"),
             makePrompt("recent-q"), makeResponse("recent-a"),
         ])
-        let plan = AppleTranscriptCompactionPlan(transcript: transcript, preservedRecentTurnCount: 2)
-        #expect(plan.summarizedEntries.count == 2)
-        #expect(plan.recentEntries.count == 4)
+        let entries = compactableEntries(from: transcript)
+        let plan = TurnPreservationPlan(
+            entries: entries,
+            preservedRecentTurnCount: 2,
+            isTurnStart: isTurnStarter,
+        )
+        #expect(plan.olderEntries(from: entries).count == 2)
+        #expect(plan.recentEntries(from: entries).count == 4)
+    }
+
+    @available(macOS 26, iOS 26, visionOS 26, macCatalyst 26, *)
+    private func compactableEntries(from transcript: Transcript) -> [Transcript.Entry] {
+        Array(transcript).filter {
+            if case .instructions = $0 { false } else { true }
+        }
+    }
+
+    @available(macOS 26, iOS 26, visionOS 26, macCatalyst 26, *)
+    private func isTurnStarter(_ entry: Transcript.Entry) -> Bool {
+        if case .prompt = entry { return true }
+        return false
     }
 }
 

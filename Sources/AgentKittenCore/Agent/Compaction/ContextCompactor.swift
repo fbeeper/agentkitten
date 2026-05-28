@@ -80,10 +80,12 @@ package struct SummarizationContextCompactionStrategy: ContextCompactionStrategy
         summaryGenerator: ContextCompactionSummaryGenerator,
     ) async throws -> ContextCompactionResult {
         let allEntries = await session.compactionEntries()
-        let older = olderEntries(
-            from: allEntries,
+        let plan = TurnPreservationPlan(
+            entries: allEntries,
             preservedRecentTurnCount: options.preservedRecentTurnCount,
+            isTurnStart: \.isTurnStart,
         )
+        let older = plan.olderEntries(from: allEntries)
         let summary: String? = if older.isEmpty {
             nil
         } else {
@@ -174,15 +176,6 @@ package struct SummarizationContextCompactionStrategy: ContextCompactionStrategy
             Array(groups[..<midpoint].joined()),
             Array(groups[midpoint...].joined()),
         )
-    }
-
-    private func olderEntries(
-        from entries: [RenderedSessionEntry],
-        preservedRecentTurnCount: Int,
-    ) -> [RenderedSessionEntry] {
-        let groups = makeGroups(entries)
-        let keepCount = min(max(0, preservedRecentTurnCount), groups.count)
-        return Array(groups.dropLast(keepCount).joined())
     }
 
     /// Partitions a flat entry list into turn groups.
