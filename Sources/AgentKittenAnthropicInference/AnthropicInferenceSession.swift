@@ -216,7 +216,7 @@ public actor AnthropicInferenceSession: InferenceSession {
             content.append(.text(text))
         }
         for call in toolCalls {
-            let inputValue: AnthropicJSONValue = anthropicJSONValue(from: call.argsJSON)
+            let inputValue: InferenceProviderJSONValue = jsonValue(from: call.argsJSON)
             content.append(.toolUse(id: call.id, name: call.name, input: inputValue))
         }
         if !content.isEmpty {
@@ -226,9 +226,9 @@ public actor AnthropicInferenceSession: InferenceSession {
 
     /// Parse argsJSON once here; fall back to an empty object so history
     /// re-encoding never throws if the model emitted malformed JSON.
-    private func anthropicJSONValue(from argsJSONString: String) -> AnthropicJSONValue {
+    private func jsonValue(from argsJSONString: String) -> InferenceProviderJSONValue {
         if let data = argsJSONString.data(using: .utf8),
-           let value = try? JSONDecoder().decode(AnthropicJSONValue.self, from: data) {
+           let value = try? JSONDecoder().decode(InferenceProviderJSONValue.self, from: data) {
             value
         } else {
             .object([:])

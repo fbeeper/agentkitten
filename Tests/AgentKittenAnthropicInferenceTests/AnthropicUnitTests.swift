@@ -8,12 +8,12 @@ import AgentKittenInferenceSupport
 import Foundation
 import Testing
 
-// MARK: - AnthropicToolBridge: anthropicJSONValue schema cases
+// MARK: - InferenceProviderJSONValue.encoding schema cases
 
-@Suite("AnthropicToolBridge anthropicJSONValue")
-struct AnthropicToolBridgeSchemaTests {
+@Suite("InferenceProviderJSONValue encoding from JSONSchema")
+struct JSONValueEncodingSchemaTests {
     @Test func string_withDescription_includesDescriptionKey() {
-        let result = AnthropicToolBridge.anthropicJSONValue(from: .string(description: "A name."))
+        let result = InferenceProviderJSONValue.encoding(.string(description: "A name."))
         guard case .object(let dict) = result else {
             Issue.record("Expected object"); return
         }
@@ -22,7 +22,7 @@ struct AnthropicToolBridgeSchemaTests {
     }
 
     @Test func string_nilDescription_omitsDescriptionKey() {
-        let result = AnthropicToolBridge.anthropicJSONValue(from: .string(description: nil))
+        let result = InferenceProviderJSONValue.encoding(.string(description: nil))
         guard case .object(let dict) = result else {
             Issue.record("Expected object"); return
         }
@@ -30,7 +30,7 @@ struct AnthropicToolBridgeSchemaTests {
     }
 
     @Test func integer_mapsToIntegerType() {
-        let result = AnthropicToolBridge.anthropicJSONValue(from: .integer(description: nil))
+        let result = InferenceProviderJSONValue.encoding(.integer(description: nil))
         guard case .object(let dict) = result else {
             Issue.record("Expected object"); return
         }
@@ -38,7 +38,7 @@ struct AnthropicToolBridgeSchemaTests {
     }
 
     @Test func number_mapsToNumberType() {
-        let result = AnthropicToolBridge.anthropicJSONValue(from: .number(description: "Score."))
+        let result = InferenceProviderJSONValue.encoding(.number(description: "Score."))
         guard case .object(let dict) = result else {
             Issue.record("Expected object"); return
         }
@@ -47,7 +47,7 @@ struct AnthropicToolBridgeSchemaTests {
     }
 
     @Test func boolean_mapsToBooleanType() {
-        let result = AnthropicToolBridge.anthropicJSONValue(from: .boolean(description: nil))
+        let result = InferenceProviderJSONValue.encoding(.boolean(description: nil))
         guard case .object(let dict) = result else {
             Issue.record("Expected object"); return
         }
@@ -55,9 +55,7 @@ struct AnthropicToolBridgeSchemaTests {
     }
 
     @Test func array_includesItemsAndType() {
-        let result = AnthropicToolBridge.anthropicJSONValue(
-            from: .array(items: .string(description: nil), description: "Tags."),
-        )
+        let result = InferenceProviderJSONValue.encoding(.array(items: .string(description: nil), description: "Tags."))
         guard case .object(let dict) = result else {
             Issue.record("Expected object"); return
         }
@@ -67,9 +65,7 @@ struct AnthropicToolBridgeSchemaTests {
     }
 
     @Test func array_nilDescription_omitsDescriptionKey() {
-        let result = AnthropicToolBridge.anthropicJSONValue(
-            from: .array(items: .integer(description: nil), description: nil),
-        )
+        let result = InferenceProviderJSONValue.encoding(.array(items: .integer(description: nil), description: nil))
         guard case .object(let dict) = result else {
             Issue.record("Expected object"); return
         }
@@ -77,9 +73,7 @@ struct AnthropicToolBridgeSchemaTests {
     }
 
     @Test func enumeration_includesEnumArray() {
-        let result = AnthropicToolBridge.anthropicJSONValue(
-            from: .enumeration(values: ["fast", "slow"], description: "Speed."),
-        )
+        let result = InferenceProviderJSONValue.encoding(.enumeration(values: ["fast", "slow"], description: "Speed."))
         guard case .object(let dict) = result else {
             Issue.record("Expected object"); return
         }
@@ -89,9 +83,7 @@ struct AnthropicToolBridgeSchemaTests {
     }
 
     @Test func enumeration_nilDescription_omitsDescriptionKey() {
-        let result = AnthropicToolBridge.anthropicJSONValue(
-            from: .enumeration(values: ["a"], description: nil),
-        )
+        let result = InferenceProviderJSONValue.encoding(.enumeration(values: ["a"], description: nil))
         guard case .object(let dict) = result else {
             Issue.record("Expected object"); return
         }
@@ -99,8 +91,8 @@ struct AnthropicToolBridgeSchemaTests {
     }
 
     @Test func object_emptyRequired_omitsRequiredKey() {
-        let result = AnthropicToolBridge.anthropicJSONValue(
-            from: .object(properties: ["x": .string(description: nil)], required: []),
+        let result = InferenceProviderJSONValue.encoding(
+            .object(properties: ["x": .string(description: nil)], required: []),
         )
         guard case .object(let dict) = result else {
             Issue.record("Expected object"); return
@@ -109,8 +101,8 @@ struct AnthropicToolBridgeSchemaTests {
     }
 
     @Test func object_withRequired_includesRequiredArray() {
-        let result = AnthropicToolBridge.anthropicJSONValue(
-            from: .object(properties: ["x": .string(description: nil)], required: ["x"]),
+        let result = InferenceProviderJSONValue.encoding(
+            .object(properties: ["x": .string(description: nil)], required: ["x"]),
         )
         guard case .object(let dict) = result else {
             Issue.record("Expected object"); return
@@ -119,12 +111,12 @@ struct AnthropicToolBridgeSchemaTests {
     }
 }
 
-// MARK: - AnthropicJSONValue: Decodable
+// MARK: - InferenceProviderJSONValue: Decodable
 
-@Suite("AnthropicJSONValue Decodable")
-struct AnthropicJSONValueDecodableTests {
-    private func decode(_ json: String) throws -> AnthropicJSONValue {
-        try JSONDecoder().decode(AnthropicJSONValue.self, from: Data(json.utf8))
+@Suite("InferenceProviderJSONValue Decodable")
+struct JSONValueDecodableTests {
+    private func decode(_ json: String) throws -> InferenceProviderJSONValue {
+        try JSONDecoder().decode(InferenceProviderJSONValue.self, from: Data(json.utf8))
     }
 
     @Test func string() throws {
