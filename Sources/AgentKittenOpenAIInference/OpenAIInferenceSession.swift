@@ -15,8 +15,8 @@ import Foundation
 ///
 /// Compatible with any OpenAI-spec endpoint including LM Studio.
 ///
-/// This session does not yet support structured output, token counting, or
-/// context compaction; those capabilities are layered on by later extensions.
+/// This session does not yet support token counting or context compaction; those
+/// capabilities are layered on by later extensions.
 public actor OpenAIInferenceSession: InferenceSession {
     let client: any OpenAIHTTPStreaming
     let defaultModel: String
@@ -25,6 +25,7 @@ public actor OpenAIInferenceSession: InferenceSession {
     let tools: [OpenAITool]
     var currentModel: String
     var history: [OpenAIMessage]
+    let structuredOutputInstructionFormat: String
     let operationGate = SingleFlightOperationGate<InferenceSessionOperationKind> {
         InferenceError.concurrentOperationInProgress(active: $0)
     }
@@ -35,6 +36,7 @@ public actor OpenAIInferenceSession: InferenceSession {
         systemPrompt: String?,
         toolRuntime: ToolRuntime,
         initialHistory: [OpenAIMessage] = [],
+        structuredOutputInstructionFormat: String = OpenAIInferenceProvider.defaultStructuredOutputInstructionFormat,
     ) {
         self.client = client
         self.defaultModel = defaultModel
@@ -44,6 +46,7 @@ public actor OpenAIInferenceSession: InferenceSession {
         tools = toolRuntime.allTools.map {
             OpenAIToolBridge.openAITool(from: $0, rationaleDescription: rationaleDescription)
         }
+        self.structuredOutputInstructionFormat = structuredOutputInstructionFormat
         history = initialHistory
         currentModel = defaultModel
     }
@@ -170,7 +173,7 @@ public actor OpenAIInferenceSession: InferenceSession {
             callsToExecute,
             toolTurnRuntime: toolTurnRuntime,
             turnHistory: &turnHistory,
-            continuation: continuation,
+            emit: { continuation.yield($0) },
         )
         return RequestOutcome(stopReason: stopReason, text: textAccumulated, hasToolCalls: !callsToExecute.isEmpty)
     }
@@ -212,18 +215,4 @@ public actor OpenAIInferenceSession: InferenceSession {
     }
 }
 
-extension OpenAIInferenceSession: StructuredInferenceSession {
-    /// Structured output is not supported by this session yet.
-    ///
-    /// Always throws ``InferenceError/unsupportedConfiguration(_:)``. A later
-    /// extension adds schema-guided structured generation.
-    public func generateStream<T: Codable & Sendable & JSONSchemaProviding>(
-        prompt _: String,
-        parameters _: InferenceRequestParameters,
-    ) async throws -> StructuredInferenceStream<T> {
-        throw InferenceError.unsupportedConfiguration(
-            "OpenAIInferenceSession does not yet support structured output.",
-        )
-    }
-}
 #endif

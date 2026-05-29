@@ -26,49 +26,49 @@ extension OpenAIInferenceSession {
     }
 
     /// Executes each model-requested tool call in order, appending a tool-result message per call.
-    func executeToolCalls(
+    func executeToolCalls<Output: Sendable>(
         _ calls: [PendingOpenAIToolCall],
         toolTurnRuntime: ToolTurnRuntime,
         turnHistory: inout [OpenAIMessage],
-        continuation: InferenceStream.Continuation,
+        emit: @escaping @Sendable (InferenceEvent<Output>) -> Void,
     ) async {
         guard !calls.isEmpty else { return }
         for call in calls {
             let toolMessage = await executeSingleTool(
                 call,
                 toolTurnRuntime: toolTurnRuntime,
-                continuation: continuation,
+                emit: emit,
             )
             turnHistory.append(toolMessage)
         }
     }
 
-    private func executeSingleTool(
+    private func executeSingleTool<Output: Sendable>(
         _ call: PendingOpenAIToolCall,
         toolTurnRuntime: ToolTurnRuntime,
-        continuation: InferenceStream.Continuation,
+        emit: @escaping @Sendable (InferenceEvent<Output>) -> Void,
     ) async -> OpenAIMessage {
         let callID: ToolCallID = call.id
         let (rationale, argsJSON) = ToolRationale.extracting(from: call.argsJSON)
-        continuation.yield(.toolCallRequested(id: callID, name: call.name, argumentsJSON: argsJSON))
+        emit(.toolCallRequested(id: callID, name: call.name, argumentsJSON: argsJSON))
         let pending = PendingToolCall(id: callID, name: call.name, argumentsJSON: argsJSON, modelRationale: rationale)
         let outcome = await toolTurnRuntime.invoke(
             pending,
             onApprovalRequired: { pendingCall in
-                continuation.yield(.toolApprovalRequired(call: pendingCall))
+                emit(.toolApprovalRequired(call: pendingCall))
             },
-            onHookFired: { continuation.yield(.toolHookFired($0)) },
+            onHookFired: { emit(.toolHookFired($0)) },
         )
         switch outcome {
         case .success(let content):
-            continuation.yield(.toolCallCompleted(
+            emit(.toolCallCompleted(
                 id: callID,
                 name: call.name,
                 outcome: .success(content: content),
             ))
             return OpenAIMessage.toolResult(toolCallID: callID, content: content, isError: false)
         case .failure(let failure):
-            continuation.yield(.toolCallCompleted(id: callID, name: call.name, outcome: .failure(failure)))
+            emit(.toolCallCompleted(id: callID, name: call.name, outcome: .failure(failure)))
             return OpenAIMessage.toolResult(
                 toolCallID: callID,
                 content: [.text(failure.resultJSON)],
