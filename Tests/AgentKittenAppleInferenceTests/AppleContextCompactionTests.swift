@@ -86,7 +86,8 @@ private func makeSummaryGenerator(model: SystemLanguageModel) -> @Sendable (Stri
 
 #if compiler(>=6.3)
 @available(macOS 26.4, iOS 26.4, visionOS 26.4, macCatalyst 26.4, *)
-@Test func appleCompactedTranscript_truncatesOldEntriesWithoutSummarizing() async {
+@Test(.enabled(if: SystemLanguageModel.default.isAvailable))
+func appleCompactedTranscript_truncatesOldEntriesWithoutSummarizing() async {
     let transcript = FoundationModels.Transcript(entries: [
         .instructions(FoundationModels.Transcript.Instructions(segments: [
             .text(FoundationModels.Transcript.TextSegment(content: "System instructions.")),
