@@ -11,6 +11,15 @@ import FoundationNetworking
 /// Streams SSE events from OpenAI Chat Completions API requests.
 protocol OpenAIHTTPStreaming: Sendable {
     func stream(request: OpenAIRequest) async throws -> AsyncThrowingStream<OpenAISSEEvent, Error>
+
+    /// Returns the model's maximum input-token window from `/models/{model}`, or `nil` if unavailable.
+    func maxInputTokens(for model: String) async throws -> Int?
+}
+
+extension OpenAIHTTPStreaming {
+    func maxInputTokens(for model: String) async throws -> Int? {
+        nil
+    }
 }
 
 /// Sends requests to the OpenAI Chat Completions API (or any compatible endpoint) and streams SSE responses.
@@ -49,6 +58,21 @@ struct OpenAIHTTPClient: OpenAIHTTPStreaming {
             }
             continuation.onTermination = { _ in task.cancel() }
         }
+    }
+
+    func maxInputTokens(for model: String) async throws -> Int? {
+        let endpoint = baseURL.appending(path: "models").appending(path: model)
+        var urlRequest = URLRequest(url: endpoint)
+        urlRequest.httpMethod = "GET"
+        if case .key(let provider) = credentials {
+            urlRequest.setValue("Bearer \(try await provider.apiKey())", forHTTPHeaderField: "Authorization")
+        }
+        let (data, response) = try await urlSession.data(for: urlRequest)
+        if let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode != 200 {
+            let body = String(bytes: data, encoding: .utf8).map { String($0.prefix(512)) } ?? ""
+            throw Self.error(statusCode: httpResponse.statusCode, body: body)
+        }
+        return try JSONDecoder().decode(OpenAIModelInfoResponse.self, from: data).resolvedMaxInputTokens
     }
 
     // MARK: - Private

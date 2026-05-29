@@ -26,6 +26,8 @@ public actor OpenAIInferenceSession: InferenceSession {
     var currentModel: String
     var history: [OpenAIMessage]
     let structuredOutputInstructionFormat: String
+    var resolvedContextSizes: [String: OpenAIResolvedContextSize] = [:]
+    var cachedContextTokens: Int?
     let operationGate = SingleFlightOperationGate<InferenceSessionOperationKind> {
         InferenceError.concurrentOperationInProgress(active: $0)
     }
@@ -153,10 +155,11 @@ public actor OpenAIInferenceSession: InferenceSession {
                 pendingCalls.append(PendingOpenAIToolCall(id: id, name: name, argsJSON: argsJSON))
             case .stopReason(let reason):
                 stopReason = reason
-            case .usage:
-                // Token usage is reported here, but contextUsage() is not yet
-                // supported by this session, so ignore it for now.
-                break
+            case .usage(let total):
+                // OpenAI is stateless: every request re-sends the full message array,
+                // so `total` already covers the entire conversation history. Replace rather
+                // than accumulate — accumulating would double-count all prior messages.
+                cachedContextTokens = total
             case .error(let message):
                 throw InferenceError.invalidResponse(message)
             }
@@ -184,12 +187,12 @@ public actor OpenAIInferenceSession: InferenceSession {
     ) -> OpenAIRequest {
         let selectedTools = tools.filter { parameters.toolSelection.allows(toolName: $0.function.name) }
         let effectiveTools: [OpenAITool]? = selectedTools.isEmpty ? nil : selectedTools
+        let model = parameters.inferenceContext[OpenAIModelKey.self] ?? defaultModel
+        currentModel = model
         var messages = turnHistory
         if let systemPrompt, !systemPrompt.isEmpty {
             messages = [OpenAIMessage.system(systemPrompt)] + messages
         }
-        let model = parameters.inferenceContext[OpenAIModelKey.self] ?? defaultModel
-        currentModel = model
         return OpenAIRequest(
             model: model,
             messages: messages,

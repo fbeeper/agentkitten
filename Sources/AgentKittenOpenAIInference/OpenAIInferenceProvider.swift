@@ -14,8 +14,8 @@ import Foundation
 /// Each ``Conversation`` gets its own ``OpenAIInferenceSession`` which fetches an API
 /// key from the supplied ``APIKeyProviding`` at the start of each turn.
 ///
-/// This provider supports plain text chat, tool use, and structured output. It
-/// does not yet support token counting or context compaction.
+/// This provider supports plain text chat, tool use, structured output, and
+/// token counting. It does not yet support context compaction.
 ///
 /// Use the ``InferenceProvider`` convenience factories instead of instantiating
 /// this type directly:
