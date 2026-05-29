@@ -21,14 +21,16 @@ extension AppleInferenceSession: ContextCompactableSession {
             for: Array(languageSession.transcript),
             model: model,
         )
-        let plan = AppleTranscriptCompactionPlan(
-            transcript: languageSession.transcript,
+        let compactableEntries = Self.compactableEntries(from: languageSession.transcript)
+        let plan = TurnPreservationPlan(
+            entries: compactableEntries,
             preservedRecentTurnCount: preservedRecentTurnCount,
+            isTurnStart: Self.isTurnStarter,
         )
         let entries: [FoundationModels.Transcript.Entry] = if let summary {
-            summaryEntries(summary) + plan.recentEntries
+            summaryEntries(summary) + plan.recentEntries(from: compactableEntries)
         } else {
-            plan.recentEntries
+            plan.recentEntries(from: compactableEntries)
         }
         replaceTranscript(FoundationModels.Transcript(entries: entries))
         let usageAfter = (try? await Self.contextUsage(
@@ -46,6 +48,14 @@ extension AppleInferenceSession: ContextCompactableSession {
 
 @available(macOS 26, iOS 26, visionOS 26, macCatalyst 26, *)
 extension AppleInferenceSession {
+    static func compactableEntries(
+        from transcript: FoundationModels.Transcript,
+    ) -> [FoundationModels.Transcript.Entry] {
+        Array(transcript).filter {
+            if case .instructions = $0 { false } else { true }
+        }
+    }
+
     private static func isTurnStarter(_ entry: FoundationModels.Transcript.Entry) -> Bool {
         if case .prompt = entry { return true }
         return false

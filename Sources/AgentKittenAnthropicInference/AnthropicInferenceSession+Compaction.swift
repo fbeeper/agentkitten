@@ -20,14 +20,15 @@ extension AnthropicInferenceSession: ContextCompactableSession {
             return .skipped(.failed("No Anthropic message history to compact."))
         }
         let usageBefore = try await uncheckedContextUsage()
-        let plan = AnthropicMessageCompactionPlan(
-            history: history,
+        let plan = TurnPreservationPlan(
+            entries: history,
             preservedRecentTurnCount: preservedRecentTurnCount,
+            isTurnStart: Self.isTurnStarter,
         )
         if let summary {
-            history = summaryMessages(summary) + plan.recentMessages
+            history = summaryMessages(summary) + plan.recentEntries(from: history)
         } else {
-            history = plan.recentMessages
+            history = plan.recentEntries(from: history)
         }
         cachedContextTokens = nil
         let usageAfter = (try? await uncheckedContextUsage()) ?? usageBefore
