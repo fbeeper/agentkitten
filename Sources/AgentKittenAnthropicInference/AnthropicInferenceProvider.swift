@@ -18,9 +18,6 @@ import AgentKittenInferenceSupport
 /// // Environment variable (CLI / Playground)
 /// let provider = InferenceProvider.anthropic()
 ///
-/// // Keychain (app)
-/// let provider = InferenceProvider.anthropic(keychain: "com.example.App", account: "anthropic")
-///
 /// // Custom credentials
 /// let provider = InferenceProvider.anthropic(credentials: MyVaultProvider())
 /// ```

@@ -9,6 +9,8 @@
 public struct HistoryRenderingConfiguration: Sendable {
     /// Label prepended to conversation history entries for compaction summaries.
     public var summaryMarker = "[Conversation summary]"
+    /// Role label for system turns in compaction-rendered history.
+    public var systemRoleLabel = "System"
     /// Role label for user turns in compaction-rendered history.
     public var userRoleLabel = "User"
     /// Role label for assistant turns in compaction-rendered history.

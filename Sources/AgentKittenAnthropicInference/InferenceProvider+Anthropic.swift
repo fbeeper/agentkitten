@@ -33,27 +33,5 @@ extension InferenceProvider where Provider == AnthropicInferenceProvider {
             model: model,
         ))
     }
-
-    #if canImport(Security)
-    /// Anthropic provider that reads the API key from the system Keychain.
-    ///
-    /// Recommended for app targets where storing secrets in environment variables
-    /// is not appropriate.
-    ///
-    /// - Parameters:
-    ///   - service: Keychain service name (typically the app's bundle ID).
-    ///   - account: Keychain account name distinguishing multiple keys under the same service.
-    ///   - model: The Anthropic model identifier. Defaults to `"claude-sonnet-4-5"`.
-    public static func anthropic(
-        keychain service: String,
-        account: String,
-        model: String = "claude-sonnet-4-5",
-    ) -> Self {
-        Self(AnthropicInferenceProvider(
-            credentials: KeychainAPIKeyProvider(service: service, account: account),
-            model: model,
-        ))
-    }
-    #endif
 }
 #endif

@@ -191,28 +191,19 @@ extension AnthropicInferenceSession: StructuredInferenceSession {
         _ type: T.Type,
         from json: String,
     ) throws(StructuredGenerationError) -> T {
-        do {
-            return try JSONDecoder().decode(T.self, from: Data(json.utf8))
-        } catch {
-            throw StructuredGenerationError.decodingFailed(error)
-        }
+        try AgentKittenInferenceSupport.decodeStructuredValue(type, from: json)
     }
 
     private func encodeStructuredSchema(_ schema: JSONSchema) -> String {
-        let value = InferenceProviderJSONValue.encoding(schema)
-        guard let data = try? JSONEncoder().encode(value),
-              let str = String(data: data, encoding: .utf8) else {
-            return "{}"
-        }
-        return str
+        AgentKittenInferenceSupport.encodeStructuredSchema(schema)
     }
 
     private func buildStructuredSystemPrompt(schemaJSON: String) -> String {
-        let instruction = String(format: structuredOutputInstructionFormat, schemaJSON)
-        if let systemPrompt, !systemPrompt.isEmpty {
-            return "\(systemPrompt)\n\n\(instruction)"
-        }
-        return instruction
+        AgentKittenInferenceSupport.buildStructuredSystemPrompt(
+            schemaJSON: schemaJSON,
+            systemPrompt: systemPrompt,
+            format: structuredOutputInstructionFormat,
+        )
     }
 }
 #endif
