@@ -55,7 +55,10 @@ extension InferenceProviderJSONValue {
     ///
     /// The rationale key is appended to `properties` and added to the `required` array so
     /// the model is prompted to explain its reasoning before invoking the tool.
-    package static func injectingRationale(into schema: InferenceProviderJSONValue, description: String) -> InferenceProviderJSONValue {
+    package static func injectingRationale(
+        into schema: InferenceProviderJSONValue,
+        description: String,
+    ) -> InferenceProviderJSONValue {
         guard case .object(var dict) = schema,
               case .object(var props) = dict["properties"]
         else {
