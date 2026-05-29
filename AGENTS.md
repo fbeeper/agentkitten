@@ -47,6 +47,7 @@ Source Organization:
     - `Credentials/` - Auth/token utility abstraction.
   - `AgentKittenAnthropicInference/` - Anthropic HTTP + SSE adapter. Entry: `AnthropicInferenceProvider.swift`.
   - `AgentKittenAppleInference/` - Apple Intelligence adapter. Entry: `AppleInferenceProvider.swift`.
+  - `AgentKittenInferenceTestSupport` - Support for evaluation of inference providers. Entry: `InferenceStreamValidator.swift`.
   - `AgentKittenMacros/` - Swift macro plugin. Compile-time codegen for `@Tool`, `@ParameterDescription`. Entry: `Plugin.swift`, `ToolMacro.swift`.
   - `Playground/` - CLI executable. Entry: `main.swift`. Subcommands: `generate`, `chat`, `tools`, `classify`, `chicken`, `pii`, `plan-mode`.
 - `Tests/`
