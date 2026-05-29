@@ -111,6 +111,7 @@ func buildURLRequest_fetchesFreshKeyPerCall() async throws {
     let request = OpenAIRequest(
         model: "gpt-4o",
         messages: [],
+        tools: nil,
         stream: true,
         streamOptions: nil,
         temperature: 1.0,

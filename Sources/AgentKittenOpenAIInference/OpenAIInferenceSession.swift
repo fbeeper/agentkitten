@@ -8,18 +8,21 @@ import Foundation
 
 /// A per-conversation session connected to an OpenAI Chat Completions API endpoint.
 ///
-/// Manages wire-format conversation history (`[OpenAIMessage]`) and streams plain
-/// text responses. Compatible with any OpenAI-spec endpoint including LM Studio.
-/// The API key is fetched from ``APIKeyProviding`` at the start of each turn.
+/// Manages wire-format conversation history (`[OpenAIMessage]`) and drives a
+/// manual agentic loop: when the model requests tool calls the session executes
+/// them through the ``ToolRuntime``, appends results, and re-posts the full
+/// history until the model reaches `stop` or `length`.
 ///
-/// This text-only session does not yet support tool use, structured output,
-/// token counting, or context compaction; those capabilities are layered on by
-/// later extensions.
+/// Compatible with any OpenAI-spec endpoint including LM Studio.
+///
+/// This session does not yet support structured output, token counting, or
+/// context compaction; those capabilities are layered on by later extensions.
 public actor OpenAIInferenceSession: InferenceSession {
     let client: any OpenAIHTTPStreaming
     let defaultModel: String
     let systemPrompt: String?
     let toolRuntime: ToolRuntime
+    let tools: [OpenAITool]
     var currentModel: String
     var history: [OpenAIMessage]
     let operationGate = SingleFlightOperationGate<InferenceSessionOperationKind> {
@@ -37,6 +40,10 @@ public actor OpenAIInferenceSession: InferenceSession {
         self.defaultModel = defaultModel
         self.systemPrompt = systemPrompt
         self.toolRuntime = toolRuntime
+        let rationaleDescription = toolRuntime.rationaleSchemaDescription
+        tools = toolRuntime.allTools.map {
+            OpenAIToolBridge.openAITool(from: $0, rationaleDescription: rationaleDescription)
+        }
         history = initialHistory
         currentModel = defaultModel
     }
@@ -46,7 +53,7 @@ public actor OpenAIInferenceSession: InferenceSession {
         history
     }
 
-    /// Runs a single inference turn and streams the model's text response.
+    /// Runs a single inference turn and streams the model's response.
     public func run(_ message: UserMessage, parameters: InferenceRequestParameters) async throws -> InferenceStream {
         let lease = try operationGate.begin(.run)
         let userMessage = OpenAIMessage.user(message.text)
@@ -68,33 +75,35 @@ public actor OpenAIInferenceSession: InferenceSession {
         parameters: InferenceRequestParameters,
         continuation: InferenceStream.Continuation,
     ) async {
+        let toolTurnRuntime = toolRuntime.makeTurnRuntime(
+            toolStepBudget: parameters.toolStepBudget,
+            context: parameters.toolExecutionContext,
+            toolSelection: parameters.toolSelection,
+        )
         // Snapshot history + the new user message into a local buffer.
         // self.history is only updated on success; cancellation and errors
         // leave it unchanged so aborted turns are invisible to future sends.
         var turnHistory = history + [userMessage]
         do {
-            let request = buildRequest(from: turnHistory, parameters: parameters)
-            var textAccumulated = ""
-            var stopReason = "stop"
-            for try await event in try await client.stream(request: request) {
+            var outcome: RequestOutcome
+            repeat {
                 try Task.checkCancellation()
-                switch event {
-                case .textDelta(let chunk):
-                    continuation.yield(.delta(chunk))
-                    textAccumulated += chunk
-                case .stopReason(let reason):
-                    stopReason = reason
-                case .usage:
-                    // Token usage is reported here, but contextUsage() is not yet
-                    // supported by this text-only session, so ignore it for now.
-                    break
-                case .error(let message):
-                    throw InferenceError.invalidResponse(message)
-                }
-            }
-            turnHistory.append(OpenAIMessage.assistant(textAccumulated))
+                outcome = try await runSingleRequest(
+                    client: client,
+                    parameters: parameters,
+                    toolTurnRuntime: toolTurnRuntime,
+                    turnHistory: &turnHistory,
+                    continuation: continuation,
+                )
+            } while outcome.hasToolCalls
+
             history = turnHistory
-            continuation.yield(.result(textAccumulated, finishReason(from: stopReason)))
+            continuation.yield(
+                .result(
+                    extractAssistantText(from: turnHistory),
+                    finishReason(from: outcome.stopReason),
+                ),
+            )
             continuation.finish()
         } catch is CancellationError {
             continuation.finish()
@@ -103,10 +112,66 @@ public actor OpenAIInferenceSession: InferenceSession {
         }
     }
 
+    private struct RequestOutcome {
+        let stopReason: String
+        let hasToolCalls: Bool
+    }
+
+    /// Sends one HTTP request, streams events, appends to `turnHistory`, and returns request metadata.
+    private func runSingleRequest(
+        client: any OpenAIHTTPStreaming,
+        parameters: InferenceRequestParameters,
+        toolTurnRuntime: ToolTurnRuntime,
+        turnHistory: inout [OpenAIMessage],
+        continuation: InferenceStream.Continuation,
+    ) async throws -> RequestOutcome {
+        let request = buildRequest(from: turnHistory, parameters: parameters)
+        var textAccumulated = ""
+        var pendingCalls: [PendingOpenAIToolCall] = []
+        var stopReason = "stop"
+
+        for try await event in try await client.stream(request: request) {
+            try Task.checkCancellation()
+            switch event {
+            case .textDelta(let chunk):
+                continuation.yield(.delta(chunk))
+                textAccumulated += chunk
+            case .toolCallReady(let id, let name, let argsJSON):
+                pendingCalls.append(PendingOpenAIToolCall(id: id, name: name, argsJSON: argsJSON))
+            case .stopReason(let reason):
+                stopReason = reason
+            case .usage:
+                // Token usage is reported here, but contextUsage() is not yet
+                // supported by this session, so ignore it for now.
+                break
+            case .error(let message):
+                throw InferenceError.invalidResponse(message)
+            }
+        }
+
+        if stopReason == "tool_calls", pendingCalls.isEmpty {
+            throw InferenceError.invalidResponse("OpenAI returned tool_calls finish reason without tool calls.")
+        }
+        appendAssistantTurn(text: textAccumulated, toolCalls: pendingCalls, to: &turnHistory)
+        try await executeToolCalls(
+            pendingCalls,
+            toolTurnRuntime: toolTurnRuntime,
+            turnHistory: &turnHistory,
+            continuation: continuation,
+        )
+        return RequestOutcome(stopReason: stopReason, hasToolCalls: !pendingCalls.isEmpty)
+    }
+
+    private func extractAssistantText(from turnHistory: [OpenAIMessage]) -> String {
+        turnHistory.last(where: { $0.role == .assistant })?.content ?? ""
+    }
+
     func buildRequest(
         from turnHistory: [OpenAIMessage],
         parameters: InferenceRequestParameters,
     ) -> OpenAIRequest {
+        let selectedTools = tools.filter { parameters.toolSelection.allows(toolName: $0.function.name) }
+        let effectiveTools: [OpenAITool]? = selectedTools.isEmpty ? nil : selectedTools
         var messages = turnHistory
         if let systemPrompt, !systemPrompt.isEmpty {
             messages = [OpenAIMessage.system(systemPrompt)] + messages
@@ -116,6 +181,7 @@ public actor OpenAIInferenceSession: InferenceSession {
         return OpenAIRequest(
             model: model,
             messages: messages,
+            tools: effectiveTools,
             stream: true,
             streamOptions: OpenAIRequest.StreamOptions(includeUsage: true),
             temperature: parameters.configuration.temperature,
@@ -138,7 +204,7 @@ public actor OpenAIInferenceSession: InferenceSession {
 }
 
 extension OpenAIInferenceSession: StructuredInferenceSession {
-    /// Structured output is not supported by the text-only OpenAI session.
+    /// Structured output is not supported by this session yet.
     ///
     /// Always throws ``InferenceError/unsupportedConfiguration(_:)``. A later
     /// extension adds schema-guided structured generation.
