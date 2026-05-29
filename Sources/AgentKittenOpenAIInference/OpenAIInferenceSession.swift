@@ -23,11 +23,12 @@ public actor OpenAIInferenceSession: InferenceSession {
     let systemPrompt: String?
     let toolRuntime: ToolRuntime
     let tools: [OpenAITool]
+    let historyRenderingConfiguration: HistoryRenderingConfiguration
     var currentModel: String
     var history: [OpenAIMessage]
     let structuredOutputInstructionFormat: String
     var resolvedContextSizes: [String: Int] = [:]
-    var cachedContextTokens: Int?
+    var cachedContextTokens: TokenCount = .unknown
     let operationGate = SingleFlightOperationGate<InferenceSessionOperationKind> {
         InferenceError.concurrentOperationInProgress(active: $0)
     }
@@ -38,6 +39,7 @@ public actor OpenAIInferenceSession: InferenceSession {
         systemPrompt: String?,
         toolRuntime: ToolRuntime,
         initialHistory: [OpenAIMessage] = [],
+        historyRenderingConfiguration: HistoryRenderingConfiguration = HistoryRenderingConfiguration(),
         structuredOutputInstructionFormat: String = OpenAIInferenceProvider.defaultStructuredOutputInstructionFormat,
     ) {
         self.client = client
@@ -48,6 +50,7 @@ public actor OpenAIInferenceSession: InferenceSession {
         tools = toolRuntime.allTools.map {
             OpenAIToolBridge.openAITool(from: $0, rationaleDescription: rationaleDescription)
         }
+        self.historyRenderingConfiguration = historyRenderingConfiguration
         self.structuredOutputInstructionFormat = structuredOutputInstructionFormat
         history = initialHistory
         currentModel = defaultModel
@@ -159,7 +162,7 @@ public actor OpenAIInferenceSession: InferenceSession {
                 // OpenAI is stateless: every request re-sends the full message array,
                 // so `total` already covers the entire conversation history. Replace rather
                 // than accumulate — accumulating would double-count all prior messages.
-                cachedContextTokens = total
+                cachedContextTokens = TokenCount(total)
             case .error(let message):
                 throw InferenceError.invalidResponse(message)
             }

@@ -22,11 +22,16 @@ extension AnthropicInferenceSession {
     /// themselves.
     func uncheckedContextUsage() async throws -> ContextUsage {
         let contextSize = try await resolveContextSize(for: currentModel)
+        return try await uncheckedContextUsage(contextSize: contextSize)
+    }
+
+    func uncheckedContextUsage(contextSize: Int?) async throws -> ContextUsage {
+        let size = TokenCount(contextSize)
         if history.isEmpty {
-            return ContextUsage(contextTokens: 0, contextSize: contextSize)
+            return ContextUsage(contextTokens: 0, contextSize: size)
         }
-        if let cached = cachedContextTokens {
-            return ContextUsage(contextTokens: cached, contextSize: contextSize)
+        if cachedContextTokens != .unknown {
+            return ContextUsage(contextTokens: cachedContextTokens, contextSize: size)
         }
         let key = try await apiKey()
         let request = AnthropicCountTokensRequest(
@@ -36,8 +41,8 @@ extension AnthropicInferenceSession {
             tools: tools.isEmpty ? nil : tools,
         )
         let count = try await clientFactory(key).countTokens(request: request)
-        cachedContextTokens = count
-        return ContextUsage(contextTokens: count, contextSize: contextSize)
+        cachedContextTokens = TokenCount(count)
+        return ContextUsage(contextTokens: cachedContextTokens, contextSize: size)
     }
 
     func resolveContextSize(for model: String) async throws -> Int? {

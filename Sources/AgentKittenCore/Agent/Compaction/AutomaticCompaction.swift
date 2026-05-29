@@ -17,10 +17,10 @@ public enum AutomaticCompactionTrigger: Sendable, Codable, Equatable, Hashable {
             if percent > 1 {
                 return false
             }
-            guard let contextSize = usage.contextSize, contextSize > 0 else {
+            guard usage.contextSize > 0 else {
                 return false
             }
-            return Double(usage.contextTokens) >= Double(contextSize) * percent
+            return usage.contextTokens >= usage.contextSize * percent
         }
     }
 }

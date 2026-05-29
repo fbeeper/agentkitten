@@ -127,8 +127,8 @@ extension AppleInferenceSession {
         // the toolchain that vends it.
         #if compiler(>=6.3)
         return ContextUsage(
-            contextTokens: try await model.tokenCount(for: entries),
-            contextSize: model.contextSize,
+            contextTokens: .tokens(UInt(try await model.tokenCount(for: entries))),
+            contextSize: TokenCount(model.contextSize),
         )
         #else
         throw InferenceError.unsupportedConfiguration(

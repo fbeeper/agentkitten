@@ -14,8 +14,8 @@ import Foundation
 /// Each ``Conversation`` gets its own ``OpenAIInferenceSession`` which fetches an API
 /// key from the supplied ``APIKeyProviding`` at the start of each turn.
 ///
-/// This provider supports plain text chat, tool use, structured output, and
-/// token counting. It does not yet support context compaction.
+/// This provider supports plain text chat, tool use, structured output, token
+/// counting, and context compaction.
 ///
 /// Use the ``InferenceProvider`` convenience factories instead of instantiating
 /// this type directly:
@@ -52,6 +52,7 @@ public actor OpenAIInferenceProvider: InferenceProviding {
     private let credentials: OpenAICredentials
     private let model: String
     private let baseURL: URL
+    private let historyRenderingConfiguration: HistoryRenderingConfiguration
     private let structuredOutputInstructionFormat: String
 
     /// Creates an OpenAI-compatible provider.
@@ -62,6 +63,8 @@ public actor OpenAIInferenceProvider: InferenceProviding {
     ///   - model: The model identifier. Defaults to `"gpt-4o"`.
     ///   - baseURL: The API base URL. Defaults to `https://api.openai.com/v1`.
     ///     Override to point at LM Studio, Ollama, or other local servers.
+    ///   - historyRenderingConfiguration: Labels and format strings used when rendering history
+    ///     during context compaction. Defaults to built-in English values.
     ///   - structuredOutputInstructionFormat: System-prompt instruction injected for structured
     ///     output requests. Must contain exactly one `%@` placeholder, which is replaced with
     ///     the JSON schema string at generation time. Passing a string with zero or more than
@@ -70,6 +73,7 @@ public actor OpenAIInferenceProvider: InferenceProviding {
         credentials: OpenAICredentials = .key(EnvironmentAPIKeyProvider("OPENAI_API_KEY")),
         model: String = "gpt-4o",
         baseURL: URL = OpenAIInferenceProvider.defaultBaseURL,
+        historyRenderingConfiguration: HistoryRenderingConfiguration = HistoryRenderingConfiguration(),
         structuredOutputInstructionFormat: String = OpenAIInferenceProvider.defaultStructuredOutputInstructionFormat,
     ) {
         precondition(
@@ -79,6 +83,7 @@ public actor OpenAIInferenceProvider: InferenceProviding {
         self.credentials = credentials
         self.model = model
         self.baseURL = baseURL
+        self.historyRenderingConfiguration = historyRenderingConfiguration
         self.structuredOutputInstructionFormat = structuredOutputInstructionFormat
     }
 
@@ -117,6 +122,7 @@ public actor OpenAIInferenceProvider: InferenceProviding {
             systemPrompt: systemPrompt,
             toolRuntime: toolRuntime,
             initialHistory: initialHistory,
+            historyRenderingConfiguration: historyRenderingConfiguration,
             structuredOutputInstructionFormat: structuredOutputInstructionFormat,
         )
     }

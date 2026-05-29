@@ -62,12 +62,14 @@ func makeOpenAITestSession(
     client: MockOpenAIHTTPClient,
     systemPrompt: String? = nil,
     defaultModel: String = "test-model",
+    initialHistory: [OpenAIMessage] = [],
 ) -> OpenAIInferenceSession {
     OpenAIInferenceSession(
         client: client,
         defaultModel: defaultModel,
         systemPrompt: systemPrompt,
         toolRuntime: testOpenAIToolRuntime(registry: registry),
+        initialHistory: initialHistory,
     )
 }
 

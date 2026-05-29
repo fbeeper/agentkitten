@@ -87,6 +87,62 @@ import Testing
     #expect(rebuiltText.contains("Original answer."))
 }
 
+@Test func providerCompactedRebuild_reportsCompactedWhenPostCountFailsAfterCachedUsage() async throws {
+    struct CachedUsageFailingCountHTTPClient: AnthropicHTTPStreaming {
+        func stream(request: AnthropicRequest) -> AsyncThrowingStream<SSEEvent, Error> {
+            AsyncThrowingStream { continuation in
+                continuation.yield(.usage(77))
+                continuation.yield(.textDelta("Recent answer."))
+                continuation.yield(.stopReason("end_turn"))
+                continuation.finish()
+            }
+        }
+
+        func countTokens(request: AnthropicCountTokensRequest) async throws -> Int {
+            throw InferenceError.invalidResponse("count failed")
+        }
+    }
+
+    let session = AnthropicInferenceSession(
+        credentials: MockAPIKeyProvider("test-key"),
+        defaultModel: "test-model",
+        systemPrompt: nil,
+        toolRuntime: testToolRuntime(),
+        initialHistory: [
+            AnthropicMessage(role: .user, content: [.text("Old request.")]),
+            AnthropicMessage(role: .assistant, content: [.text("Old answer.")]),
+        ],
+        clientFactory: { _ in CachedUsageFailingCountHTTPClient() },
+    )
+    let stream = try await session.run(
+        UserMessage(text: "Recent request."),
+        parameters: InferenceRequestParameters(),
+    )
+    for try await _ in stream {}
+
+    let result = await ContextCompactor().compact(
+        session,
+        options: .truncate(ContextCompactionOptions.TruncationOptions(preservedRecentTurnCount: 1)),
+        summaryGenerator: makeSummaryGenerator(
+            client: MinimalCapturingHTTPClient(),
+        ),
+    )
+
+    guard case .compacted(let compacted) = result else {
+        Issue.record("Expected cached-usage compaction to be reported as compacted.")
+        return
+    }
+    #expect(compacted.usageBefore.contextTokens == 77)
+    #expect(compacted.usageAfter.contextTokens == .unknown)
+
+    let history = await session.captureHistory()
+    let historyText = history.flatMap(\.content).compactMap {
+        if case .text(let text) = $0 { text } else { nil }
+    }.joined(separator: " ")
+    #expect(historyText.contains("Recent request."))
+    #expect(!historyText.contains("Old request."))
+}
+
 @Test func providerSession_contextUsageUsesKnownModelWindow() async throws {
     let session = AnthropicInferenceSession(
         credentials: MockAPIKeyProvider("test-key"),
@@ -110,7 +166,7 @@ import Testing
     )
 
     let usage = try await session.contextUsage()
-    #expect(usage.contextSize == nil)
+    #expect(usage.contextSize == .unknown)
 }
 
 @Test func providerSession_contextUsageCachesResolvedModelWindow() async throws {
