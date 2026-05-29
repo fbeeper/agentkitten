@@ -30,6 +30,9 @@ let package = Package(
         .library(name: "AgentKittenAppleInference", targets: [
             "AgentKittenAppleInference",
         ]),
+        .library(name: "AgentKittenInferenceTestSupport", targets: [
+            "AgentKittenInferenceTestSupport",
+        ]),
     ],
     dependencies: [
         .package(url: "https://github.com/apple/swift-argument-parser", from: "1.3.0"),
@@ -63,6 +66,10 @@ let package = Package(
             name: "AgentKittenAppleInference",
             dependencies: ["AgentKittenCore", "AgentKittenInferenceSupport"],
         ),
+        .target(
+            name: "AgentKittenInferenceTestSupport",
+            dependencies: ["AgentKittenCore"],
+        ),
         .macro(
             name: "AgentKittenMacros",
             dependencies: [
@@ -88,11 +95,25 @@ let package = Package(
         ),
         .testTarget(
             name: "AgentKittenAnthropicInferenceTests",
-            dependencies: ["AgentKittenAnthropicInference", "AgentKittenInferenceSupport"],
+            dependencies: [
+                "AgentKittenAnthropicInference",
+                "AgentKittenInferenceSupport",
+                "AgentKittenInferenceTestSupport",
+            ],
         ),
         .testTarget(
             name: "AgentKittenAppleInferenceTests",
-            dependencies: ["AgentKittenAppleInference"],
+            dependencies: [
+                "AgentKittenAppleInference",
+                "AgentKittenInferenceTestSupport",
+            ],
+        ),
+        .testTarget(
+            name: "AgentKittenInferenceTestSupportTests",
+            dependencies: [
+                "AgentKittenInferenceTestSupport",
+                "AgentKittenCore",
+            ],
         ),
         .testTarget(
             name: "AgentKittenCoreTests",
