@@ -234,6 +234,5 @@ struct AnthropicFactoryTests {
         )
         #expect(type(of: session) == AnthropicInferenceSession.self)
     }
-
 }
 #endif

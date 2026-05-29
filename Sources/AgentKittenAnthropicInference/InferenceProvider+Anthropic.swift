@@ -33,6 +33,5 @@ extension InferenceProvider where Provider == AnthropicInferenceProvider {
             model: model,
         ))
     }
-
 }
 #endif
