@@ -30,8 +30,13 @@ import Testing
     unsetenv(varName)
 
     let provider = EnvironmentAPIKeyProvider(varName)
-    await #expect(throws: (any Error).self) {
+    do {
         _ = try await provider.apiKey()
+        Issue.record("Expected missing API key error")
+    } catch APIKeyError.missing(let message) {
+        #expect(message.contains(varName))
+    } catch {
+        Issue.record("Expected APIKeyError.missing, got \(error)")
     }
 }
 
@@ -41,8 +46,13 @@ import Testing
     defer { unsetenv(varName) }
 
     let provider = EnvironmentAPIKeyProvider(varName)
-    await #expect(throws: (any Error).self) {
+    do {
         _ = try await provider.apiKey()
+        Issue.record("Expected missing API key error")
+    } catch APIKeyError.missing(let message) {
+        #expect(message.contains(varName))
+    } catch {
+        Issue.record("Expected APIKeyError.missing, got \(error)")
     }
 }
 
@@ -58,8 +68,10 @@ import Testing
     do {
         _ = try await provider.apiKey()
         Issue.record("Expected an error for a non-existent Keychain item")
-    } catch APIKeyError.missing {
+    } catch APIKeyError.missing(let message) {
         // Expected path
+        #expect(message.contains(service))
+        #expect(message.contains("test"))
     } catch {
         // Entitlement/sandbox restriction — acceptable in CI
         withKnownIssue("Keychain unavailable in this test environment: \(error)") {}

@@ -14,6 +14,64 @@ import Testing
 private let budgetOneMessage = UserMessage(text: "Hi")
 private let budgetOneParameters = InferenceRequestParameters(toolStepBudget: .budget(1))
 
+private final class RotatingAPIKeyProvider: APIKeyProviding, @unchecked Sendable {
+    private let keys: Mutex<[String]>
+
+    init(keys: [String]) {
+        self.keys = Mutex(keys)
+    }
+
+    func apiKey() async throws -> String {
+        try keys.withLock { keys in
+            guard !keys.isEmpty else {
+                throw APIKeyError.missing("No test API keys remain.")
+            }
+            return keys.removeFirst()
+        }
+    }
+}
+
+@Test func session_preservesCredentialLookupFailure() async throws {
+    let variableName = "AGENTKITTEN_TEST_MISSING_KEY_\(Int.random(in: 100_000 ... 999_999))"
+    unsetenv(variableName)
+    let session = AnthropicInferenceSession(
+        credentials: EnvironmentAPIKeyProvider(variableName),
+        defaultModel: "test-model",
+        systemPrompt: nil,
+        toolRuntime: testToolRuntime(),
+        clientFactory: { _ in MockHTTPClient(responses: []) },
+    )
+
+    do {
+        _ = try await session.run(UserMessage(text: "Hi"), parameters: InferenceRequestParameters())
+        Issue.record("Expected credential lookup to fail")
+    } catch APIKeyError.missing(let message) {
+        #expect(message.contains(variableName))
+    } catch {
+        Issue.record("Expected APIKeyError.missing, got \(error)")
+    }
+}
+
+@Test func session_fetchesFreshAPIKeyForEachTurn() async throws {
+    let credentials = RotatingAPIKeyProvider(keys: ["key-1", "key-2"])
+    let observedKeys = Mutex<[String]>([])
+    let session = AnthropicInferenceSession(
+        credentials: credentials,
+        defaultModel: "test-model",
+        systemPrompt: nil,
+        toolRuntime: testToolRuntime(),
+        clientFactory: { key in
+            observedKeys.withLock { $0.append(key) }
+            return MockHTTPClient(responses: [[.textDelta("ok"), .stopReason("end_turn")]])
+        },
+    )
+
+    for try await _ in try await session.run(UserMessage(text: "First"), parameters: InferenceRequestParameters()) {}
+    for try await _ in try await session.run(UserMessage(text: "Second"), parameters: InferenceRequestParameters()) {}
+
+    #expect(observedKeys.withLock { $0 } == ["key-1", "key-2"])
+}
+
 /// With a one-step tool budget and a mock that returns one tool_use response then a text
 /// response, the session must send the follow-up request and deliver the final text.
 /// Before the > fix (when it was >=), the follow-up was skipped and the text was never received.

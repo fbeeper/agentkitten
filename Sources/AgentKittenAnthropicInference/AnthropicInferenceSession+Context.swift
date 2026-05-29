@@ -28,7 +28,7 @@ extension AnthropicInferenceSession {
         if let cached = cachedContextTokens {
             return ContextUsage(contextTokens: cached, contextSize: contextSize)
         }
-        let key = try await resolvedKey()
+        let key = try await apiKey()
         let request = AnthropicCountTokensRequest(
             model: currentModel,
             system: systemPrompt,
@@ -46,7 +46,7 @@ extension AnthropicInferenceSession {
         }
 
         let fallback = AnthropicModelContextWindow.standardMaxInputTokens(for: model)
-        guard let key = try? await resolvedKey() else {
+        guard let key = try? await apiKey() else {
             return fallback
         }
 

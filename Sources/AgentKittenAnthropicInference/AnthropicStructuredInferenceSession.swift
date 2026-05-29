@@ -14,7 +14,7 @@ extension AnthropicInferenceSession: StructuredInferenceSession {
         -> StructuredInferenceStream<T> {
         let lease = try operationGate.begin(.generate)
         do {
-            let key = try await resolvedKey()
+            let key = try await apiKey()
             let system = buildStructuredSystemPrompt(schemaJSON: encodeStructuredSchema(T.jsonSchema))
             return AsyncThrowingStream { continuation in
                 let task = Task {
