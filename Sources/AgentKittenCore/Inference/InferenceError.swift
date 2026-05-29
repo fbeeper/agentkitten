@@ -26,6 +26,27 @@ public struct ContextWindowExceededInfo: Sendable, Equatable, Hashable, Codable 
     }
 }
 
+/// Details for a provider-side authentication failure.
+public struct AuthenticationFailureInfo: Sendable, Equatable, Hashable, Codable {
+    /// Provider or backend that reported the failure.
+    public let provider: String
+    /// Human-readable failure message. Must not contain credential secret values.
+    public let message: String
+    /// HTTP status code when the provider rejected authentication.
+    public let statusCode: Int
+
+    /// Creates authentication failure details.
+    public init(
+        provider: String,
+        message: String,
+        statusCode: Int,
+    ) {
+        self.provider = provider
+        self.message = message
+        self.statusCode = statusCode
+    }
+}
+
 /// Errors that can arise during inference.
 public enum InferenceError: Error, Sendable, Equatable, Hashable, Codable {
     /// Another inference-session operation is already running.
@@ -47,6 +68,9 @@ public enum InferenceError: Error, Sendable, Equatable, Hashable, Codable {
 
     /// The provider rejected the turn because the session context exceeded the model window.
     case contextWindowExceeded(ContextWindowExceededInfo)
+
+    /// The provider rejected authentication for the request.
+    case authenticationFailed(AuthenticationFailureInfo)
 }
 
 /// Inference-session operations that require exclusive access.

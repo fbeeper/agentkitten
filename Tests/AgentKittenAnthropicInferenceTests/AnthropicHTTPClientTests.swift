@@ -21,16 +21,31 @@ import Testing
     #expect(info.message.contains("prompt is too long"))
 }
 
-@Test func httpError_keepsNonContextFailureAsInvalidResponse() {
+@Test func httpError_mapsAuthenticationFailureToTypedInferenceError() {
     let error = AnthropicHTTPClient.error(
         statusCode: 401,
         body: #"{"error":{"type":"authentication_error","message":"bad key"}}"#,
+    )
+
+    guard case .authenticationFailed(let info) = error else {
+        Issue.record("Expected authenticationFailed, got \(error)")
+        return
+    }
+    #expect(info.provider == "Anthropic")
+    #expect(info.message.contains("bad key"))
+    #expect(info.statusCode == 401)
+}
+
+@Test func httpError_keepsNonAuthenticationNonContextFailureAsInvalidResponse() {
+    let error = AnthropicHTTPClient.error(
+        statusCode: 500,
+        body: #"{"error":{"type":"api_error","message":"server failed"}}"#,
     )
 
     guard case .invalidResponse(let message) = error else {
         Issue.record("Expected invalidResponse, got \(error)")
         return
     }
-    #expect(message.contains("bad key"))
+    #expect(message.contains("server failed"))
 }
 #endif

@@ -97,6 +97,15 @@ struct AnthropicHTTPClient: AnthropicHTTPStreaming {
     static func error(statusCode: Int, body: String) -> InferenceError {
         let fallbackMessage = "Anthropic API returned HTTP \(statusCode): \(body)"
         let message = parsedErrorMessage(body) ?? fallbackMessage
+        if isAuthenticationFailure(statusCode: statusCode) {
+            return .authenticationFailed(
+                AuthenticationFailureInfo(
+                    provider: Self.providerName,
+                    message: message,
+                    statusCode: statusCode,
+                ),
+            )
+        }
         guard isContextWindowExceeded(statusCode: statusCode, errorMessage: message) else {
             return .invalidResponse(fallbackMessage)
         }
@@ -116,6 +125,10 @@ struct AnthropicHTTPClient: AnthropicHTTPStreaming {
             return nil
         }
         return message
+    }
+
+    private static func isAuthenticationFailure(statusCode: Int) -> Bool {
+        statusCode == 401 || statusCode == 403
     }
 
     private static func isContextWindowExceeded(statusCode: Int, errorMessage: String) -> Bool {

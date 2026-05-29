@@ -13,8 +13,7 @@ import Foundation
 /// them, appends results, and re-posts the full history until the model reaches
 /// `end_turn` or `max_tokens`.
 ///
-/// The API key is fetched from ``APIKeyProviding`` at the start of the first turn
-/// and cached for the session's lifetime.
+/// The API key is fetched from ``APIKeyProviding`` at the start of each operation.
 ///
 /// In-flight request cancellation is owned by stream termination, not by
 /// session deinitialization. The worker task retains the session while active,
@@ -33,7 +32,6 @@ public actor AnthropicInferenceSession: InferenceSession {
     var resolvedContextSizes: [String: Int] = [:]
     var history: [AnthropicMessage]
     var cachedContextTokens: Int?
-    private var cachedKey: String?
     let operationGate = SingleFlightOperationGate<InferenceSessionOperationKind> {
         InferenceError.concurrentOperationInProgress(active: $0)
     }
@@ -75,7 +73,7 @@ public actor AnthropicInferenceSession: InferenceSession {
         let lease = try operationGate.begin(.run)
         let key: String
         do {
-            key = try await resolvedKey()
+            key = try await apiKey()
         } catch {
             lease.end()
             throw error
@@ -104,15 +102,6 @@ public actor AnthropicInferenceSession: InferenceSession {
     }
 
     // MARK: - Private
-
-    func resolvedKey() async throws -> String {
-        if let cached = cachedKey {
-            return cached
-        }
-        let key = try await credentials.apiKey()
-        cachedKey = key
-        return key
-    }
 
     private func runTurn(
         userMessage: AnthropicMessage,
