@@ -67,6 +67,10 @@ let package = Package(
             dependencies: ["AgentKittenCore", "AgentKittenInferenceSupport"],
         ),
         .target(
+            name: "AgentKittenOpenAIInference",
+            dependencies: ["AgentKittenCore", "AgentKittenInferenceSupport"],
+        ),
+        .target(
             name: "AgentKittenInferenceTestSupport",
             dependencies: ["AgentKittenCore"],
         ),
@@ -105,6 +109,14 @@ let package = Package(
             name: "AgentKittenAppleInferenceTests",
             dependencies: [
                 "AgentKittenAppleInference",
+                "AgentKittenInferenceTestSupport",
+            ],
+        ),
+        .testTarget(
+            name: "AgentKittenOpenAIInferenceTests",
+            dependencies: [
+                "AgentKittenOpenAIInference",
+                "AgentKittenInferenceSupport",
                 "AgentKittenInferenceTestSupport",
             ],
         ),
