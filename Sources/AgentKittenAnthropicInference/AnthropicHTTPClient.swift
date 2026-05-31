@@ -96,50 +96,44 @@ struct AnthropicHTTPClient: AnthropicHTTPStreaming {
 
     static func error(statusCode: Int, body: String) -> InferenceError {
         let fallbackMessage = "Anthropic API returned HTTP \(statusCode): \(body)"
-        let message = parsedErrorMessage(body) ?? fallbackMessage
+        let parsedError = parsedError(body)
         if isAuthenticationFailure(statusCode: statusCode) {
             return .authenticationFailed(
                 AuthenticationFailureInfo(
                     provider: Self.providerName,
-                    message: message,
+                    message: parsedError?.message ?? fallbackMessage,
                     statusCode: statusCode,
                 ),
             )
         }
-        guard isContextWindowExceeded(statusCode: statusCode, errorMessage: message) else {
-            return .invalidResponse(fallbackMessage)
+        if let parsedError, isContextWindowExceeded(statusCode: statusCode, error: parsedError) {
+            return .contextWindowExceeded(
+                ContextWindowExceededInfo(provider: Self.providerName, message: parsedError.message),
+            )
         }
-        return .contextWindowExceeded(
-            ContextWindowExceededInfo(provider: Self.providerName, message: message),
-        )
+        return .invalidResponse(fallbackMessage)
     }
 
-    /// Parses the Anthropic JSON error body to extract the structured error message.
+    /// Parses the Anthropic JSON error body to extract structured error details.
     ///
     /// Anthropic error responses have the shape `{"type":"error","error":{"type":"...","message":"..."}}`.
-    private static func parsedErrorMessage(_ body: String) -> String? {
-        guard let data = body.data(using: .utf8),
-              let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-              let error = json["error"] as? [String: Any],
-              let message = error["message"] as? String else {
+    private static func parsedError(_ body: String) -> AnthropicErrorPayload? {
+        guard
+            let data = body.data(using: .utf8),
+            let response = try? JSONDecoder().decode(AnthropicErrorResponse.self, from: data)
+        else {
             return nil
         }
-        return message
+        return response.error
     }
 
     private static func isAuthenticationFailure(statusCode: Int) -> Bool {
         statusCode == 401 || statusCode == 403
     }
 
-    private static func isContextWindowExceeded(statusCode: Int, errorMessage: String) -> Bool {
-        guard statusCode == 400 || statusCode == 413 else {
-            return false
-        }
-        let normalized = errorMessage.lowercased()
-        return normalized.contains("prompt is too long")
-            || normalized.contains("context window")
-            || (normalized.contains("token") && normalized.contains("exceed"))
-            || (normalized.contains("tokens") && normalized.contains("maximum"))
+    private static func isContextWindowExceeded(statusCode: Int, error: AnthropicErrorPayload) -> Bool {
+        error.type == "invalid_request_error"
+            && error.message.lowercased().hasPrefix("prompt is too long") == true
     }
 
     private func streamSSEEvents(
@@ -193,5 +187,14 @@ struct AnthropicHTTPClient: AnthropicHTTPStreaming {
         urlRequest.httpBody = try encoder.encode(request)
         return urlRequest
     }
+}
+
+private struct AnthropicErrorResponse: Decodable {
+    let error: AnthropicErrorPayload
+}
+
+private struct AnthropicErrorPayload: Decodable {
+    let type: String
+    let message: String
 }
 #endif

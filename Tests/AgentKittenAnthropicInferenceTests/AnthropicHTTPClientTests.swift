@@ -10,7 +10,12 @@ import Testing
 @Test func httpError_mapsContextWindowFailureToTypedInferenceError() {
     let error = AnthropicHTTPClient.error(
         statusCode: 400,
-        body: #"{"error":{"type":"invalid_request_error","message":"prompt is too long"}}"#,
+        body: """
+        {"error":{
+        "type":"invalid_request_error",
+        "message":"prompt is too long: 200001 tokens > 200000 maximum"
+        }}
+        """,
     )
 
     guard case .contextWindowExceeded(let info) = error else {
@@ -19,6 +24,37 @@ import Testing
     }
     #expect(info.provider == "Anthropic")
     #expect(info.message.contains("prompt is too long"))
+}
+
+@Test func httpError_doesNotInferContextWindowFailureFromMessageOnly() {
+    let error = AnthropicHTTPClient.error(
+        statusCode: 400,
+        body: #"{"error":{"type":"api_error","message":"prompt is too long"}}"#,
+    )
+
+    guard case .invalidResponse(let message) = error else {
+        Issue.record("Expected invalidResponse, got \(error)")
+        return
+    }
+    #expect(message.contains("prompt is too long"))
+}
+
+@Test func httpError_doesNotInferContextWindowFailureFromGenericTokenMessage() {
+    let error = AnthropicHTTPClient.error(
+        statusCode: 400,
+        body: """
+        {"error":{
+        "type":"invalid_request_error",
+        "message":"token count exceeds supported maximum"
+        }}
+        """,
+    )
+
+    guard case .invalidResponse(let message) = error else {
+        Issue.record("Expected invalidResponse, got \(error)")
+        return
+    }
+    #expect(message.contains("token count exceeds"))
 }
 
 @Test func httpError_mapsAuthenticationFailureToTypedInferenceError() {
