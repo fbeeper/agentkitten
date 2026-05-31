@@ -97,22 +97,21 @@ struct AnthropicHTTPClient: AnthropicHTTPStreaming {
     static func error(statusCode: Int, body: String) -> InferenceError {
         let fallbackMessage = "Anthropic API returned HTTP \(statusCode): \(body)"
         let parsedError = parsedError(body)
-        let message = parsedError?.message ?? fallbackMessage
         if isAuthenticationFailure(statusCode: statusCode) {
             return .authenticationFailed(
                 AuthenticationFailureInfo(
                     provider: Self.providerName,
-                    message: message,
+                    message: parsedError?.message ?? fallbackMessage,
                     statusCode: statusCode,
                 ),
             )
         }
-        guard isContextWindowExceeded(statusCode: statusCode, error: parsedError) else {
-            return .invalidResponse(fallbackMessage)
+        if let parsedError, isContextWindowExceeded(statusCode: statusCode, error: parsedError) {
+            return .contextWindowExceeded(
+                ContextWindowExceededInfo(provider: Self.providerName, message: parsedError.message),
+            )
         }
-        return .contextWindowExceeded(
-            ContextWindowExceededInfo(provider: Self.providerName, message: message),
-        )
+        return .invalidResponse(fallbackMessage)
     }
 
     /// Parses the Anthropic JSON error body to extract structured error details.
@@ -132,15 +131,9 @@ struct AnthropicHTTPClient: AnthropicHTTPStreaming {
         statusCode == 401 || statusCode == 403
     }
 
-    private static func isContextWindowExceeded(statusCode: Int, error: AnthropicErrorPayload?) -> Bool {
-        guard isAuthenticationFailure(statusCode: statusCode) == false else {
-            return false
-        }
-        guard statusCode == 400 || statusCode == 413 else {
-            return false
-        }
-        return error?.type == "invalid_request_error"
-            && error?.message.lowercased().hasPrefix("prompt is too long") == true
+    private static func isContextWindowExceeded(statusCode: Int, error: AnthropicErrorPayload) -> Bool {
+        error.type == "invalid_request_error"
+            && error.message.lowercased().hasPrefix("prompt is too long") == true
     }
 
     private func streamSSEEvents(
