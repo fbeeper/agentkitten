@@ -56,34 +56,33 @@ struct OpenAIHTTPClient: OpenAIHTTPStreaming {
 
     static func error(statusCode: Int, body: String) -> InferenceError {
         let fallbackMessage = "OpenAI API returned HTTP \(statusCode): \(body)"
-        let parsedError = parsedError(body)
-        let message = parsedError?.message ?? fallbackMessage
+        let errorPayload = errorPayload(from: body, fallbackMessage: fallbackMessage)
         if isAuthenticationFailure(statusCode: statusCode) {
             return .authenticationFailed(
                 AuthenticationFailureInfo(
                     provider: Self.providerName,
-                    message: message,
+                    message: errorPayload.message,
                     statusCode: statusCode,
                 ),
             )
         }
-        guard isContextWindowExceeded(statusCode: statusCode, error: parsedError) else {
+        guard isContextWindowExceeded(error: errorPayload) else {
             return .invalidResponse(fallbackMessage)
         }
         return .contextWindowExceeded(
-            ContextWindowExceededInfo(provider: Self.providerName, message: message),
+            ContextWindowExceededInfo(provider: Self.providerName, message: errorPayload.message),
         )
     }
 
     /// Parses the OpenAI JSON error body to extract structured error details.
     ///
     /// OpenAI error responses have the shape `{"error":{"message":"...","type":"...","code":"..."}}`.
-    private static func parsedError(_ body: String) -> OpenAIErrorPayload? {
+    private static func errorPayload(from body: String, fallbackMessage: String) -> OpenAIErrorPayload {
         guard
             let data = body.data(using: .utf8),
             let response = try? JSONDecoder().decode(OpenAIErrorResponse.self, from: data)
         else {
-            return nil
+            return OpenAIErrorPayload(message: fallbackMessage, code: nil)
         }
         return response.error
     }
@@ -92,11 +91,8 @@ struct OpenAIHTTPClient: OpenAIHTTPStreaming {
         statusCode == 401 || statusCode == 403
     }
 
-    private static func isContextWindowExceeded(statusCode: Int, error: OpenAIErrorPayload?) -> Bool {
-        guard isAuthenticationFailure(statusCode: statusCode) == false else {
-            return false
-        }
-        return error?.code == "context_length_exceeded"
+    private static func isContextWindowExceeded(error: OpenAIErrorPayload) -> Bool {
+        error.code == "context_length_exceeded"
     }
 
     private func streamSSEEvents(
@@ -155,7 +151,6 @@ private struct OpenAIErrorResponse: Decodable {
 
 private struct OpenAIErrorPayload: Decodable {
     let message: String
-    let type: String?
     let code: String?
 }
 #endif

@@ -68,16 +68,6 @@ struct OpenAIMessage: Encodable {
 
     let role: Role
     let content: String?
-
-    func encode(to encoder: any Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(role, forKey: .role)
-        try container.encodeIfPresent(content, forKey: .content)
-    }
-
-    enum CodingKeys: String, CodingKey {
-        case role, content
-    }
 }
 
 extension OpenAIMessage {
