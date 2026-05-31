@@ -10,7 +10,7 @@ import FoundationNetworking
 
 /// Streams SSE events from OpenAI Chat Completions API requests.
 protocol OpenAIHTTPStreaming: Sendable {
-    func stream(request: OpenAIRequest) -> AsyncThrowingStream<OpenAISSEEvent, Error>
+    func stream(request: OpenAIRequest) async throws -> AsyncThrowingStream<OpenAISSEEvent, Error>
 }
 
 /// Sends requests to the OpenAI Chat Completions API (or any compatible endpoint) and streams SSE responses.
@@ -18,28 +18,27 @@ protocol OpenAIHTTPStreaming: Sendable {
 /// The `baseURL` parameter accepts any OpenAI-compatible API endpoint, enabling
 /// local model serving via LM Studio at e.g. `http://localhost:1234/v1`.
 struct OpenAIHTTPClient: OpenAIHTTPStreaming {
-    private let apiKey: String
+    private let credentials: OpenAICredentials
     private let baseURL: URL
     private let urlSession: URLSession
 
     static let providerName = "OpenAI"
 
-    init(apiKey: String, baseURL: URL = URL(string: "https://api.openai.com/v1")!) {
-        self.apiKey = apiKey
+    init(credentials: OpenAICredentials, baseURL: URL = URL(string: "https://api.openai.com/v1")!) {
+        self.credentials = credentials
         self.baseURL = baseURL
         urlSession = URLSession.shared
     }
 
     /// Streams SSE events from a single Chat Completions request.
     ///
-    /// On Darwin platforms this uses incremental byte streaming from `URLSession`.
-    /// On non-Darwin platforms it falls back to buffering the full response body
-    /// because `FoundationNetworking` does not expose the same streaming API surface.
-    func stream(request: OpenAIRequest) -> AsyncThrowingStream<OpenAISSEEvent, Error> {
-        AsyncThrowingStream { continuation in
+    /// Resolves credentials before opening the stream, then uses incremental byte streaming
+    /// on Darwin or a buffered fallback on non-Darwin platforms.
+    func stream(request: OpenAIRequest) async throws -> AsyncThrowingStream<OpenAISSEEvent, Error> {
+        let urlRequest = try await buildURLRequest(for: request)
+        return AsyncThrowingStream { continuation in
             let task = Task {
                 do {
-                    let urlRequest = try buildURLRequest(for: request)
                     try await streamSSEEvents(for: urlRequest, continuation: continuation)
                     continuation.finish()
                 } catch is CancellationError {
@@ -54,11 +53,13 @@ struct OpenAIHTTPClient: OpenAIHTTPStreaming {
 
     // MARK: - Private
 
-    private func buildURLRequest(for request: OpenAIRequest) throws -> URLRequest {
+    func buildURLRequest(for request: OpenAIRequest) async throws -> URLRequest {
         let endpoint = baseURL.appending(path: "chat/completions")
         var urlRequest = URLRequest(url: endpoint)
         urlRequest.httpMethod = "POST"
-        urlRequest.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
+        if case .key(let provider) = credentials {
+            urlRequest.setValue("Bearer \(try await provider.apiKey())", forHTTPHeaderField: "Authorization")
+        }
         urlRequest.setValue("application/json", forHTTPHeaderField: "Content-Type")
         urlRequest.setValue("text/event-stream", forHTTPHeaderField: "Accept")
         urlRequest.httpBody = try JSONEncoder().encode(request)

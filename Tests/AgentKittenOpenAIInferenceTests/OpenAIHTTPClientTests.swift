@@ -3,7 +3,10 @@
 
 #if canImport(Darwin) || canImport(FoundationNetworking)
 @testable import AgentKittenCore
+import AgentKittenInferenceSupport
 @testable import AgentKittenOpenAIInference
+import Foundation
+import Synchronization
 import Testing
 
 @Test func openAIHTTPError_mapsContextWindowFailureToTypedInferenceError() {
@@ -97,5 +100,40 @@ import Testing
         return
     }
     #expect(message.contains("maximum context length"))
+}
+
+@Test("Fetches a fresh API key for each request")
+func buildURLRequest_fetchesFreshKeyPerCall() async throws {
+    let client = OpenAIHTTPClient(
+        credentials: .key(RotatingAPIKeyProvider(keys: ["key-1", "key-2"])),
+        baseURL: URL(string: "https://example.com/v1")!,
+    )
+    let request = OpenAIRequest(
+        model: "gpt-4o",
+        messages: [],
+        stream: true,
+        streamOptions: nil,
+        temperature: 1.0,
+        maxTokens: 100,
+    )
+    let r1 = try await client.buildURLRequest(for: request)
+    let r2 = try await client.buildURLRequest(for: request)
+    #expect(r1.value(forHTTPHeaderField: "Authorization") == "Bearer key-1")
+    #expect(r2.value(forHTTPHeaderField: "Authorization") == "Bearer key-2")
+}
+
+private final class RotatingAPIKeyProvider: APIKeyProviding, @unchecked Sendable {
+    private let keys: Mutex<[String]>
+
+    init(keys: [String]) {
+        self.keys = Mutex(keys)
+    }
+
+    func apiKey() async throws -> String {
+        try keys.withLock { keys in
+            guard !keys.isEmpty else { throw APIKeyError.missing("No test API keys remain.") }
+            return keys.removeFirst()
+        }
+    }
 }
 #endif

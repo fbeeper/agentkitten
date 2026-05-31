@@ -30,6 +30,9 @@ let package = Package(
         .library(name: "AgentKittenAppleInference", targets: [
             "AgentKittenAppleInference",
         ]),
+        .library(name: "AgentKittenOpenAIInference", targets: [
+            "AgentKittenOpenAIInference",
+        ]),
         .library(name: "AgentKittenInferenceTestSupport", targets: [
             "AgentKittenInferenceTestSupport",
         ]),
