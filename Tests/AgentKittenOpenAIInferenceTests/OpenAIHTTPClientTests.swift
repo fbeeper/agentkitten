@@ -114,7 +114,7 @@ func buildURLRequest_fetchesFreshKeyPerCall() async throws {
         stream: true,
         streamOptions: nil,
         temperature: 1.0,
-        maxTokens: 100,
+        maxCompletionTokens: 100,
     )
     let r1 = try await client.buildURLRequest(for: request)
     let r2 = try await client.buildURLRequest(for: request)
