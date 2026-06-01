@@ -106,7 +106,7 @@ import Testing
 func buildURLRequest_fetchesFreshKeyPerCall() async throws {
     let client = OpenAIHTTPClient(
         credentials: .key(RotatingAPIKeyProvider(keys: ["key-1", "key-2"])),
-        baseURL: URL(string: "https://example.com/v1")!,
+        baseURL: try #require(URL(string: "https://example.com/v1")),
     )
     let request = OpenAIRequest(
         model: "gpt-4o",
@@ -116,10 +116,10 @@ func buildURLRequest_fetchesFreshKeyPerCall() async throws {
         temperature: 1.0,
         maxCompletionTokens: 100,
     )
-    let r1 = try await client.buildURLRequest(for: request)
-    let r2 = try await client.buildURLRequest(for: request)
-    #expect(r1.value(forHTTPHeaderField: "Authorization") == "Bearer key-1")
-    #expect(r2.value(forHTTPHeaderField: "Authorization") == "Bearer key-2")
+    let req1 = try await client.buildURLRequest(for: request)
+    let req2 = try await client.buildURLRequest(for: request)
+    #expect(req1.value(forHTTPHeaderField: "Authorization") == "Bearer key-1")
+    #expect(req2.value(forHTTPHeaderField: "Authorization") == "Bearer key-2")
 }
 
 private final class RotatingAPIKeyProvider: APIKeyProviding, @unchecked Sendable {

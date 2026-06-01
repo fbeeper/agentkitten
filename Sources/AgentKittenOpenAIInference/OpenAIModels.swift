@@ -42,7 +42,7 @@ struct OpenAIMessage: Encodable {
     }
 
     let role: Role
-    let content: String?
+    let content: String
 }
 
 extension OpenAIMessage {
