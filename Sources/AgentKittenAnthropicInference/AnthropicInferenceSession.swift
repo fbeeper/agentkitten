@@ -121,10 +121,12 @@ public actor AnthropicInferenceSession: InferenceSession {
         do {
             var stopReason = "end_turn"
             var toolUseResponsesSeen = 0 // Tracks consecutive empty tool call cycles. Orthogonal to per-call budget.
-            var budgetExhausted = false
             repeat {
                 try Task.checkCancellation()
-                let wasExhaustedAtStart = budgetExhausted
+                // Allow one follow-up after budget exhaustion so the model sees the
+                // step-limit-exceeded error result. Break before a second such round
+                // to avoid looping forever if the model keeps requesting tools.
+                let wasExhaustedAtStart = await toolTurnRuntime.isBudgetExhausted
                 let outcome = try await runSingleRequest(
                     client: client,
                     parameters: parameters,
@@ -132,15 +134,11 @@ public actor AnthropicInferenceSession: InferenceSession {
                     turnHistory: &turnHistory,
                     continuation: continuation,
                 )
-                budgetExhausted = outcome.budgetExhausted
                 stopReason = stopReasonAfterRequest(
                     stopReason: outcome.stopReason,
                     hasToolCalls: outcome.hasToolCalls,
                     toolUseResponsesSeen: &toolUseResponsesSeen,
                 )
-                // Allow one follow-up after budget exhaustion so the model sees the
-                // step-limit-exceeded error result. Break before a second such round
-                // to avoid looping forever if the model keeps requesting tools.
                 if wasExhaustedAtStart { break }
             } while stopReason == "tool_use"
 
@@ -162,7 +160,6 @@ public actor AnthropicInferenceSession: InferenceSession {
     private struct RequestOutcome {
         let stopReason: String
         let hasToolCalls: Bool
-        let budgetExhausted: Bool
     }
 
     /// Sends one HTTP request, streams events, appends to `turnHistory`, and returns the stop reason.
@@ -199,13 +196,13 @@ public actor AnthropicInferenceSession: InferenceSession {
         }
 
         appendAssistantTurn(text: textAccumulated, toolCalls: pendingCalls, to: &turnHistory)
-        let budgetExhausted = try await executeToolCalls(
+        try await executeToolCalls(
             pendingCalls,
             toolTurnRuntime: toolTurnRuntime,
             turnHistory: &turnHistory,
             continuation: continuation,
         )
-        return RequestOutcome(stopReason: stopReason, hasToolCalls: !pendingCalls.isEmpty, budgetExhausted: budgetExhausted)
+        return RequestOutcome(stopReason: stopReason, hasToolCalls: !pendingCalls.isEmpty)
     }
 
     func appendAssistantTurn(
@@ -237,36 +234,30 @@ public actor AnthropicInferenceSession: InferenceSession {
         }
     }
 
-    /// Returns `true` if any call was rejected because the step budget was exhausted.
-    /// The caller should break the tool loop when this happens — a model that keeps
-    /// requesting tools after budget exhaustion would loop forever otherwise.
     func executeToolCalls(
         _ calls: [PendingSSEToolCall],
         toolTurnRuntime: ToolTurnRuntime,
         turnHistory: inout [AnthropicMessage],
         continuation: InferenceStream.Continuation,
-    ) async throws -> Bool {
-        guard !calls.isEmpty else { return false }
+    ) async throws {
+        guard !calls.isEmpty else { return }
         var toolResultContents: [AnthropicContent] = []
-        var budgetExhausted = false
         for call in calls {
-            let (result, exceeded) = try await executeSingleTool(
+            let result = try await executeSingleTool(
                 call,
                 toolTurnRuntime: toolTurnRuntime,
                 continuation: continuation,
             )
             toolResultContents.append(result)
-            if exceeded { budgetExhausted = true }
         }
         turnHistory.append(AnthropicMessage(role: .user, content: toolResultContents))
-        return budgetExhausted
     }
 
     private func executeSingleTool(
         _ call: PendingSSEToolCall,
         toolTurnRuntime: ToolTurnRuntime,
         continuation: InferenceStream.Continuation,
-    ) async throws -> (AnthropicContent, budgetExhausted: Bool) {
+    ) async throws -> AnthropicContent {
         let callID: ToolCallID = call.id
         let (rationale, argsJSON) = ToolRationale.extracting(from: call.argsJSON)
         continuation.yield(.toolCallRequested(id: callID, name: call.name, argumentsJSON: argsJSON))
@@ -285,10 +276,10 @@ public actor AnthropicInferenceSession: InferenceSession {
                 name: call.name,
                 outcome: .success(content: content),
             ))
-            return (.toolResult(toolUseID: callID, content: content, isError: false), false)
+            return .toolResult(toolUseID: callID, content: content, isError: false)
         case .failure(let failure):
             continuation.yield(.toolCallCompleted(id: callID, name: call.name, outcome: .failure(failure)))
-            return (.toolResult(toolUseID: callID, content: [.text(failure.resultJSON)], isError: true), failure == .stepLimitExceeded)
+            return .toolResult(toolUseID: callID, content: [.text(failure.resultJSON)], isError: true)
         }
     }
 

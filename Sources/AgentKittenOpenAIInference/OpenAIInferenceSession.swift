@@ -86,10 +86,12 @@ public actor OpenAIInferenceSession: InferenceSession {
         var turnHistory = history + [userMessage]
         do {
             var outcome: RequestOutcome
-            var budgetExhausted = false
             repeat {
                 try Task.checkCancellation()
-                let wasExhaustedAtStart = budgetExhausted
+                // Allow one follow-up after budget exhaustion so the model sees the
+                // step-limit-exceeded error result. Break before a second such round
+                // to avoid looping forever if the model keeps requesting tools.
+                let wasExhaustedAtStart = await toolTurnRuntime.isBudgetExhausted
                 outcome = try await runSingleRequest(
                     client: client,
                     parameters: parameters,
@@ -97,10 +99,6 @@ public actor OpenAIInferenceSession: InferenceSession {
                     turnHistory: &turnHistory,
                     continuation: continuation,
                 )
-                budgetExhausted = outcome.budgetExhausted
-                // Allow one follow-up after budget exhaustion so the model sees the
-                // step-limit-exceeded error result. Break before a second such round
-                // to avoid looping forever if the model keeps requesting tools.
                 if wasExhaustedAtStart { break }
             } while outcome.hasToolCalls
 
@@ -122,7 +120,6 @@ public actor OpenAIInferenceSession: InferenceSession {
     private struct RequestOutcome {
         let stopReason: String
         let hasToolCalls: Bool
-        let budgetExhausted: Bool
     }
 
     /// Sends one HTTP request, streams events, appends to `turnHistory`, and returns request metadata.
@@ -161,13 +158,13 @@ public actor OpenAIInferenceSession: InferenceSession {
             throw InferenceError.invalidResponse("OpenAI returned tool_calls finish reason without tool calls.")
         }
         appendAssistantTurn(text: textAccumulated, toolCalls: pendingCalls, to: &turnHistory)
-        let budgetExhausted = try await executeToolCalls(
+        try await executeToolCalls(
             pendingCalls,
             toolTurnRuntime: toolTurnRuntime,
             turnHistory: &turnHistory,
             continuation: continuation,
         )
-        return RequestOutcome(stopReason: stopReason, hasToolCalls: !pendingCalls.isEmpty, budgetExhausted: budgetExhausted)
+        return RequestOutcome(stopReason: stopReason, hasToolCalls: !pendingCalls.isEmpty)
     }
 
     private func extractAssistantText(from turnHistory: [OpenAIMessage]) -> String {
