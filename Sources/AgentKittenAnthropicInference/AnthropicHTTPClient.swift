@@ -72,7 +72,7 @@ struct AnthropicHTTPClient: AnthropicHTTPStreaming {
         urlRequest.httpBody = try JSONEncoder().encode(request)
         let (data, response) = try await urlSession.data(for: urlRequest)
         if let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode != 200 {
-            let body = String(bytes: data, encoding: .utf8).map { String($0.prefix(512)) } ?? ""
+            let body = String(bytes: data, encoding: .utf8) ?? ""
             throw Self.error(statusCode: httpResponse.statusCode, body: body)
         }
         return try JSONDecoder().decode(AnthropicTokenCountResponse.self, from: data).inputTokens
@@ -86,7 +86,7 @@ struct AnthropicHTTPClient: AnthropicHTTPStreaming {
         urlRequest.setValue(Self.anthropicVersion, forHTTPHeaderField: "anthropic-version")
         let (data, response) = try await urlSession.data(for: urlRequest)
         if let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode != 200 {
-            let body = String(bytes: data, encoding: .utf8).map { String($0.prefix(512)) } ?? ""
+            let body = String(bytes: data, encoding: .utf8) ?? ""
             throw Self.error(statusCode: httpResponse.statusCode, body: body)
         }
         return try JSONDecoder().decode(AnthropicModelInfoResponse.self, from: data).maxInputTokens
@@ -95,45 +95,22 @@ struct AnthropicHTTPClient: AnthropicHTTPStreaming {
     // MARK: - Private
 
     static func error(statusCode: Int, body: String) -> InferenceError {
-        let fallbackMessage = "Anthropic API returned HTTP \(statusCode): \(body)"
-        let parsedError = parsedError(body)
-        if isAuthenticationFailure(statusCode: statusCode) {
+        let error = AnthropicHTTPError(statusCode: statusCode, body: body)
+        if error.isAuthenticationFailure {
             return .authenticationFailed(
                 AuthenticationFailureInfo(
                     provider: Self.providerName,
-                    message: parsedError?.message ?? fallbackMessage,
+                    message: error.message,
                     statusCode: statusCode,
                 ),
             )
         }
-        if let parsedError, isContextWindowExceeded(statusCode: statusCode, error: parsedError) {
+        if error.isContextWindowExceeded {
             return .contextWindowExceeded(
-                ContextWindowExceededInfo(provider: Self.providerName, message: parsedError.message),
+                ContextWindowExceededInfo(provider: Self.providerName, message: error.message),
             )
         }
-        return .invalidResponse(fallbackMessage)
-    }
-
-    /// Parses the Anthropic JSON error body to extract structured error details.
-    ///
-    /// Anthropic error responses have the shape `{"type":"error","error":{"type":"...","message":"..."}}`.
-    private static func parsedError(_ body: String) -> AnthropicErrorPayload? {
-        guard
-            let data = body.data(using: .utf8),
-            let response = try? JSONDecoder().decode(AnthropicErrorResponse.self, from: data)
-        else {
-            return nil
-        }
-        return response.error
-    }
-
-    private static func isAuthenticationFailure(statusCode: Int) -> Bool {
-        statusCode == 401 || statusCode == 403
-    }
-
-    private static func isContextWindowExceeded(statusCode: Int, error: AnthropicErrorPayload) -> Bool {
-        error.type == "invalid_request_error"
-            && error.message.lowercased().hasPrefix("prompt is too long") == true
+        return .invalidResponse(error.message)
     }
 
     private func streamSSEEvents(
@@ -144,11 +121,7 @@ struct AnthropicHTTPClient: AnthropicHTTPStreaming {
         let (bytes, response) = try await urlSession.bytes(for: request)
 
         if let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode != 200 {
-            var body = ""
-            for try await line in bytes.lines {
-                body += line
-                if body.count > 512 { break }
-            }
+            let body = try await Self.errorBody(from: bytes)
             throw Self.error(statusCode: httpResponse.statusCode, body: body)
         }
 
@@ -160,7 +133,7 @@ struct AnthropicHTTPClient: AnthropicHTTPStreaming {
         let (data, response) = try await urlSession.data(for: request)
 
         if let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode != 200 {
-            let body = String(bytes: data, encoding: .utf8).map { String($0.prefix(512)) } ?? ""
+            let body = String(bytes: data, encoding: .utf8) ?? ""
             throw Self.error(statusCode: httpResponse.statusCode, body: body)
         }
 
@@ -187,6 +160,16 @@ struct AnthropicHTTPClient: AnthropicHTTPStreaming {
         urlRequest.httpBody = try encoder.encode(request)
         return urlRequest
     }
+
+    #if canImport(Darwin)
+    private static func errorBody(from bytes: URLSession.AsyncBytes) async throws -> String {
+        var data = Data()
+        for try await byte in bytes {
+            data.append(byte)
+        }
+        return String(bytes: data, encoding: .utf8) ?? ""
+    }
+    #endif
 }
 
 private struct AnthropicErrorResponse: Decodable {
@@ -194,7 +177,52 @@ private struct AnthropicErrorResponse: Decodable {
 }
 
 private struct AnthropicErrorPayload: Decodable {
-    let type: String
-    let message: String
+    let type: String?
+    let message: String?
+}
+
+private struct AnthropicHTTPError {
+    let statusCode: Int
+    let body: String
+    let payload: AnthropicErrorPayload?
+
+    init(statusCode: Int, body: String) {
+        self.statusCode = statusCode
+        self.body = body
+        payload = Self.payload(from: body)
+    }
+
+    var isAuthenticationFailure: Bool {
+        statusCode == 401 || statusCode == 403
+    }
+
+    var isContextWindowExceeded: Bool {
+        payload?.type == "invalid_request_error"
+            && payload?.message?.lowercased().hasPrefix("prompt is too long") == true
+    }
+
+    var message: String {
+        if isAuthenticationFailure {
+            if let type = payload?.type {
+                return "Anthropic API returned HTTP \(statusCode): authentication failed (error type: \(type))"
+            }
+            return "Anthropic API returned HTTP \(statusCode): authentication failed"
+        }
+
+        return "Anthropic API returned HTTP \(statusCode): \(payload?.message ?? String(body.prefix(512)))"
+    }
+
+    /// Parses the Anthropic JSON error body to extract structured error details.
+    ///
+    /// Anthropic error responses have the shape `{"type":"error","error":{"type":"...","message":"..."}}`.
+    private static func payload(from body: String) -> AnthropicErrorPayload? {
+        guard
+            let data = body.data(using: .utf8),
+            let response = try? JSONDecoder().decode(AnthropicErrorResponse.self, from: data)
+        else {
+            return nil
+        }
+        return response.error
+    }
 }
 #endif
