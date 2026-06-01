@@ -111,13 +111,15 @@ public actor OpenAIInferenceSession: InferenceSession {
         if let systemPrompt, !systemPrompt.isEmpty {
             messages = [OpenAIMessage.system(systemPrompt)] + messages
         }
+        let model = parameters.inferenceContext[OpenAIModelKey.self] ?? defaultModel
+        currentModel = model
         return OpenAIRequest(
-            model: currentModel,
+            model: model,
             messages: messages,
             stream: true,
             streamOptions: OpenAIRequest.StreamOptions(includeUsage: true),
             temperature: parameters.configuration.temperature,
-            maxTokens: parameters.configuration.maxTokens,
+            maxCompletionTokens: parameters.configuration.maxTokens,
         )
     }
 
