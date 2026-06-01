@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #if canImport(Darwin) || canImport(FoundationNetworking)
+import AgentKittenInferenceSupport
 import Foundation
 #if canImport(FoundationNetworking)
 import FoundationNetworking
@@ -16,60 +17,27 @@ enum AnthropicSSEParser {
     /// `content_block_stop`, at which point it emits a `.toolCallReady` event
     /// with the fully assembled arguments JSON.
     static func events(from bytes: URLSession.AsyncBytes) -> AsyncThrowingStream<SSEEvent, Error> {
-        AsyncThrowingStream { continuation in
-            let task = Task {
-                do {
-                    let debug = ProcessInfo.processInfo.environment["AGENTKITTEN_DEBUG"] != nil
-                    var state = ParserState()
-                    for try await line in bytes.lines {
-                        try Task.checkCancellation()
-                        if debug {
-                            FileHandle.standardError.write(Data("SSE< [\(line)]\n".utf8))
-                        }
-                        state.consume(line: line, continuation: continuation)
-                    }
-                    // Flush any event not terminated by a trailing blank line (EOF-terminated SSE).
-                    state.flush(continuation: continuation)
-                    continuation.finish()
-                } catch is CancellationError {
-                    continuation.finish()
-                } catch {
-                    continuation.finish(throwing: error)
-                }
-            }
-            continuation.onTermination = { _ in task.cancel() }
-        }
+        makeSSEStream(from: bytes.lines, state: ParserState())
+    }
+    #else
+    /// Drives the parser from a full SSE payload encoded as UTF-8 text.
+    static func events(from data: Data) -> AsyncThrowingStream<SSEEvent, Error> {
+        let lines = sseLines(from: data)
+        return events(fromLines: lines)
     }
     #endif
 
-    /// Drives the parser from a full SSE payload encoded as UTF-8 text.
-    static func events(from data: Data) -> AsyncThrowingStream<SSEEvent, Error> {
-        // Split on `\n`, preserve blank lines for SSE event boundaries, then trim a
-        // trailing `\r` from each line so CRLF-delimited payloads normalize correctly.
-        let lines = (String(bytes: data, encoding: .utf8) ?? "")
-            .split(separator: "\n", omittingEmptySubsequences: false)
-            .map { $0.hasSuffix("\r") ? String($0.dropLast()) : String($0) }
-        return events(fromLines: lines)
-    }
-
     /// Drives the parser from a plain string sequence. Package-internal for testing.
     static func events(fromLines lines: [String]) -> AsyncThrowingStream<SSEEvent, Error> {
-        AsyncThrowingStream { continuation in
-            Task {
-                var state = ParserState()
-                for line in lines {
-                    state.consume(line: line, continuation: continuation)
-                }
-                state.flush(continuation: continuation)
-                continuation.finish()
-            }
-        }
+        makeSSEStream(fromLines: lines, state: ParserState())
     }
 }
 
 // MARK: - Parser State
 
-private struct ParserState {
+private struct ParserState: SSELineConsumer {
+    typealias Event = SSEEvent
+
     var eventType = ""
     var dataLines: [String] = []
     var toolIDs: [Int: String] = [:]
@@ -77,60 +45,62 @@ private struct ParserState {
     var toolArgs: [Int: String] = [:]
     var pendingInputTokens: Int = 0
 
-    mutating func flush(continuation: AsyncThrowingStream<SSEEvent, Error>.Continuation) {
-        guard !dataLines.isEmpty else { return }
-        dispatch(continuation: continuation)
+    mutating func flush() -> [SSEEvent] {
+        guard !dataLines.isEmpty else { return [] }
+        return dispatch()
     }
 
-    mutating func consume(
-        line: String,
-        continuation: AsyncThrowingStream<SSEEvent, Error>.Continuation,
-    ) {
+    mutating func consume(line: String) -> [SSEEvent] {
         if line.hasPrefix("event:") {
             // Dispatch any buffered data from the previous event before starting a new one.
             // URLSession.AsyncBytes.lines skips blank lines, so blank-line dispatch never fires;
             // dispatching here handles Anthropic's blank-line-free SSE format.
+            var events: [SSEEvent] = []
             if !dataLines.isEmpty {
-                dispatch(continuation: continuation)
+                events = dispatch()
                 dataLines = []
             }
             eventType = String(line.dropFirst(6)).trimmingCharacters(in: .whitespaces)
+            return events
         } else if line.hasPrefix("data:") {
             let data = String(line.dropFirst(5)).trimmingCharacters(in: .whitespaces)
             dataLines.append(data)
+            return []
         } else if line.isEmpty {
-            dispatch(continuation: continuation)
+            let events = dispatch()
             dataLines = []
             eventType = ""
+            return events
         }
+        return []
     }
 
-    private mutating func dispatch(
-        continuation: AsyncThrowingStream<SSEEvent, Error>.Continuation,
-    ) {
-        let payload = dataLines.joined()
+    private mutating func dispatch() -> [SSEEvent] {
+        let payload = dataLines.joined(separator: "\n")
         guard
             !payload.isEmpty,
             let jsonData = payload.data(using: .utf8),
             let json = try? JSONSerialization.jsonObject(with: jsonData) as? [String: Any]
         else {
-            return
+            return []
         }
         switch eventType {
         case "message_start":
             handleMessageStart(json: json)
+            return []
         case "content_block_start":
             handleBlockStart(json: json)
+            return []
         case "content_block_delta":
-            handleBlockDelta(json: json, continuation: continuation)
+            return handleBlockDelta(json: json)
         case "content_block_stop":
-            handleBlockStop(json: json, continuation: continuation)
+            return handleBlockStop(json: json)
         case "message_delta":
-            handleMessageDelta(json: json, continuation: continuation)
+            return handleMessageDelta(json: json)
         case "error":
-            handleError(json: json, continuation: continuation)
+            return handleError(json: json)
         default:
-            break
+            return []
         }
     }
 
@@ -158,21 +128,18 @@ private struct ParserState {
         toolArgs[index] = ""
     }
 
-    private mutating func handleBlockDelta(
-        json: [String: Any],
-        continuation: AsyncThrowingStream<SSEEvent, Error>.Continuation,
-    ) {
+    private mutating func handleBlockDelta(json: [String: Any]) -> [SSEEvent] {
         guard
             let index = json["index"] as? Int,
             let delta = json["delta"] as? [String: Any],
             let deltaType = delta["type"] as? String
         else {
-            return
+            return []
         }
         switch deltaType {
         case "text_delta":
             if let text = delta["text"] as? String {
-                continuation.yield(.textDelta(text))
+                return [.textDelta(text)]
             }
         case "input_json_delta":
             if let partial = delta["partial_json"] as? String {
@@ -181,39 +148,34 @@ private struct ParserState {
         default:
             break
         }
+        return []
     }
 
-    private mutating func handleBlockStop(
-        json: [String: Any],
-        continuation: AsyncThrowingStream<SSEEvent, Error>.Continuation,
-    ) {
-        guard let index = json["index"] as? Int else { return }
+    private mutating func handleBlockStop(json: [String: Any]) -> [SSEEvent] {
+        guard let index = json["index"] as? Int else { return [] }
         if let id = toolIDs[index], let name = toolNames[index], let args = toolArgs[index] {
             let argsJSON = args.isEmpty ? "{}" : args
-            continuation.yield(.toolCallReady(id: id, name: name, argsJSON: argsJSON))
             toolIDs.removeValue(forKey: index)
             toolNames.removeValue(forKey: index)
             toolArgs.removeValue(forKey: index)
+            return [.toolCallReady(id: id, name: name, argsJSON: argsJSON)]
         }
+        return []
     }
 
-    private func handleMessageDelta(
-        json: [String: Any],
-        continuation: AsyncThrowingStream<SSEEvent, Error>.Continuation,
-    ) {
+    private func handleMessageDelta(json: [String: Any]) -> [SSEEvent] {
+        var events: [SSEEvent] = []
         if let delta = json["delta"] as? [String: Any], let reason = delta["stop_reason"] as? String {
-            continuation.yield(.stopReason(reason))
+            events.append(.stopReason(reason))
         }
         let outputTokens = (json["usage"] as? [String: Any])?["output_tokens"] as? Int ?? 0
-        continuation.yield(.usage(pendingInputTokens + outputTokens))
+        events.append(.usage(pendingInputTokens + outputTokens))
+        return events
     }
 
-    private func handleError(
-        json: [String: Any],
-        continuation: AsyncThrowingStream<SSEEvent, Error>.Continuation,
-    ) {
+    private func handleError(json: [String: Any]) -> [SSEEvent] {
         let message = (json["error"] as? [String: Any])?["message"] as? String
-        continuation.yield(.error(message ?? "Unknown Anthropic API error."))
+        return [.error(message ?? "Unknown Anthropic API error.")]
     }
 }
 #endif

@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #if canImport(Darwin) || canImport(FoundationNetworking)
+import AgentKittenInferenceSupport
 import Foundation
 #if canImport(FoundationNetworking)
 import FoundationNetworking
@@ -15,104 +16,69 @@ enum OpenAISSEParser {
     #if canImport(Darwin)
     /// Transforms raw `URLSession.AsyncBytes` into a stream of ``OpenAISSEEvent`` values.
     static func events(from bytes: URLSession.AsyncBytes) -> AsyncThrowingStream<OpenAISSEEvent, Error> {
-        AsyncThrowingStream { continuation in
-            let task = Task {
-                do {
-                    let debug = ProcessInfo.processInfo.environment["AGENTKITTEN_DEBUG"] != nil
-                    var state = ParserState()
-                    for try await line in bytes.lines {
-                        try Task.checkCancellation()
-                        if debug {
-                            FileHandle.standardError.write(Data("SSE< [\(line)]\n".utf8))
-                        }
-                        state.consume(line: line, continuation: continuation)
-                    }
-                    continuation.finish()
-                } catch is CancellationError {
-                    continuation.finish()
-                } catch {
-                    continuation.finish(throwing: error)
-                }
-            }
-            continuation.onTermination = { _ in task.cancel() }
-        }
+        makeSSEStream(from: bytes.lines, state: ParserState())
+    }
+    #else
+    /// Drives the parser from a full SSE payload encoded as UTF-8 text.
+    static func events(from data: Data) -> AsyncThrowingStream<OpenAISSEEvent, Error> {
+        let lines = sseLines(from: data)
+        return events(fromLines: lines)
     }
     #endif
 
-    /// Drives the parser from a full SSE payload encoded as UTF-8 text.
-    static func events(from data: Data) -> AsyncThrowingStream<OpenAISSEEvent, Error> {
-        let lines = (String(bytes: data, encoding: .utf8) ?? "")
-            .split(separator: "\n", omittingEmptySubsequences: false)
-            .map { $0.hasSuffix("\r") ? String($0.dropLast()) : String($0) }
-        return events(fromLines: lines)
-    }
-
     /// Drives the parser from a plain string sequence. Package-internal for testing.
     static func events(fromLines lines: [String]) -> AsyncThrowingStream<OpenAISSEEvent, Error> {
-        AsyncThrowingStream { continuation in
-            Task {
-                var state = ParserState()
-                for line in lines {
-                    state.consume(line: line, continuation: continuation)
-                }
-                continuation.finish()
-            }
-        }
+        makeSSEStream(fromLines: lines, state: ParserState())
     }
 }
 
 // MARK: - Parser State
 
-private struct ParserState {
-    mutating func consume(
-        line: String,
-        continuation: AsyncThrowingStream<OpenAISSEEvent, Error>.Continuation,
-    ) {
-        guard line.hasPrefix("data:") else { return }
+private struct ParserState: SSELineConsumer {
+    typealias Event = OpenAISSEEvent
+
+    mutating func consume(line: String) -> [OpenAISSEEvent] {
+        guard line.hasPrefix("data:") else { return [] }
         let payload = String(line.dropFirst(5)).trimmingCharacters(in: .whitespaces)
         if payload == "[DONE]" {
-            return
+            return []
         }
         guard
             !payload.isEmpty,
             let jsonData = payload.data(using: .utf8),
             let json = try? JSONSerialization.jsonObject(with: jsonData) as? [String: Any]
         else {
-            return
+            return []
         }
-        handleChunk(json: json, continuation: continuation)
+        return handleChunk(json: json)
     }
 
-    private func handleChunk(
-        json: [String: Any],
-        continuation: AsyncThrowingStream<OpenAISSEEvent, Error>.Continuation,
-    ) {
+    private func handleChunk(json: [String: Any]) -> [OpenAISSEEvent] {
+        var events: [OpenAISSEEvent] = []
         let choices = json["choices"] as? [[String: Any]] ?? []
         if let choice = choices.first {
             if let delta = choice["delta"] as? [String: Any],
                let content = delta["content"] as? String, !content.isEmpty {
-                continuation.yield(.textDelta(content))
+                events.append(.textDelta(content))
             }
             if let finishReason = choice["finish_reason"] as? String, !finishReason.isEmpty {
-                continuation.yield(.stopReason(finishReason))
+                events.append(.stopReason(finishReason))
             }
         }
         if let usage = json["usage"] as? [String: Any] {
-            handleUsage(usage: usage, continuation: continuation)
+            events += handleUsage(usage: usage)
         }
         if let error = json["error"] as? [String: Any] {
             let message = error["message"] as? String ?? "Unknown OpenAI API error."
-            continuation.yield(.error(message))
+            events.append(.error(message))
         }
+        return events
     }
 
-    private func handleUsage(
-        usage: [String: Any],
-        continuation: AsyncThrowingStream<OpenAISSEEvent, Error>.Continuation,
-    ) {
+    private func handleUsage(usage: [String: Any]) -> [OpenAISSEEvent] {
         let total = usage["total_tokens"] as? Int
             ?? (usage["prompt_tokens"] as? Int ?? 0) + (usage["completion_tokens"] as? Int ?? 0)
-        continuation.yield(.usage(total))
+        return [.usage(total)]
     }
 }
 #endif
