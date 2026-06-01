@@ -25,28 +25,35 @@ extension OpenAIInferenceSession {
     }
 
     /// Executes each model-requested tool call in order, appending a tool-result message per call.
+    ///
+    /// Returns `true` if any call was rejected because the step budget was exhausted.
+    /// The caller should break the tool loop when this happens — a model that keeps
+    /// requesting tools after budget exhaustion would loop forever otherwise.
     func executeToolCalls(
         _ calls: [PendingOpenAIToolCall],
         toolTurnRuntime: ToolTurnRuntime,
         turnHistory: inout [OpenAIMessage],
         continuation: InferenceStream.Continuation,
-    ) async throws {
-        guard !calls.isEmpty else { return }
+    ) async throws -> Bool {
+        guard !calls.isEmpty else { return false }
+        var budgetExhausted = false
         for call in calls {
-            let toolMessage = try await executeSingleTool(
+            let (toolMessage, exceeded) = try await executeSingleTool(
                 call,
                 toolTurnRuntime: toolTurnRuntime,
                 continuation: continuation,
             )
             turnHistory.append(toolMessage)
+            if exceeded { budgetExhausted = true }
         }
+        return budgetExhausted
     }
 
     private func executeSingleTool(
         _ call: PendingOpenAIToolCall,
         toolTurnRuntime: ToolTurnRuntime,
         continuation: InferenceStream.Continuation,
-    ) async throws -> OpenAIMessage {
+    ) async throws -> (OpenAIMessage, budgetExhausted: Bool) {
         let callID: ToolCallID = call.id
         let (rationale, argsJSON) = ToolRationale.extracting(from: call.argsJSON)
         continuation.yield(.toolCallRequested(id: callID, name: call.name, argumentsJSON: argsJSON))
@@ -65,13 +72,16 @@ extension OpenAIInferenceSession {
                 name: call.name,
                 outcome: .success(content: content),
             ))
-            return OpenAIMessage.toolResult(toolCallID: callID, content: content, isError: false)
+            return (OpenAIMessage.toolResult(toolCallID: callID, content: content, isError: false), false)
         case .failure(let failure):
             continuation.yield(.toolCallCompleted(id: callID, name: call.name, outcome: .failure(failure)))
-            return OpenAIMessage.toolResult(
-                toolCallID: callID,
-                content: [.text(failure.resultJSON)],
-                isError: true,
+            return (
+                OpenAIMessage.toolResult(
+                    toolCallID: callID,
+                    content: [.text(failure.resultJSON)],
+                    isError: true,
+                ),
+                failure == .stepLimitExceeded,
             )
         }
     }

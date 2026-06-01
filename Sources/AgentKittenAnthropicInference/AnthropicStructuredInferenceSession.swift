@@ -69,7 +69,9 @@ extension AnthropicInferenceSession: StructuredInferenceSession {
         var stopReason = "end_turn"
         var accumulated = ""
         var toolUseResponsesSeen = 0 // Tracks consecutive empty tool call cycles. Orthogonal to per-call budget.
+        var budgetExhausted = false
         repeat {
+            let wasExhaustedAtStart = budgetExhausted
             let outcome = try await runStructuredRequest(
                 client: client,
                 system: system,
@@ -78,12 +80,17 @@ extension AnthropicInferenceSession: StructuredInferenceSession {
                 turnHistory: &turnHistory,
                 continuation: continuation,
             )
+            budgetExhausted = outcome.budgetExhausted
             stopReason = stopReasonAfterRequest(
                 stopReason: outcome.stopReason,
                 hasToolCalls: outcome.hasToolCalls,
                 toolUseResponsesSeen: &toolUseResponsesSeen,
             )
             accumulated = outcome.text
+            // Allow one follow-up after budget exhaustion so the model sees the
+            // step-limit-exceeded error result. Break before a second such round
+            // to avoid looping forever if the model keeps requesting tools.
+            if wasExhaustedAtStart { break }
         } while stopReason == "tool_use"
         return LoopOutcome(stopReason: stopReason, text: accumulated)
     }
@@ -92,6 +99,7 @@ extension AnthropicInferenceSession: StructuredInferenceSession {
         let stopReason: String
         let text: String
         let hasToolCalls: Bool
+        let budgetExhausted: Bool
     }
 
     // swiftlint:disable:next function_parameter_count
@@ -142,13 +150,13 @@ extension AnthropicInferenceSession: StructuredInferenceSession {
         }
 
         appendAssistantTurn(text: textAccumulated, toolCalls: pendingCalls, to: &turnHistory)
-        try await executeStructuredToolCalls(
+        let budgetExhausted = try await executeStructuredToolCalls(
             pendingCalls,
             toolTurnRuntime: toolTurnRuntime,
             turnHistory: &turnHistory,
             continuation: continuation,
         )
-        return RequestOutcome(stopReason: stopReason, text: textAccumulated, hasToolCalls: !pendingCalls.isEmpty)
+        return RequestOutcome(stopReason: stopReason, text: textAccumulated, hasToolCalls: !pendingCalls.isEmpty, budgetExhausted: budgetExhausted)
     }
 
     private func executeStructuredToolCalls<T: Sendable>(
@@ -156,25 +164,28 @@ extension AnthropicInferenceSession: StructuredInferenceSession {
         toolTurnRuntime: ToolTurnRuntime,
         turnHistory: inout [AnthropicMessage],
         continuation: StructuredInferenceStream<T>.Continuation,
-    ) async throws {
-        guard !calls.isEmpty else { return }
+    ) async throws -> Bool {
+        guard !calls.isEmpty else { return false }
         var toolResultContents: [AnthropicContent] = []
+        var budgetExhausted = false
         for call in calls {
-            let result = try await executeStructuredSingleTool(
+            let (result, exceeded) = try await executeStructuredSingleTool(
                 call,
                 toolTurnRuntime: toolTurnRuntime,
                 continuation: continuation,
             )
             toolResultContents.append(result)
+            if exceeded { budgetExhausted = true }
         }
         turnHistory.append(AnthropicMessage(role: .user, content: toolResultContents))
+        return budgetExhausted
     }
 
     private func executeStructuredSingleTool<T: Sendable>(
         _ call: PendingSSEToolCall,
         toolTurnRuntime: ToolTurnRuntime,
         continuation: StructuredInferenceStream<T>.Continuation,
-    ) async throws -> AnthropicContent {
+    ) async throws -> (AnthropicContent, budgetExhausted: Bool) {
         let callID: ToolCallID = call.id
         let (rationale, argsJSON) = ToolRationale.extracting(from: call.argsJSON)
         continuation.yield(.toolCallRequested(id: callID, name: call.name, argumentsJSON: argsJSON))
@@ -192,10 +203,10 @@ extension AnthropicInferenceSession: StructuredInferenceSession {
                 name: call.name,
                 outcome: .success(content: content),
             ))
-            return .toolResult(toolUseID: callID, content: content, isError: false)
+            return (.toolResult(toolUseID: callID, content: content, isError: false), false)
         case .failure(let failure):
             continuation.yield(.toolCallCompleted(id: callID, name: call.name, outcome: .failure(failure)))
-            return .toolResult(toolUseID: callID, content: [.text(failure.resultJSON)], isError: true)
+            return (.toolResult(toolUseID: callID, content: [.text(failure.resultJSON)], isError: true), failure == .stepLimitExceeded)
         }
     }
 
