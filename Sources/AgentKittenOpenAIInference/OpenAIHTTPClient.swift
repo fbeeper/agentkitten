@@ -54,45 +54,15 @@ struct OpenAIHTTPClient: OpenAIHTTPStreaming {
 
     // MARK: - Private
 
-    static func error(statusCode: Int, body: String) -> InferenceError {
-        let fallbackMessage = "OpenAI API returned HTTP \(statusCode): \(body)"
-        let errorPayload = errorPayload(from: body, fallbackMessage: fallbackMessage)
-        if isAuthenticationFailure(statusCode: statusCode) {
-            return .authenticationFailed(
-                AuthenticationFailureInfo(
-                    provider: Self.providerName,
-                    message: errorPayload.message,
-                    statusCode: statusCode,
-                ),
-            )
-        }
-        guard isContextWindowExceeded(error: errorPayload) else {
-            return .invalidResponse(fallbackMessage)
-        }
-        return .contextWindowExceeded(
-            ContextWindowExceededInfo(provider: Self.providerName, message: errorPayload.message),
-        )
-    }
-
-    /// Parses the OpenAI JSON error body to extract structured error details.
-    ///
-    /// OpenAI error responses have the shape `{"error":{"message":"...","type":"...","code":"..."}}`.
-    private static func errorPayload(from body: String, fallbackMessage: String) -> OpenAIErrorPayload {
-        guard
-            let data = body.data(using: .utf8),
-            let response = try? JSONDecoder().decode(OpenAIErrorResponse.self, from: data)
-        else {
-            return OpenAIErrorPayload(message: fallbackMessage, code: nil)
-        }
-        return response.error
-    }
-
-    private static func isAuthenticationFailure(statusCode: Int) -> Bool {
-        statusCode == 401 || statusCode == 403
-    }
-
-    private static func isContextWindowExceeded(error: OpenAIErrorPayload) -> Bool {
-        error.code == "context_length_exceeded"
+    private func buildURLRequest(for request: OpenAIRequest) throws -> URLRequest {
+        let endpoint = baseURL.appending(path: "chat/completions")
+        var urlRequest = URLRequest(url: endpoint)
+        urlRequest.httpMethod = "POST"
+        urlRequest.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
+        urlRequest.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        urlRequest.setValue("text/event-stream", forHTTPHeaderField: "Accept")
+        urlRequest.httpBody = try JSONEncoder().encode(request)
+        return urlRequest
     }
 
     private func streamSSEEvents(
@@ -103,11 +73,7 @@ struct OpenAIHTTPClient: OpenAIHTTPStreaming {
         let (bytes, response) = try await urlSession.bytes(for: request)
 
         if let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode != 200 {
-            var body = ""
-            for try await line in bytes.lines {
-                body += line
-                if body.count > 512 { break }
-            }
+            let body = try await Self.errorBody(from: bytes)
             throw Self.error(statusCode: httpResponse.statusCode, body: body)
         }
 
@@ -119,7 +85,7 @@ struct OpenAIHTTPClient: OpenAIHTTPStreaming {
         let (data, response) = try await urlSession.data(for: request)
 
         if let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode != 200 {
-            let body = String(bytes: data, encoding: .utf8).map { String($0.prefix(512)) } ?? ""
+            let body = String(bytes: data, encoding: .utf8) ?? ""
             throw Self.error(statusCode: httpResponse.statusCode, body: body)
         }
 
@@ -133,15 +99,33 @@ struct OpenAIHTTPClient: OpenAIHTTPStreaming {
         #endif
     }
 
-    private func buildURLRequest(for request: OpenAIRequest) throws -> URLRequest {
-        let endpoint = baseURL.appending(path: "chat/completions")
-        var urlRequest = URLRequest(url: endpoint)
-        urlRequest.httpMethod = "POST"
-        urlRequest.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
-        urlRequest.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        urlRequest.setValue("text/event-stream", forHTTPHeaderField: "Accept")
-        urlRequest.httpBody = try JSONEncoder().encode(request)
-        return urlRequest
+    #if canImport(Darwin)
+    private static func errorBody(from bytes: URLSession.AsyncBytes) async throws -> String {
+        var data = Data()
+        for try await byte in bytes {
+            data.append(byte)
+        }
+        return String(bytes: data, encoding: .utf8) ?? ""
+    }
+    #endif
+
+    static func error(statusCode: Int, body: String) -> InferenceError {
+        let error = OpenAIHTTPError(statusCode: statusCode, body: body)
+        if error.isAuthenticationFailure {
+            return .authenticationFailed(
+                AuthenticationFailureInfo(
+                    provider: Self.providerName,
+                    message: error.message,
+                    statusCode: statusCode,
+                ),
+            )
+        } else if error.isContextWindowExceeded {
+            return .contextWindowExceeded(
+                ContextWindowExceededInfo(provider: Self.providerName, message: error.message),
+            )
+        } else {
+            return .invalidResponse(error.message)
+        }
     }
 }
 
@@ -150,7 +134,51 @@ private struct OpenAIErrorResponse: Decodable {
 }
 
 private struct OpenAIErrorPayload: Decodable {
-    let message: String
+    let message: String?
     let code: String?
+}
+
+private struct OpenAIHTTPError {
+    let statusCode: Int
+    let body: String
+    let payload: OpenAIErrorPayload?
+
+    init(statusCode: Int, body: String) {
+        self.statusCode = statusCode
+        self.body = body
+        payload = Self.payload(from: body)
+    }
+
+    var isAuthenticationFailure: Bool {
+        statusCode == 401 || statusCode == 403
+    }
+
+    var isContextWindowExceeded: Bool {
+        payload?.code == "context_length_exceeded"
+    }
+
+    var message: String {
+        if isAuthenticationFailure {
+            if let code = payload?.code {
+                return "OpenAI API returned HTTP \(statusCode): authentication failed (error code: \(code))"
+            }
+            return "OpenAI API returned HTTP \(statusCode): authentication failed"
+        }
+
+        return "OpenAI API returned HTTP \(statusCode): \(payload?.message ?? String(body.prefix(512)))"
+    }
+
+    /// Parses the OpenAI JSON error body to extract structured error details.
+    ///
+    /// OpenAI error responses have the shape `{"error":{"message":"...","type":"...","code":"..."}}`.
+    private static func payload(from body: String) -> OpenAIErrorPayload? {
+        guard
+            let data = body.data(using: .utf8),
+            let response = try? JSONDecoder().decode(OpenAIErrorResponse.self, from: data)
+        else {
+            return nil
+        }
+        return response.error
+    }
 }
 #endif

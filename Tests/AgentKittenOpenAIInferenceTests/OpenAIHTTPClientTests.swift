@@ -43,7 +43,7 @@ import Testing
         return
     }
     #expect(info.provider == "OpenAI")
-    #expect(info.message.contains("Incorrect API key"))
+    #expect(info.message == "OpenAI API returned HTTP 401: authentication failed (error code: invalid_api_key)")
     #expect(info.statusCode == 401)
 }
 
@@ -64,7 +64,7 @@ import Testing
         return
     }
     #expect(info.provider == "OpenAI")
-    #expect(info.message.contains("does not have access"))
+    #expect(info.message == "OpenAI API returned HTTP 403: authentication failed (error code: model_not_found)")
     #expect(info.statusCode == 403)
 }
 
