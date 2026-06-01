@@ -68,7 +68,7 @@ import Testing
         return
     }
     #expect(info.provider == "Anthropic")
-    #expect(info.message.contains("bad key"))
+    #expect(info.message == "Anthropic API returned HTTP 401: authentication failed (error type: authentication_error)")
     #expect(info.statusCode == 401)
 }
 
