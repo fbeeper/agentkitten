@@ -93,7 +93,6 @@ public actor AnthropicInferenceSession: InferenceSession {
                 continuation: continuation,
             )
         }
-        // Unstructured Task: onTermination is a @Sendable sync callback; cannot await.
         continuation.onTermination = { _ in
             lease.end()
             task.cancel()
