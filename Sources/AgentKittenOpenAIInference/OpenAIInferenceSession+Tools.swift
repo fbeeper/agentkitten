@@ -21,8 +21,7 @@ extension OpenAIInferenceSession {
         let effectiveCalls: [OpenAIWireToolCall]? = wireCalls.isEmpty ? nil : wireCalls
         // Important: an empty `stop` response is still a completed assistant turn.
         // Keep `content: ""` so later user messages do not erase that turn from provider history.
-        let effectiveText = text.isEmpty && effectiveCalls != nil ? nil : text
-        turnHistory.append(OpenAIMessage.assistant(text: effectiveText, toolCalls: effectiveCalls))
+        turnHistory.append(OpenAIMessage.assistant(text: text, toolCalls: effectiveCalls))
     }
 
     /// Executes each model-requested tool call in order, appending a tool-result message per call.
