@@ -14,11 +14,11 @@ extension OpenAIInferenceSession {
     public func contextUsage() async throws -> ContextUsage {
         let lease = try operationGate.begin(.contextUsage)
         defer { lease.end() }
-        let contextSize = await resolveContextSize(for: currentModel)
+        let contextSize = try await resolveContextSize(for: currentModel)
         return ContextUsage(contextTokens: cachedContextTokens ?? 0, contextSize: contextSize)
     }
 
-    func resolveContextSize(for model: String) async -> Int? {
+    func resolveContextSize(for model: String) async throws -> Int? {
         if let cached = resolvedContextSizes[model] {
             return cached.value
         }
@@ -30,6 +30,8 @@ extension OpenAIInferenceSession {
                 cacheResolvedContextSize(resolved, for: model)
                 return resolved
             }
+        } catch InferenceError.authenticationFailed(let info) {
+            throw InferenceError.authenticationFailed(info)
         } catch {
             cacheResolvedContextSize(fallback, for: model)
             return fallback
