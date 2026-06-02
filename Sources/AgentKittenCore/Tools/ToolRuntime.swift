@@ -117,6 +117,11 @@ public actor ToolTurnRuntime {
     private let toolSelection: ToolSelection
     private let runtimeConfig: ToolRuntimeConfig
     private var toolStepBudget: ToolStepBudget
+    // Loop budget state machine. hasToolBudget snapshots preRoundExhausted before
+    // each request; recordRound advances the machine using that snapshot afterwards.
+    private var preRoundExhausted = false
+    private var exhaustedRoundSeen = false
+    private var followUpRoundDone = false
 
     package init(
         executor: ToolExecutor,
@@ -219,6 +224,29 @@ public actor ToolTurnRuntime {
             String(format: runtimeConfig.unavailableReasonFormat, name)
         case .all:
             preconditionFailure("Tool selection denied a tool while all tools are available.")
+        }
+    }
+
+    /// Returns false when the agentic loop should stop before issuing the next request.
+    ///
+    /// Also snapshots the current exhaustion state for the paired ``recordRound()`` call.
+    /// Always call ``recordRound()`` after each request that was gated by this method.
+    public func prepareRound() -> Bool {
+        guard !followUpRoundDone else { return false }
+        preRoundExhausted = !hasRemainingStepCapacity
+        return true
+    }
+
+    /// Records the outcome of the completed round, advancing the budget state machine.
+    ///
+    /// Must be called after each request, once per ``hasToolBudget`` check that returned true.
+    /// When the round ran with an exhausted budget, this allows exactly one follow-up round
+    /// so the model can acknowledge ``ToolCallFailure/stepLimitExceeded`` errors before stopping.
+    public func recordRound() {
+        if exhaustedRoundSeen {
+            followUpRoundDone = true
+        } else if preRoundExhausted {
+            exhaustedRoundSeen = true
         }
     }
 

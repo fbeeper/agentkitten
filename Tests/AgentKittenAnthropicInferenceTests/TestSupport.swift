@@ -11,12 +11,14 @@ import Testing
 func testToolRuntime(
     registry: ToolRegistry = ToolRegistry(),
     executionPolicy: some ToolExecutionPolicy = AutoApprovePolicy(),
+    hooks: [AnyToolHook] = [],
 ) -> ToolRuntime {
     let toolBehavior = ToolBehavior()
     return ToolRuntime(
         toolDefinition: ToolDefinition(
             tools: registry.all,
             executionPolicy: executionPolicy,
+            hooks: hooks,
         ),
         toolBehavior: toolBehavior,
     )

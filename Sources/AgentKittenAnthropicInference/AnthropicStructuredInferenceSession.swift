@@ -67,9 +67,12 @@ extension AnthropicInferenceSession: StructuredInferenceSession {
         continuation: StructuredInferenceStream<T>.Continuation,
     ) async throws -> LoopOutcome {
         var stopReason = "end_turn"
-        var accumulated = ""
+        var lastRoundText = ""
         var toolUseResponsesSeen = 0 // Tracks consecutive empty tool call cycles. Orthogonal to per-call budget.
         repeat {
+            guard await toolTurnRuntime.prepareRound() else {
+                break // Given the follow up stopReason is ok on tool_use without having to set manually.
+            }
             let outcome = try await runStructuredRequest(
                 client: client,
                 system: system,
@@ -83,9 +86,10 @@ extension AnthropicInferenceSession: StructuredInferenceSession {
                 hasToolCalls: outcome.hasToolCalls,
                 toolUseResponsesSeen: &toolUseResponsesSeen,
             )
-            accumulated = outcome.text
+            lastRoundText = outcome.text
+            await toolTurnRuntime.recordRound()
         } while stopReason == "tool_use"
-        return LoopOutcome(stopReason: stopReason, text: accumulated)
+        return LoopOutcome(stopReason: stopReason, text: lastRoundText)
     }
 
     private struct RequestOutcome {
@@ -141,62 +145,17 @@ extension AnthropicInferenceSession: StructuredInferenceSession {
             }
         }
 
-        appendAssistantTurn(text: textAccumulated, toolCalls: pendingCalls, to: &turnHistory)
-        try await executeStructuredToolCalls(
-            pendingCalls,
+        // Only treat pending calls as executable when the model explicitly finished with tool_use.
+        // A max_tokens finish may carry completed tool blocks that must be discarded.
+        let callsToExecute = stopReason == "tool_use" ? pendingCalls : []
+        appendAssistantTurn(text: textAccumulated, toolCalls: callsToExecute, to: &turnHistory)
+        await executeToolCalls(
+            callsToExecute,
             toolTurnRuntime: toolTurnRuntime,
             turnHistory: &turnHistory,
-            continuation: continuation,
+            emit: { continuation.yield($0) },
         )
-        return RequestOutcome(stopReason: stopReason, text: textAccumulated, hasToolCalls: !pendingCalls.isEmpty)
-    }
-
-    private func executeStructuredToolCalls<T: Sendable>(
-        _ calls: [PendingSSEToolCall],
-        toolTurnRuntime: ToolTurnRuntime,
-        turnHistory: inout [AnthropicMessage],
-        continuation: StructuredInferenceStream<T>.Continuation,
-    ) async throws {
-        guard !calls.isEmpty else { return }
-        var toolResultContents: [AnthropicContent] = []
-        for call in calls {
-            let result = try await executeStructuredSingleTool(
-                call,
-                toolTurnRuntime: toolTurnRuntime,
-                continuation: continuation,
-            )
-            toolResultContents.append(result)
-        }
-        turnHistory.append(AnthropicMessage(role: .user, content: toolResultContents))
-    }
-
-    private func executeStructuredSingleTool<T: Sendable>(
-        _ call: PendingSSEToolCall,
-        toolTurnRuntime: ToolTurnRuntime,
-        continuation: StructuredInferenceStream<T>.Continuation,
-    ) async throws -> AnthropicContent {
-        let callID: ToolCallID = call.id
-        let (rationale, argsJSON) = ToolRationale.extracting(from: call.argsJSON)
-        continuation.yield(.toolCallRequested(id: callID, name: call.name, argumentsJSON: argsJSON))
-        let pending = PendingToolCall(id: callID, name: call.name, argumentsJSON: argsJSON, modelRationale: rationale)
-        let outcome = await toolTurnRuntime.invoke(
-            pending,
-            onApprovalRequired: { pendingCall in
-                continuation.yield(.toolApprovalRequired(call: pendingCall))
-            },
-        )
-        switch outcome {
-        case .success(let content):
-            continuation.yield(.toolCallCompleted(
-                id: callID,
-                name: call.name,
-                outcome: .success(content: content),
-            ))
-            return .toolResult(toolUseID: callID, content: content, isError: false)
-        case .failure(let failure):
-            continuation.yield(.toolCallCompleted(id: callID, name: call.name, outcome: .failure(failure)))
-            return .toolResult(toolUseID: callID, content: [.text(failure.resultJSON)], isError: true)
-        }
+        return RequestOutcome(stopReason: stopReason, text: textAccumulated, hasToolCalls: !callsToExecute.isEmpty)
     }
 
     private func decodeStructuredValue<T: Decodable>(
