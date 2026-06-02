@@ -63,13 +63,19 @@ public actor OpenAIInferenceProvider: InferenceProviding {
     ///   - baseURL: The API base URL. Defaults to `https://api.openai.com/v1`.
     ///     Override to point at LM Studio, Ollama, or other local servers.
     ///   - structuredOutputInstructionFormat: System-prompt instruction injected for structured
-    ///     output requests. Receives one `%@` argument: the JSON schema string.
+    ///     output requests. Must contain exactly one `%@` placeholder, which is replaced with
+    ///     the JSON schema string at generation time. Passing a string with zero or more than
+    ///     one `%@` triggers a precondition failure at init.
     public init(
         credentials: OpenAICredentials = .key(EnvironmentAPIKeyProvider("OPENAI_API_KEY")),
         model: String = "gpt-4o",
         baseURL: URL = OpenAIInferenceProvider.defaultBaseURL,
         structuredOutputInstructionFormat: String = OpenAIInferenceProvider.defaultStructuredOutputInstructionFormat,
     ) {
+        precondition(
+            structuredOutputInstructionFormat.formatPlaceholderCount == 1,
+            "structuredOutputInstructionFormat must contain exactly one %@ placeholder for the JSON schema string."
+        )
         self.credentials = credentials
         self.model = model
         self.baseURL = baseURL

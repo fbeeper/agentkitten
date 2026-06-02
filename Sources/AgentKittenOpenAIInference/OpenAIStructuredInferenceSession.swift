@@ -103,13 +103,13 @@ extension OpenAIInferenceSession: StructuredInferenceSession {
             messages = [OpenAIMessage.system(system)] + messages
         }
         let request = OpenAIRequest(
-            model: defaultModel,
+            model: parameters.inferenceContext[OpenAIModelKey.self] ?? defaultModel,
             messages: messages,
             tools: effectiveTools,
             stream: true,
             streamOptions: nil,
-            temperature: 0,
-            maxCompletionTokens: 4096,
+            temperature: parameters.configuration.temperature,
+            maxCompletionTokens: parameters.configuration.maxTokens,
         )
         var textAccumulated = ""
         var pendingCalls: [PendingOpenAIToolCall] = []
