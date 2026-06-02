@@ -70,6 +70,7 @@ extension AnthropicInferenceSession: StructuredInferenceSession {
         var lastRoundText = ""
         var toolUseResponsesSeen = 0 // Tracks consecutive empty tool call cycles. Orthogonal to per-call budget.
         repeat {
+            try Task.checkCancellation()
             guard await toolTurnRuntime.prepareRound() else {
                 break // Given the follow up stopReason is ok on tool_use without having to set manually.
             }
