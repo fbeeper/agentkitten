@@ -112,25 +112,5 @@ struct OpenAISessionTests {
             _ = try await collectText(session, "Hi")
         }
     }
-
-    @Test("Structured output is unsupported in the text-only session")
-    func structuredUnsupported() async throws {
-        let client = MockOpenAIHTTPClient(responses: [[.textDelta("x"), .stopReason("stop")]])
-        let session = makeOpenAITestSession(client: client)
-        await #expect(throws: InferenceError.self) {
-            let _: OpenAIStructuredAnswer = try await session.generate(
-                prompt: "answer",
-                parameters: InferenceRequestParameters(toolSelection: .disabled),
-            )
-        }
-    }
-}
-
-private struct OpenAIStructuredAnswer: Codable, Sendable, JSONSchemaProviding {
-    let answer: String
-
-    static var jsonSchema: JSONSchema {
-        .object(properties: ["answer": .string(description: "The answer.")], required: ["answer"])
-    }
 }
 #endif

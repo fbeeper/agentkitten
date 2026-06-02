@@ -238,18 +238,21 @@ struct AnthropicStructuredSessionTests {
         #expect(request.tools == nil)
     }
 
-    @Test func generate_usesZeroTemperature() async throws {
+    @Test func generate_usesConfiguredTemperature() async throws {
         let client = CapturingHTTPClient(events: [
             .textDelta(#"{"label":"neutral","confidence":0.5}"#),
             .stopReason("end_turn"),
         ])
         let session = makeSession(client: client)
         let _: Sentiment = try await session.generate(
-            prompt: "test", parameters: InferenceRequestParameters(),
+            prompt: "test",
+            parameters: InferenceRequestParameters(
+                configuration: InferenceConfiguration(temperature: 0.2),
+            ),
         )
 
         let request = try #require(client.capturedRequest)
-        #expect(request.temperature == 0)
+        #expect(request.temperature == 0.2)
     }
 
     @Test func generate_includesRegisteredToolsInRequest() async throws {

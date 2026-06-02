@@ -64,4 +64,12 @@ func testOpenAIToolRuntime(registry: ToolRegistry = ToolRegistry()) -> ToolRunti
         toolBehavior: ToolBehavior(),
     )
 }
+
+struct OpenAIStructuredAnswer: Codable, Sendable, JSONSchemaProviding, Equatable {
+    let answer: String
+
+    static var jsonSchema: JSONSchema {
+        .object(properties: ["answer": .string(description: "The answer.")], required: ["answer"])
+    }
+}
 #endif

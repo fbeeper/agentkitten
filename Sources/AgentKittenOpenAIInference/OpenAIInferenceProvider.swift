@@ -14,8 +14,8 @@ import Foundation
 /// Each ``Conversation`` gets its own ``OpenAIInferenceSession`` which fetches an API
 /// key from the supplied ``APIKeyProviding`` at the start of each turn.
 ///
-/// This provider supports plain text chat and tool use. It does not yet support
-/// structured output, token counting, or context compaction.
+/// This provider supports plain text chat, tool use, and structured output. It
+/// does not yet support token counting or context compaction.
 ///
 /// Use the ``InferenceProvider`` convenience factories instead of instantiating
 /// this type directly:
@@ -37,9 +37,22 @@ public actor OpenAIInferenceProvider: InferenceProviding {
     /// The default OpenAI Chat Completions API base URL.
     public static let defaultBaseURL = URL(string: "https://api.openai.com/v1")!
 
+    /// The default structured-output instruction format string.
+    ///
+    /// Used when no custom `structuredOutputInstructionFormat` is supplied to the provider initializer.
+    /// Receives one `%@` argument: the JSON schema string.
+    public static let defaultStructuredOutputInstructionFormat = """
+    Respond with a single valid JSON value that conforms to this schema:
+    %@
+    Output only the raw JSON value. Do not use markdown, code blocks, or backticks. \
+    When the root schema is an object, start with { and end with }; \
+    when it is an array, start with [ and end with ].
+    """
+
     private let credentials: OpenAICredentials
     private let model: String
     private let baseURL: URL
+    private let structuredOutputInstructionFormat: String
 
     /// Creates an OpenAI-compatible provider.
     ///
@@ -49,14 +62,24 @@ public actor OpenAIInferenceProvider: InferenceProviding {
     ///   - model: The model identifier. Defaults to `"gpt-4o"`.
     ///   - baseURL: The API base URL. Defaults to `https://api.openai.com/v1`.
     ///     Override to point at LM Studio, Ollama, or other local servers.
+    ///   - structuredOutputInstructionFormat: System-prompt instruction injected for structured
+    ///     output requests. Must contain exactly one `%@` placeholder, which is replaced with
+    ///     the JSON schema string at generation time. Passing a string with zero or more than
+    ///     one `%@` triggers a precondition failure at init.
     public init(
         credentials: OpenAICredentials = .key(EnvironmentAPIKeyProvider("OPENAI_API_KEY")),
         model: String = "gpt-4o",
         baseURL: URL = OpenAIInferenceProvider.defaultBaseURL,
+        structuredOutputInstructionFormat: String = OpenAIInferenceProvider.defaultStructuredOutputInstructionFormat,
     ) {
+        precondition(
+            structuredOutputInstructionFormat.formatPlaceholderCount == 1,
+            "structuredOutputInstructionFormat must contain exactly one %@ placeholder for the JSON schema string.",
+        )
         self.credentials = credentials
         self.model = model
         self.baseURL = baseURL
+        self.structuredOutputInstructionFormat = structuredOutputInstructionFormat
     }
 
     /// Returns whether a conversation can be reused across a turn-configuration transition.
@@ -94,6 +117,7 @@ public actor OpenAIInferenceProvider: InferenceProviding {
             systemPrompt: systemPrompt,
             toolRuntime: toolRuntime,
             initialHistory: initialHistory,
+            structuredOutputInstructionFormat: structuredOutputInstructionFormat,
         )
     }
 
