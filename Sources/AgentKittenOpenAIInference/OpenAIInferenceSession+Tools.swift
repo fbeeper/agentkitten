@@ -18,9 +18,10 @@ extension OpenAIInferenceSession {
                 function: OpenAIWireToolCall.FunctionCall(name: $0.name, arguments: $0.argsJSON),
             )
         }
-        let effectiveText = text.isEmpty ? nil : text
         let effectiveCalls: [OpenAIWireToolCall]? = wireCalls.isEmpty ? nil : wireCalls
-        guard effectiveText != nil || effectiveCalls != nil else { return }
+        // Important: an empty `stop` response is still a completed assistant turn.
+        // Keep `content: ""` so later user messages do not erase that turn from provider history.
+        let effectiveText = text.isEmpty && effectiveCalls != nil ? nil : text
         turnHistory.append(OpenAIMessage.assistant(text: effectiveText, toolCalls: effectiveCalls))
     }
 

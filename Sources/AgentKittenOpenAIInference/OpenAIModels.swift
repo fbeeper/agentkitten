@@ -69,8 +69,7 @@ extension OpenAIMessage {
     }
 
     static func assistant(text: String?, toolCalls: [OpenAIWireToolCall]?) -> OpenAIMessage {
-        let content = text.flatMap { $0.isEmpty ? nil : $0 }
-        return OpenAIMessage(role: .assistant, content: content, toolCalls: toolCalls, toolCallID: nil)
+        OpenAIMessage(role: .assistant, content: text, toolCalls: toolCalls, toolCallID: nil)
     }
 
     static func toolResult(

@@ -86,6 +86,22 @@ struct OpenAISessionTests {
         #expect(roles == [.system, .user, .assistant, .user])
     }
 
+    @Test("Preserves empty assistant turn in request history")
+    func preservesEmptyAssistantTurn() async throws {
+        let client = MockOpenAIHTTPClient(responses: [
+            [.stopReason("stop")],
+            [.textDelta("second"), .stopReason("stop")],
+        ])
+        let session = makeOpenAITestSession(client: client)
+        _ = try await collectText(session, "one")
+        _ = try await collectText(session, "two")
+
+        let secondRequest = client.capturedRequests[1]
+        let roles = secondRequest.messages.map(\.role)
+        #expect(roles == [.user, .assistant, .user])
+        #expect(secondRequest.messages[1].content == "")
+    }
+
     @Test("Surfaces an error event as a thrown error")
     func surfacesError() async throws {
         let client = MockOpenAIHTTPClient(responses: [
