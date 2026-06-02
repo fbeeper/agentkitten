@@ -59,7 +59,7 @@ public actor AnthropicInferenceProvider: InferenceProviding {
     ) {
         precondition(
             structuredOutputInstructionFormat.formatPlaceholderCount == 1,
-            "structuredOutputInstructionFormat must contain exactly one %@ placeholder for the JSON schema string."
+            "structuredOutputInstructionFormat must contain exactly one %@ placeholder for the JSON schema string.",
         )
         self.credentials = credentials
         self.model = model
