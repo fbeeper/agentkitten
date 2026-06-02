@@ -248,13 +248,15 @@ private struct InferenceImageTool: RichAgentTool {
 
     let value: StructuredDecision = try await session.generate(
         prompt: "Return a structured answer",
-        parameters: InferenceRequestParameters(),
+        parameters: InferenceRequestParameters(
+            configuration: InferenceConfiguration(temperature: 0.2),
+        ),
     )
     #expect(value == StructuredDecision(answer: "structured"))
 
     let request = try #require(client.capturedRequest)
     #expect(request.tools == nil)
-    #expect(request.temperature == 0)
+    #expect(request.temperature == 0.2)
 }
 
 @Test func session_generateSupportsToolCallsBeforeFinalStructuredJSON() async throws {
