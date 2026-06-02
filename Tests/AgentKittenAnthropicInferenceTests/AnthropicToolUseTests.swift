@@ -71,6 +71,47 @@ struct AnthropicToolUseTests {
         #expect(mock.callCount < 4, "Loop issued \(mock.callCount) requests; expected ≤ 3 with budget(1).")
     }
 
+    @Test("Discards tool calls and surfaces maxTokens when stop reason is max_tokens")
+    func discardsToolCallsOnMaxTokensFinish() async throws {
+        let mock = MockHTTPClient(responses: [
+            [.toolCallReady(id: "call-1", name: "missing_tool", argsJSON: "{}"), .stopReason("max_tokens")],
+        ])
+        let session = makeSession(clientFactory: { _ in mock })
+        let events = try await collect(session)
+
+        #expect(mock.callCount == 1, "No follow-up request should be issued after max_tokens finish.")
+        #expect(!events.contains(where: { if case .toolCallRequested = $0 { true } else { false } }),
+                "toolCallRequested must not appear when tool calls are discarded due to max_tokens finish.")
+        let finishReason = events.compactMap {
+            if case .result(_, let reason) = $0 { reason } else { nil }
+        }.first
+        #expect(finishReason == .maxTokens)
+    }
+
+    @Test("Structured generation discards tool calls on max_tokens finish and does not follow up")
+    func structuredGeneration_discardsToolCallsOnMaxTokensFinish() async throws {
+        let mock = MockHTTPClient(responses: [
+            [.toolCallReady(id: "call-1", name: "missing_tool", argsJSON: "{}"), .stopReason("max_tokens")],
+        ])
+        let session = makeSession(clientFactory: { _ in mock })
+
+        let stream: StructuredInferenceStream<StructuredDecision> = try await session.generateStream(
+            prompt: "probe",
+            parameters: InferenceRequestParameters(),
+        )
+        var sawToolCallRequested = false
+        // The stream throws because max_tokens produces no decodable result — that is
+        // correct behaviour. We only care that no tool was invoked and no follow-up was sent.
+        do {
+            for try await event in stream {
+                if case .toolCallRequested = event { sawToolCallRequested = true }
+            }
+        } catch {}
+
+        #expect(mock.callCount == 1, "No follow-up request should be issued after max_tokens finish.")
+        #expect(!sawToolCallRequested, "toolCallRequested must not appear when tool calls are discarded.")
+    }
+
     @Test("Regular inference emits toolHookFired events from tool execution")
     func inference_emitsHookFiredEvents() async throws {
         let spy = HookSpy()

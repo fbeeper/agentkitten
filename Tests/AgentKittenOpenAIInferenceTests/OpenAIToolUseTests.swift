@@ -86,6 +86,23 @@ struct OpenAIToolUseTests {
         #expect(client.callCount < 4, "Loop issued \(client.callCount) requests; expected ≤ 3 with budget(1).")
     }
 
+    @Test("Discards tool calls and surfaces maxTokens when finish reason is length")
+    func discardsToolCallsOnLengthFinish() async throws {
+        let client = MockOpenAIHTTPClient(responses: [
+            [.toolCallReady(id: "call-1", name: "missing_tool", argsJSON: "{}"), .stopReason("length")],
+        ])
+        let session = makeOpenAITestSession(client: client)
+        let events = try await collect(session)
+
+        #expect(client.callCount == 1, "No follow-up request should be issued after length finish.")
+        #expect(!events.contains(where: { if case .toolCallRequested = $0 { true } else { false } }),
+                "toolCallRequested must not appear when tool calls are discarded due to length finish.")
+        let finishReason = events.compactMap {
+            if case .result(_, let reason) = $0 { reason } else { nil }
+        }.first
+        #expect(finishReason == .maxTokens)
+    }
+
     @Test("Sends tool definitions on the request and a tool result on the follow-up")
     func wiresToolsAndResultsIntoRequests() async throws {
         let registry = ToolRegistry()

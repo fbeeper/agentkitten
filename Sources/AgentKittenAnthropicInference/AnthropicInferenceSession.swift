@@ -195,14 +195,17 @@ public actor AnthropicInferenceSession: InferenceSession {
             }
         }
 
-        appendAssistantTurn(text: textAccumulated, toolCalls: pendingCalls, to: &turnHistory)
+        // Only treat pending calls as executable when the model explicitly finished with tool_use.
+        // A max_tokens finish may carry completed tool blocks that must be discarded.
+        let callsToExecute = stopReason == "tool_use" ? pendingCalls : []
+        appendAssistantTurn(text: textAccumulated, toolCalls: callsToExecute, to: &turnHistory)
         await executeToolCalls(
-            pendingCalls,
+            callsToExecute,
             toolTurnRuntime: toolTurnRuntime,
             turnHistory: &turnHistory,
             emit: { continuation.yield($0) },
         )
-        return RequestOutcome(stopReason: stopReason, hasToolCalls: !pendingCalls.isEmpty)
+        return RequestOutcome(stopReason: stopReason, hasToolCalls: !callsToExecute.isEmpty)
     }
 
     func appendAssistantTurn(

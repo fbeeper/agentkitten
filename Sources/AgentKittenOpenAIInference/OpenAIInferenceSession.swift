@@ -157,14 +157,17 @@ public actor OpenAIInferenceSession: InferenceSession {
         if stopReason == "tool_calls", pendingCalls.isEmpty {
             throw InferenceError.invalidResponse("OpenAI returned tool_calls finish reason without tool calls.")
         }
-        appendAssistantTurn(text: textAccumulated, toolCalls: pendingCalls, to: &turnHistory)
+        // Only treat pending calls as executable when the model explicitly finished with tool_calls.
+        // A length finish may carry partial or complete tool-call deltas that must be discarded.
+        let callsToExecute = stopReason == "tool_calls" ? pendingCalls : []
+        appendAssistantTurn(text: textAccumulated, toolCalls: callsToExecute, to: &turnHistory)
         try await executeToolCalls(
-            pendingCalls,
+            callsToExecute,
             toolTurnRuntime: toolTurnRuntime,
             turnHistory: &turnHistory,
             continuation: continuation,
         )
-        return RequestOutcome(stopReason: stopReason, hasToolCalls: !pendingCalls.isEmpty)
+        return RequestOutcome(stopReason: stopReason, hasToolCalls: !callsToExecute.isEmpty)
     }
 
     private func extractAssistantText(from turnHistory: [OpenAIMessage]) -> String {
