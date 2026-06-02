@@ -147,61 +147,13 @@ extension AnthropicInferenceSession: StructuredInferenceSession {
         }
 
         appendAssistantTurn(text: textAccumulated, toolCalls: pendingCalls, to: &turnHistory)
-        try await executeStructuredToolCalls(
+        await executeToolCalls(
             pendingCalls,
             toolTurnRuntime: toolTurnRuntime,
             turnHistory: &turnHistory,
-            continuation: continuation,
+            emit: { continuation.yield($0) },
         )
         return RequestOutcome(stopReason: stopReason, text: textAccumulated, hasToolCalls: !pendingCalls.isEmpty)
-    }
-
-    private func executeStructuredToolCalls<T: Sendable>(
-        _ calls: [PendingSSEToolCall],
-        toolTurnRuntime: ToolTurnRuntime,
-        turnHistory: inout [AnthropicMessage],
-        continuation: StructuredInferenceStream<T>.Continuation,
-    ) async throws {
-        guard !calls.isEmpty else { return }
-        var toolResultContents: [AnthropicContent] = []
-        for call in calls {
-            let result = try await executeStructuredSingleTool(
-                call,
-                toolTurnRuntime: toolTurnRuntime,
-                continuation: continuation,
-            )
-            toolResultContents.append(result)
-        }
-        turnHistory.append(AnthropicMessage(role: .user, content: toolResultContents))
-    }
-
-    private func executeStructuredSingleTool<T: Sendable>(
-        _ call: PendingSSEToolCall,
-        toolTurnRuntime: ToolTurnRuntime,
-        continuation: StructuredInferenceStream<T>.Continuation,
-    ) async throws -> AnthropicContent {
-        let callID: ToolCallID = call.id
-        let (rationale, argsJSON) = ToolRationale.extracting(from: call.argsJSON)
-        continuation.yield(.toolCallRequested(id: callID, name: call.name, argumentsJSON: argsJSON))
-        let pending = PendingToolCall(id: callID, name: call.name, argumentsJSON: argsJSON, modelRationale: rationale)
-        let outcome = await toolTurnRuntime.invoke(
-            pending,
-            onApprovalRequired: { pendingCall in
-                continuation.yield(.toolApprovalRequired(call: pendingCall))
-            },
-        )
-        switch outcome {
-        case .success(let content):
-            continuation.yield(.toolCallCompleted(
-                id: callID,
-                name: call.name,
-                outcome: .success(content: content),
-            ))
-            return .toolResult(toolUseID: callID, content: content, isError: false)
-        case .failure(let failure):
-            continuation.yield(.toolCallCompleted(id: callID, name: call.name, outcome: .failure(failure)))
-            return .toolResult(toolUseID: callID, content: [.text(failure.resultJSON)], isError: true)
-        }
     }
 
     private func decodeStructuredValue<T: Decodable>(

@@ -4,7 +4,30 @@
 #if canImport(Darwin) || canImport(FoundationNetworking)
 @testable import AgentKittenAnthropicInference
 @testable import AgentKittenCore
+import AgentKittenInferenceSupport
+import Synchronization
 import Testing
+
+/// Records whether its `before` hook fired. Thread-safe via internal `Mutex`.
+private final class HookSpy: ToolHook, @unchecked Sendable {
+    var name: String {
+        "spy"
+    }
+
+    var phases: Set<ToolHookPhase> {
+        [.before]
+    }
+
+    private let _fired = Mutex(false)
+    var fired: Bool {
+        _fired.withLock { $0 }
+    }
+
+    func beforeExecute(_ call: PendingToolCall, context: ToolExecutionContext) async throws -> PendingToolCall {
+        _fired.withLock { $0 = true }
+        return call
+    }
+}
 
 @Suite("Anthropic tool use")
 struct AnthropicToolUseTests {
@@ -46,6 +69,61 @@ struct AnthropicToolUseTests {
         // as the one follow-up so the model sees the error result. Round 4 must not
         // be issued — that would mean the loop is running past budget exhaustion.
         #expect(mock.callCount < 4, "Loop issued \(mock.callCount) requests; expected ≤ 3 with budget(1).")
+    }
+
+    @Test("Regular inference emits toolHookFired events from tool execution")
+    func inference_emitsHookFiredEvents() async throws {
+        let spy = HookSpy()
+        let mock = MockHTTPClient(responses: [
+            [.toolCallReady(id: "call-h1", name: "echo", argsJSON: #"{"message":"probe"}"#), .stopReason("tool_use")],
+            [.textDelta("done"), .stopReason("end_turn")],
+        ])
+        let session = AnthropicInferenceSession(
+            credentials: MockAPIKeyProvider("test-key"),
+            defaultModel: "test-model",
+            systemPrompt: nil,
+            toolRuntime: testToolRuntime(
+                registry: ToolRegistry([AnyAgentTool(InferenceEchoTool())]),
+                hooks: [AnyToolHook(spy)],
+            ),
+            clientFactory: { _ in mock },
+        )
+
+        let events = try await collect(session)
+        #expect(events.contains(where: { if case .toolHookFired = $0 { true } else { false } }),
+                "toolHookFired must appear in the regular inference stream")
+        #expect(spy.fired, "Hook must have fired during regular tool execution")
+    }
+
+    @Test("Structured generation emits toolHookFired events from tool execution")
+    func structuredGeneration_emitsHookFiredEvents() async throws {
+        let spy = HookSpy()
+        let mock = MockHTTPClient(responses: [
+            [.toolCallReady(id: "call-h1", name: "echo", argsJSON: #"{"message":"probe"}"#), .stopReason("tool_use")],
+            [.textDelta(#"{"answer":"done"}"#), .stopReason("end_turn")],
+        ])
+        let session = AnthropicInferenceSession(
+            credentials: MockAPIKeyProvider("test-key"),
+            defaultModel: "test-model",
+            systemPrompt: nil,
+            toolRuntime: testToolRuntime(
+                registry: ToolRegistry([AnyAgentTool(InferenceEchoTool())]),
+                hooks: [AnyToolHook(spy)],
+            ),
+            clientFactory: { _ in mock },
+        )
+
+        let stream: StructuredInferenceStream<StructuredDecision> = try await session.generateStream(
+            prompt: "probe",
+            parameters: InferenceRequestParameters(),
+        )
+        var sawHookEvent = false
+        for try await event in stream {
+            if case .toolHookFired = event { sawHookEvent = true }
+        }
+
+        #expect(sawHookEvent, "toolHookFired must appear in the structured generation stream")
+        #expect(spy.fired, "Hook must have fired during structured tool execution")
     }
 }
 #endif
