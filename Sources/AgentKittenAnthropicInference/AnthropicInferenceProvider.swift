@@ -48,13 +48,19 @@ public actor AnthropicInferenceProvider: InferenceProviding {
     ///   - historyRenderingConfiguration: Labels and format strings used when rendering history
     ///     during context compaction. Defaults to built-in English values.
     ///   - structuredOutputInstructionFormat: System-prompt instruction injected for structured
-    ///     output requests. Receives one `%@` argument: the JSON schema string.
+    ///     output requests. Must contain exactly one `%@` placeholder, which is replaced with
+    ///     the JSON schema string at generation time. Passing a string with zero or more than
+    ///     one `%@` triggers a precondition failure at init.
     public init(
         credentials: any APIKeyProviding = EnvironmentAPIKeyProvider("ANTHROPIC_API_KEY"),
         model: String = "claude-sonnet-4-5",
         historyRenderingConfiguration: HistoryRenderingConfiguration = HistoryRenderingConfiguration(),
         structuredOutputInstructionFormat: String = AnthropicInferenceProvider.defaultStructuredOutputInstructionFormat,
     ) {
+        precondition(
+            structuredOutputInstructionFormat.formatPlaceholderCount == 1,
+            "structuredOutputInstructionFormat must contain exactly one %@ placeholder for the JSON schema string."
+        )
         self.credentials = credentials
         self.model = model
         self.historyRenderingConfiguration = historyRenderingConfiguration

@@ -116,12 +116,12 @@ extension AnthropicInferenceSession: StructuredInferenceSession {
         let model = parameters.inferenceContext[AnthropicModelKey.self] ?? defaultModel
         let request = AnthropicRequest(
             model: model,
-            maxTokens: 4096,
+            maxTokens: parameters.configuration.maxTokens,
             system: system,
             messages: turnHistory,
             tools: effectiveTools,
             stream: true,
-            temperature: 0,
+            temperature: parameters.configuration.temperature,
         )
         var textAccumulated = ""
         var pendingCalls: [PendingSSEToolCall] = []
