@@ -166,7 +166,7 @@ public actor OpenAIInferenceSession: InferenceSession {
         // A length finish may carry partial or complete tool-call deltas that must be discarded.
         let callsToExecute = stopReason == "tool_calls" ? pendingCalls : []
         appendAssistantTurn(text: textAccumulated, toolCalls: callsToExecute, to: &turnHistory)
-        try await executeToolCalls(
+        await executeToolCalls(
             callsToExecute,
             toolTurnRuntime: toolTurnRuntime,
             turnHistory: &turnHistory,

@@ -30,10 +30,10 @@ extension OpenAIInferenceSession {
         toolTurnRuntime: ToolTurnRuntime,
         turnHistory: inout [OpenAIMessage],
         continuation: InferenceStream.Continuation,
-    ) async throws {
+    ) async {
         guard !calls.isEmpty else { return }
         for call in calls {
-            let toolMessage = try await executeSingleTool(
+            let toolMessage = await executeSingleTool(
                 call,
                 toolTurnRuntime: toolTurnRuntime,
                 continuation: continuation,
@@ -46,7 +46,7 @@ extension OpenAIInferenceSession {
         _ call: PendingOpenAIToolCall,
         toolTurnRuntime: ToolTurnRuntime,
         continuation: InferenceStream.Continuation,
-    ) async throws -> OpenAIMessage {
+    ) async -> OpenAIMessage {
         let callID: ToolCallID = call.id
         let (rationale, argsJSON) = ToolRationale.extracting(from: call.argsJSON)
         continuation.yield(.toolCallRequested(id: callID, name: call.name, argumentsJSON: argsJSON))
