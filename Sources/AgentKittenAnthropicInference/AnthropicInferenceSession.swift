@@ -123,6 +123,9 @@ public actor AnthropicInferenceSession: InferenceSession {
             var toolUseResponsesSeen = 0 // Tracks consecutive empty tool call cycles. Orthogonal to per-call budget.
             repeat {
                 try Task.checkCancellation()
+                guard await toolTurnRuntime.prepareRound() else {
+                    break // Given the follow up stopReason is ok on tool_use without having to set manually.
+                }
                 let outcome = try await runSingleRequest(
                     client: client,
                     parameters: parameters,
@@ -135,6 +138,7 @@ public actor AnthropicInferenceSession: InferenceSession {
                     hasToolCalls: outcome.hasToolCalls,
                     toolUseResponsesSeen: &toolUseResponsesSeen,
                 )
+                await toolTurnRuntime.recordRound()
             } while stopReason == "tool_use"
 
             history = turnHistory
@@ -190,14 +194,17 @@ public actor AnthropicInferenceSession: InferenceSession {
             }
         }
 
-        appendAssistantTurn(text: textAccumulated, toolCalls: pendingCalls, to: &turnHistory)
-        try await executeToolCalls(
-            pendingCalls,
+        // Only treat pending calls as executable when the model explicitly finished with tool_use.
+        // A max_tokens finish may carry completed tool blocks that must be discarded.
+        let callsToExecute = stopReason == "tool_use" ? pendingCalls : []
+        appendAssistantTurn(text: textAccumulated, toolCalls: callsToExecute, to: &turnHistory)
+        await executeToolCalls(
+            callsToExecute,
             toolTurnRuntime: toolTurnRuntime,
             turnHistory: &turnHistory,
-            continuation: continuation,
+            emit: { continuation.yield($0) },
         )
-        return RequestOutcome(stopReason: stopReason, hasToolCalls: !pendingCalls.isEmpty)
+        return RequestOutcome(stopReason: stopReason, hasToolCalls: !callsToExecute.isEmpty)
     }
 
     func appendAssistantTurn(
@@ -229,47 +236,47 @@ public actor AnthropicInferenceSession: InferenceSession {
         }
     }
 
-    func executeToolCalls(
+    func executeToolCalls<Output: Sendable>(
         _ calls: [PendingSSEToolCall],
         toolTurnRuntime: ToolTurnRuntime,
         turnHistory: inout [AnthropicMessage],
-        continuation: InferenceStream.Continuation,
-    ) async throws {
+        emit: @escaping @Sendable (InferenceEvent<Output>) -> Void,
+    ) async {
         guard !calls.isEmpty else { return }
         var toolResultContents: [AnthropicContent] = []
         for call in calls {
-            let result = try await executeSingleTool(call, toolTurnRuntime: toolTurnRuntime, continuation: continuation)
+            let result = await executeSingleTool(
+                call,
+                toolTurnRuntime: toolTurnRuntime,
+                emit: emit,
+            )
             toolResultContents.append(result)
         }
         turnHistory.append(AnthropicMessage(role: .user, content: toolResultContents))
     }
 
-    private func executeSingleTool(
+    private func executeSingleTool<Output: Sendable>(
         _ call: PendingSSEToolCall,
         toolTurnRuntime: ToolTurnRuntime,
-        continuation: InferenceStream.Continuation,
-    ) async throws -> AnthropicContent {
+        emit: @escaping @Sendable (InferenceEvent<Output>) -> Void,
+    ) async -> AnthropicContent {
         let callID: ToolCallID = call.id
         let (rationale, argsJSON) = ToolRationale.extracting(from: call.argsJSON)
-        continuation.yield(.toolCallRequested(id: callID, name: call.name, argumentsJSON: argsJSON))
+        emit(.toolCallRequested(id: callID, name: call.name, argumentsJSON: argsJSON))
         let pending = PendingToolCall(id: callID, name: call.name, argumentsJSON: argsJSON, modelRationale: rationale)
         let outcome = await toolTurnRuntime.invoke(
             pending,
             onApprovalRequired: { pendingCall in
-                continuation.yield(.toolApprovalRequired(call: pendingCall))
+                emit(.toolApprovalRequired(call: pendingCall))
             },
-            onHookFired: { continuation.yield(.toolHookFired($0)) },
+            onHookFired: { emit(.toolHookFired($0)) },
         )
         switch outcome {
         case .success(let content):
-            continuation.yield(.toolCallCompleted(
-                id: callID,
-                name: call.name,
-                outcome: .success(content: content),
-            ))
+            emit(.toolCallCompleted(id: callID, name: call.name, outcome: .success(content: content)))
             return .toolResult(toolUseID: callID, content: content, isError: false)
         case .failure(let failure):
-            continuation.yield(.toolCallCompleted(id: callID, name: call.name, outcome: .failure(failure)))
+            emit(.toolCallCompleted(id: callID, name: call.name, outcome: .failure(failure)))
             return .toolResult(toolUseID: callID, content: [.text(failure.resultJSON)], isError: true)
         }
     }
