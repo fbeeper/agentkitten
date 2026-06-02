@@ -141,6 +141,28 @@ struct AnthropicToolUseTests {
         #expect(finishReason == .maxTokens)
     }
 
+    @Test("Max-token tool-only turn does not reuse prior assistant text")
+    func maxTokenToolOnlyTurnDoesNotReusePriorAssistantText() async throws {
+        let mock = MockHTTPClient(responses: [
+            [.textDelta("Old answer"), .stopReason("end_turn")],
+            [.toolCallReady(id: "call-1", name: "missing_tool", argsJSON: "{}"), .stopReason("max_tokens")],
+        ])
+        let session = makeSession(clientFactory: { _ in mock })
+
+        _ = try await collect(session, "First")
+        let events = try await collect(session, "Second")
+        let result = events.compactMap {
+            if case .result(let output, let reason) = $0 {
+                (output, reason)
+            } else {
+                nil
+            }
+        }.first
+
+        #expect(result?.0 == "")
+        #expect(result?.1 == .maxTokens)
+    }
+
     @Test("Structured generation discards tool calls on max_tokens finish and does not follow up")
     func structuredGeneration_discardsToolCallsOnMaxTokensFinish() async throws {
         let mock = MockHTTPClient(responses: [

@@ -120,6 +120,7 @@ public actor AnthropicInferenceSession: InferenceSession {
         var turnHistory = history + [userMessage]
         do {
             var stopReason = "end_turn"
+            var lastResponseText = ""
             var toolUseResponsesSeen = 0 // Tracks consecutive empty tool call cycles. Orthogonal to per-call budget.
             repeat {
                 try Task.checkCancellation()
@@ -138,13 +139,14 @@ public actor AnthropicInferenceSession: InferenceSession {
                     hasToolCalls: outcome.hasToolCalls,
                     toolUseResponsesSeen: &toolUseResponsesSeen,
                 )
+                lastResponseText = outcome.text
                 await toolTurnRuntime.recordRound()
             } while stopReason == "tool_use"
 
             history = turnHistory
             continuation.yield(
                 .result(
-                    extractAssistantText(from: turnHistory),
+                    lastResponseText,
                     finishReason(from: stopReason),
                 ),
             )
@@ -158,6 +160,7 @@ public actor AnthropicInferenceSession: InferenceSession {
 
     private struct RequestOutcome {
         let stopReason: String
+        let text: String
         let hasToolCalls: Bool
     }
 
@@ -204,7 +207,7 @@ public actor AnthropicInferenceSession: InferenceSession {
             turnHistory: &turnHistory,
             emit: { continuation.yield($0) },
         )
-        return RequestOutcome(stopReason: stopReason, hasToolCalls: !callsToExecute.isEmpty)
+        return RequestOutcome(stopReason: stopReason, text: textAccumulated, hasToolCalls: !callsToExecute.isEmpty)
     }
 
     func appendAssistantTurn(
@@ -279,19 +282,6 @@ public actor AnthropicInferenceSession: InferenceSession {
             emit(.toolCallCompleted(id: callID, name: call.name, outcome: .failure(failure)))
             return .toolResult(toolUseID: callID, content: [.text(failure.resultJSON)], isError: true)
         }
-    }
-
-    private func extractAssistantText(from turnHistory: [AnthropicMessage]) -> String {
-        guard let lastAssistant = turnHistory.last(where: { $0.role == .assistant }) else {
-            return ""
-        }
-        let textSegments = lastAssistant.content.compactMap { content -> String? in
-            guard case .text(let text) = content else {
-                return nil
-            }
-            return text
-        }
-        return textSegments.joined()
     }
 }
 #endif
