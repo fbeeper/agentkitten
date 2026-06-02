@@ -29,5 +29,21 @@ struct OpenAIStreamConformanceTests {
             return
         }
     }
+
+    @Test("Tool-use turn satisfies the inference stream contract")
+    func toolUseTurnConforms() async throws {
+        let client = MockOpenAIHTTPClient(responses: [
+            [.toolCallReady(id: "call-1", name: "missing_tool", argsJSON: "{}"), .stopReason("tool_calls")],
+            [.textDelta("Done"), .stopReason("stop")],
+        ])
+        let session = makeOpenAITestSession(client: client)
+        let stream = try await session.run(
+            UserMessage(text: "Use a tool"),
+            parameters: InferenceRequestParameters(),
+        )
+        let events = try await InferenceStreamValidator.validate(stream)
+        let requested = events.contains { if case .toolCallRequested = $0 { true } else { false } }
+        #expect(requested, "Expected a tool-call request in the stream.")
+    }
 }
 #endif
