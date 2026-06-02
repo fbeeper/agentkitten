@@ -14,9 +14,8 @@ import Foundation
 /// Each ``Conversation`` gets its own ``OpenAIInferenceSession`` which fetches an API
 /// key from the supplied ``APIKeyProviding`` at the start of each turn.
 ///
-/// This provider supports plain text chat. It does not yet support tool use; if any
-/// tool is selected, ``preflight(toolRegistry:toolSelection:)`` throws rather than
-/// silently dropping the tools.
+/// This provider supports plain text chat and tool use. It does not yet support
+/// structured output, token counting, or context compaction.
 ///
 /// Use the ``InferenceProvider`` convenience factories instead of instantiating
 /// this type directly:
@@ -58,19 +57,6 @@ public actor OpenAIInferenceProvider: InferenceProviding {
         self.credentials = credentials
         self.model = model
         self.baseURL = baseURL
-    }
-
-    /// Rejects configurations that select tools, which this text-only provider does not support.
-    public nonisolated func preflight(
-        toolRegistry: ToolRegistry,
-        toolSelection: ToolSelection,
-    ) throws {
-        let selected = toolRegistry.all.filter { toolSelection.allows(toolName: $0.name) }
-        guard selected.isEmpty else {
-            throw InferenceError.unsupportedConfiguration(
-                "OpenAIInferenceProvider does not yet support tool use; remove tools or disable them for this turn.",
-            )
-        }
     }
 
     /// Returns whether a conversation can be reused across a turn-configuration transition.

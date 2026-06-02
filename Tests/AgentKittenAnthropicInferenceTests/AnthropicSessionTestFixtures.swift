@@ -15,12 +15,17 @@ final class MockHTTPClient: AnthropicHTTPStreaming, @unchecked Sendable {
     private struct State {
         var queue: [[SSEEvent]]
         var callCount = 0
+        var requests: [AnthropicRequest] = []
     }
 
     private let state: Mutex<State>
 
     var callCount: Int {
         state.withLock { $0.callCount }
+    }
+
+    var capturedRequests: [AnthropicRequest] {
+        state.withLock { $0.requests }
     }
 
     init(responses: [[SSEEvent]]) {
@@ -30,6 +35,7 @@ final class MockHTTPClient: AnthropicHTTPStreaming, @unchecked Sendable {
     func stream(request: AnthropicRequest) -> AsyncThrowingStream<SSEEvent, Error> {
         let events = state.withLock { state in
             state.callCount += 1
+            state.requests.append(request)
             return state.queue.isEmpty ? [] : state.queue.removeFirst()
         }
         return AsyncThrowingStream { continuation in
