@@ -63,7 +63,10 @@ struct AnthropicToolUseTests {
             session,
             parameters: InferenceRequestParameters(toolStepBudget: .budget(1)),
         )
-        #expect(mock.callCount == 3, "Expected exactly 3 requests: round 1 (tool ok), round 2 (tool fails), round 3 (follow-up, then stop).")
+        #expect(
+            mock.callCount == 3,
+            "Expected exactly 3 requests: round 1 (tool ok), round 2 (tool fails), round 3 (follow-up, then stop).",
+        )
     }
 
     @Test("Model can respond to stepLimitExceeded errors when budget is exhausted")
@@ -82,8 +85,17 @@ struct AnthropicToolUseTests {
             parameters: InferenceRequestParameters(toolStepBudget: .budget(1)),
         )
         #expect(mock.callCount == 3, "Follow-up round must fire so the model can respond to errors.")
-        let text = events.compactMap { if case .result(let t, _) = $0 { t } else { nil } }.first
-        #expect(text == "I hit the step limit.", "Result text must come from the model's error-acknowledgement response.")
+        let text = events.compactMap {
+            if case .result(let output, _) = $0 {
+                output
+            } else {
+                nil
+            }
+        }.first
+        #expect(
+            text == "I hit the step limit.",
+            "Result text must come from the model's error-acknowledgement response.",
+        )
     }
 
     @Test("disabled budget: model receives stepLimitExceeded errors and can respond before loop stops")
@@ -102,7 +114,13 @@ struct AnthropicToolUseTests {
             parameters: InferenceRequestParameters(toolStepBudget: .disabled),
         )
         #expect(mock.callCount == 2, "Follow-up round must fire so the model can respond to stepLimitExceeded errors.")
-        let text = events.compactMap { if case .result(let t, _) = $0 { t } else { nil } }.first
+        let text = events.compactMap {
+            if case .result(let output, _) = $0 {
+                output
+            } else {
+                nil
+            }
+        }.first
         #expect(text == "Tools are disabled.", "Result text must come from the model's follow-up response.")
     }
 
