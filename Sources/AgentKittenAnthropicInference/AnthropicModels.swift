@@ -55,17 +55,6 @@ struct AnthropicModelInfoResponse: Decodable {
     }
 }
 
-enum AnthropicModelContextWindow {
-    static func standardMaxInputTokens(for model: String) -> Int? {
-        guard model.hasPrefix("claude-") else {
-            return nil
-        }
-        // Anthropic's standard Messages API context window is currently 200K.
-        // Larger windows require explicit beta opt-in that AgentKitten does not send.
-        return 200_000
-    }
-}
-
 // MARK: - Message
 
 struct AnthropicMessage: Encodable {

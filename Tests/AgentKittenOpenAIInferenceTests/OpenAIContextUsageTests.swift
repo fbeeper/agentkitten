@@ -15,10 +15,9 @@ struct OpenAIContextUsageTests {
         ) {}
     }
 
-    @Test("Reports cached usage tokens and falls back to the static context window")
-    func reportsUsageWithFallbackContextSize() async throws {
-        // The mock has no metadata for gpt-4o, so the /models lookup returns nil and the
-        // static table fallback (128k) is used.
+    @Test("Reports cached usage tokens and nil context size when /models returns no data")
+    func reportsUsageWithNilContextSize() async throws {
+        // The mock returns no metadata, so contextSize is nil — callers must handle it.
         let client = MockOpenAIHTTPClient(responses: [
             [.textDelta("hi"), .stopReason("stop"), .usage(321)],
         ])
@@ -27,7 +26,7 @@ struct OpenAIContextUsageTests {
 
         let usage = try await session.contextUsage()
         #expect(usage.contextTokens == 321)
-        #expect(usage.contextSize == 128_000)
+        #expect(usage.contextSize == nil)
     }
 
     @Test("Resolves an unknown model's context window from /models metadata")

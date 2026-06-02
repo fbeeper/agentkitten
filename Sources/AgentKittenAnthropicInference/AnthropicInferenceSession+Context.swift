@@ -21,7 +21,7 @@ extension AnthropicInferenceSession {
     /// re-entering the single-flight guard and tripping the concurrency error on
     /// themselves.
     func uncheckedContextUsage() async throws -> ContextUsage {
-        let contextSize = await resolveContextSize(for: currentModel)
+        let contextSize = try await resolveContextSize(for: currentModel)
         if history.isEmpty {
             return ContextUsage(contextTokens: 0, contextSize: contextSize)
         }
@@ -40,27 +40,25 @@ extension AnthropicInferenceSession {
         return ContextUsage(contextTokens: count, contextSize: contextSize)
     }
 
-    func resolveContextSize(for model: String) async -> Int? {
+    func resolveContextSize(for model: String) async throws -> Int? {
         if let cached = resolvedContextSizes[model] {
             return cached
         }
 
-        let fallback = AnthropicModelContextWindow.standardMaxInputTokens(for: model)
-        guard let key = try? await apiKey() else {
-            return fallback
-        }
-
         do {
+            let key = try await apiKey()
             let client = clientFactory(key)
             if let resolved = try await client.maxInputTokens(for: model), resolved > 0 {
                 resolvedContextSizes[model] = resolved
                 return resolved
             }
+        } catch InferenceError.authenticationFailed(let info) {
+            throw InferenceError.authenticationFailed(info)
         } catch {
-            return fallback
+            return nil
         }
 
-        return fallback
+        return nil
     }
 
     func buildRequest(

@@ -33,37 +33,6 @@ struct OpenAIRequest: Encodable {
     }
 }
 
-// MARK: - Context Window
-
-enum OpenAIModelContextWindow {
-    /// Returns the known maximum input-token window for a standard OpenAI model, or `nil` if unknown.
-    static func standardMaxInputTokens(for model: String) -> Int? {
-        let normalized = model.lowercased()
-
-        switch normalized {
-        case "chatgpt-4o-latest":
-            return 128_000
-        default:
-            break
-        }
-
-        if normalized.hasPrefix("gpt-5.4") || normalized.hasPrefix("gpt-4.1") {
-            return 1_000_000
-        }
-        if normalized == "gpt-5" || normalized.hasPrefix("gpt-5-") {
-            return 400_000
-        }
-        if normalized.hasPrefix("gpt-4o") {
-            return 128_000
-        }
-        if normalized.hasPrefix("o4-mini") {
-            return 200_000
-        }
-
-        return nil
-    }
-}
-
 /// Decoded `/models/{id}` metadata, used to resolve the context window for unknown models.
 struct OpenAIModelInfoResponse: Decodable {
     let contextWindow: Int?

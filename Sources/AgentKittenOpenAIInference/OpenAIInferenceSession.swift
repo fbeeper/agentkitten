@@ -26,7 +26,7 @@ public actor OpenAIInferenceSession: InferenceSession {
     var currentModel: String
     var history: [OpenAIMessage]
     let structuredOutputInstructionFormat: String
-    var resolvedContextSizes: [String: OpenAIResolvedContextSize] = [:]
+    var resolvedContextSizes: [String: Int] = [:]
     var cachedContextTokens: Int?
     let operationGate = SingleFlightOperationGate<InferenceSessionOperationKind> {
         InferenceError.concurrentOperationInProgress(active: $0)

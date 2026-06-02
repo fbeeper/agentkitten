@@ -20,33 +20,21 @@ extension OpenAIInferenceSession {
 
     func resolveContextSize(for model: String) async throws -> Int? {
         if let cached = resolvedContextSizes[model] {
-            return cached.value
+            return cached
         }
-
-        let fallback = OpenAIModelContextWindow.standardMaxInputTokens(for: model)
 
         do {
             if let resolved = try await client.maxInputTokens(for: model), resolved > 0 {
-                cacheResolvedContextSize(resolved, for: model)
+                resolvedContextSizes[model] = resolved
                 return resolved
             }
         } catch InferenceError.authenticationFailed(let info) {
             throw InferenceError.authenticationFailed(info)
         } catch {
-            cacheResolvedContextSize(fallback, for: model)
-            return fallback
+            return nil
         }
 
-        cacheResolvedContextSize(fallback, for: model)
-        return fallback
-    }
-
-    func cacheResolvedContextSize(_ contextSize: Int?, for model: String) {
-        if let contextSize {
-            resolvedContextSizes[model] = .available(contextSize)
-        } else {
-            resolvedContextSizes[model] = .unavailable
-        }
+        return nil
     }
 }
 #endif
