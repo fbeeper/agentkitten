@@ -223,7 +223,9 @@ public actor ToolTurnRuntime {
     }
 
     /// True when the per-turn step budget is exhausted. Sessions query this to break the agentic loop.
-    public var isBudgetExhausted: Bool { !hasRemainingStepCapacity }
+    public var isBudgetExhausted: Bool {
+        !hasRemainingStepCapacity
+    }
 
     private var hasRemainingStepCapacity: Bool {
         switch toolStepBudget {
