@@ -163,6 +163,27 @@ struct AnthropicToolUseTests {
         #expect(result?.1 == .maxTokens)
     }
 
+    @Test("Preserves empty assistant turn in request history")
+    func preservesEmptyAssistantTurnInRequestHistory() async throws {
+        let mock = MockHTTPClient(responses: [
+            [.stopReason("end_turn")],
+            [.textDelta("second"), .stopReason("end_turn")],
+        ])
+        let session = makeSession(clientFactory: { _ in mock })
+
+        _ = try await collect(session, "one")
+        _ = try await collect(session, "two")
+
+        let secondRequest = mock.capturedRequests[1]
+        let roles = secondRequest.messages.map(\.role)
+        #expect(roles == [.user, .assistant, .user])
+        guard case .text(let text) = secondRequest.messages[1].content.first else {
+            Issue.record("Expected empty assistant text block")
+            return
+        }
+        #expect(text == "")
+    }
+
     @Test("Structured generation discards tool calls on max_tokens finish and does not follow up")
     func structuredGeneration_discardsToolCallsOnMaxTokensFinish() async throws {
         let mock = MockHTTPClient(responses: [

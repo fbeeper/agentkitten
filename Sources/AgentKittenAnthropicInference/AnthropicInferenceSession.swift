@@ -216,16 +216,18 @@ public actor AnthropicInferenceSession: InferenceSession {
         to turnHistory: inout [AnthropicMessage],
     ) {
         var content: [AnthropicContent] = []
-        if !text.isEmpty {
-            content.append(.text(text))
-        }
         for call in toolCalls {
             let inputValue: InferenceProviderJSONValue = jsonValue(from: call.argsJSON)
             content.append(.toolUse(id: call.id, name: call.name, input: inputValue))
         }
-        if !content.isEmpty {
-            turnHistory.append(AnthropicMessage(role: .assistant, content: content))
+        if content.isEmpty {
+            // Important: an empty `end_turn` response is still a completed assistant turn.
+            // Keep `.text("")` so later user messages do not erase that turn from provider history.
+            content.append(.text(text))
+        } else if !text.isEmpty {
+            content.insert(.text(text), at: 0)
         }
+        turnHistory.append(AnthropicMessage(role: .assistant, content: content))
     }
 
     /// Parse argsJSON once here; fall back to an empty object so history
