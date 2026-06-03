@@ -33,6 +33,9 @@ extension AnthropicInferenceSession: ContextCompactableSession {
         }
         // Invalidate the cached count so the next call re-probes with the compacted history.
         cachedContextTokens = .unknown
+        // Retrieving contextTokens is failable, if it were to throw after compaction:
+        // - Purposefully avoiding throwing to not wrongly send the message that compaction didn't happen.
+        // - Not keeping the before count because we'd risk auto-compactions running every subsequent turn.
         let usageAfter = (try? await uncheckedContextUsage(contextSize: contextSize))
             ?? ContextUsage(contextTokens: .unknown, contextSize: TokenCount(contextSize))
         return .compacted(
