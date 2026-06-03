@@ -46,9 +46,8 @@ extension InferenceProvider where Provider == OpenAIInferenceProvider {
 
     /// Provider targeting an LM Studio server (or any other local OpenAI-compatible endpoint).
     ///
-    /// LM Studio exposes an OpenAI-compatible REST API and accepts any non-empty string as the
-    /// API key. This factory passes a `"lm-studio"` placeholder so the `Authorization` header
-    /// is well-formed without requiring a real credential.
+    /// LM Studio exposes an OpenAI-compatible REST API and can run without an API key.
+    /// This factory sends no `Authorization` header.
     ///
     /// ```swift
     /// let provider = InferenceProvider.lmStudio(

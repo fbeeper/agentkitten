@@ -123,6 +123,26 @@ func buildURLRequest_fetchesFreshKeyPerCall() async throws {
     #expect(req2.value(forHTTPHeaderField: "Authorization") == "Bearer key-2")
 }
 
+@Test("No credential omits Authorization header")
+func buildURLRequest_omitsAuthorizationHeaderWithoutCredential() async throws {
+    let client = OpenAIHTTPClient(
+        credentials: .noCredential,
+        baseURL: try #require(URL(string: "https://example.com/v1")),
+    )
+    let request = OpenAIRequest(
+        model: "gpt-4o",
+        messages: [],
+        tools: nil,
+        stream: true,
+        streamOptions: nil,
+        temperature: 1.0,
+        maxCompletionTokens: 100,
+    )
+    let urlRequest = try await client.buildURLRequest(for: request)
+
+    #expect(urlRequest.value(forHTTPHeaderField: "Authorization") == nil)
+}
+
 private final class RotatingAPIKeyProvider: APIKeyProviding, @unchecked Sendable {
     private let keys: Mutex<[String]>
 
