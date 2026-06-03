@@ -14,11 +14,10 @@ import Testing
         .stopReason("end_turn"),
     ])
     let session = AnthropicInferenceSession(
-        credentials: MockAPIKeyProvider("test-key"),
+        client: client,
         defaultModel: "default-model",
         systemPrompt: nil,
         toolRuntime: testToolRuntime(),
-        clientFactory: { _ in client },
     )
 
     var inferenceContext = InferenceContext()
@@ -37,11 +36,10 @@ import Testing
         .stopReason("end_turn"),
     ])
     let session = AnthropicInferenceSession(
-        credentials: MockAPIKeyProvider("test-key"),
+        client: client,
         defaultModel: "default-model",
         systemPrompt: nil,
         toolRuntime: testToolRuntime(),
-        clientFactory: { _ in client },
     )
 
     let parameters = InferenceRequestParameters()

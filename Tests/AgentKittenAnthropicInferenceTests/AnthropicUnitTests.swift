@@ -171,7 +171,7 @@ struct AnthropicContentIsErrorTests {
 
 @Suite("AnthropicInferenceProvider sessionCompatibility")
 struct AnthropicSessionCompatibilityTests {
-    private let provider = AnthropicInferenceProvider(credentials: MockAPIKeyProvider("k"))
+    private let provider = AnthropicInferenceProvider(credentials: .key(MockAPIKeyProvider("k")))
 
     @Test func identicalConfigs_reuse() {
         let cfg = EffectiveExecutionConfiguration()

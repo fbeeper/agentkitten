@@ -18,7 +18,7 @@ struct AnthropicStreamConformanceTests {
         let mock = MockHTTPClient(responses: [
             [.textDelta("Hello there"), .stopReason("end_turn")],
         ])
-        let session = makeSession { _ in mock }
+        let session = makeSession(client: mock)
         let stream = try await session.run(
             UserMessage(text: "Hi"),
             parameters: InferenceRequestParameters(toolSelection: .disabled),
@@ -39,7 +39,7 @@ struct AnthropicStreamConformanceTests {
             ],
             [.textDelta("Done"), .stopReason("end_turn")],
         ])
-        let session = makeSession { _ in mock }
+        let session = makeSession(client: mock)
         let stream = try await session.run(
             UserMessage(text: "Use a tool"),
             parameters: InferenceRequestParameters(toolStepBudget: .budget(1)),

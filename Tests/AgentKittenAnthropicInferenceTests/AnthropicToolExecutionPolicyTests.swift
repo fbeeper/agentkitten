@@ -34,14 +34,13 @@ private struct AnthropicRequiresApprovalPolicy: ToolExecutionPolicy {
         registry: ToolRegistry([AnyAgentTool(InferenceEchoTool())]),
     )
     let session = AnthropicInferenceSession(
-        credentials: MockAPIKeyProvider("test-key"),
+        client: mock,
         defaultModel: "test-model",
         systemPrompt: nil,
         toolRuntime: testToolRuntime(
             registry: executor.registry,
             executionPolicy: AnthropicDenyAllPolicy(reason: "blocked"),
         ),
-        clientFactory: { _ in mock },
     )
 
     var outcome: ToolCallOutcome?
@@ -70,14 +69,13 @@ private struct AnthropicRequiresApprovalPolicy: ToolExecutionPolicy {
         registry: ToolRegistry([AnyAgentTool(InferenceEchoTool())]),
     )
     let session = AnthropicInferenceSession(
-        credentials: MockAPIKeyProvider("test-key"),
+        client: SequencedHTTPClient(clients: [client, followUp]),
         defaultModel: "test-model",
         systemPrompt: nil,
         toolRuntime: testToolRuntime(
             registry: executor.registry,
             executionPolicy: AnthropicDenyAllPolicy(reason: "blocked"),
         ),
-        clientFactory: { _ in SequencedHTTPClient(clients: [client, followUp]) },
     )
 
     let stream: StructuredInferenceStream<StructuredDecision> =
@@ -109,14 +107,13 @@ private struct AnthropicRequiresApprovalPolicy: ToolExecutionPolicy {
         registry: ToolRegistry([AnyAgentTool(InferenceEchoTool())]),
     )
     let session = AnthropicInferenceSession(
-        credentials: MockAPIKeyProvider("test-key"),
+        client: SequencedHTTPClient(clients: [first, followUp]),
         defaultModel: "test-model",
         systemPrompt: nil,
         toolRuntime: testToolRuntime(
             registry: executor.registry,
             executionPolicy: AnthropicDenyAllPolicy(reason: "blocked"),
         ),
-        clientFactory: { _ in SequencedHTTPClient(clients: [first, followUp]) },
     )
 
     for try await _ in try await session.run(
@@ -153,7 +150,7 @@ private struct AnthropicRequiresApprovalPolicy: ToolExecutionPolicy {
     ])
     let gate = ToolApprovalGate()
     let session = AnthropicInferenceSession(
-        credentials: MockAPIKeyProvider("test-key"),
+        client: mock,
         defaultModel: "test-model",
         systemPrompt: nil,
         toolRuntime: {
@@ -167,7 +164,6 @@ private struct AnthropicRequiresApprovalPolicy: ToolExecutionPolicy {
                 approvalGate: gate,
             )
         }(),
-        clientFactory: { _ in mock },
     )
 
     var sawApproval = false

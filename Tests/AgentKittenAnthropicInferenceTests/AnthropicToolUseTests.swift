@@ -58,7 +58,7 @@ struct AnthropicToolUseTests {
             [.toolCallReady(id: "call-3", name: "missing_tool", argsJSON: "{}"), .stopReason("tool_use")],
             [.textDelta("Done"), .stopReason("end_turn")],
         ])
-        let session = makeSession(clientFactory: { _ in mock })
+        let session = makeSession(client: mock)
         _ = try await collect(
             session,
             parameters: InferenceRequestParameters(toolStepBudget: .budget(1)),
@@ -79,7 +79,7 @@ struct AnthropicToolUseTests {
             [.toolCallReady(id: "call-2", name: "missing_tool", argsJSON: "{}"), .stopReason("tool_use")],
             [.textDelta("I hit the step limit."), .stopReason("end_turn")],
         ])
-        let session = makeSession(clientFactory: { _ in mock })
+        let session = makeSession(client: mock)
         let events = try await collect(
             session,
             parameters: InferenceRequestParameters(toolStepBudget: .budget(1)),
@@ -108,7 +108,7 @@ struct AnthropicToolUseTests {
             [.toolCallReady(id: "call-1", name: "missing_tool", argsJSON: "{}"), .stopReason("tool_use")],
             [.textDelta("Tools are disabled."), .stopReason("end_turn")],
         ])
-        let session = makeSession(clientFactory: { _ in mock })
+        let session = makeSession(client: mock)
         let events = try await collect(
             session,
             parameters: InferenceRequestParameters(toolStepBudget: .disabled),
@@ -129,7 +129,7 @@ struct AnthropicToolUseTests {
         let mock = MockHTTPClient(responses: [
             [.toolCallReady(id: "call-1", name: "missing_tool", argsJSON: "{}"), .stopReason("max_tokens")],
         ])
-        let session = makeSession(clientFactory: { _ in mock })
+        let session = makeSession(client: mock)
         let events = try await collect(session)
 
         #expect(mock.callCount == 1, "No follow-up request should be issued after max_tokens finish.")
@@ -147,7 +147,7 @@ struct AnthropicToolUseTests {
             [.textDelta("Old answer"), .stopReason("end_turn")],
             [.toolCallReady(id: "call-1", name: "missing_tool", argsJSON: "{}"), .stopReason("max_tokens")],
         ])
-        let session = makeSession(clientFactory: { _ in mock })
+        let session = makeSession(client: mock)
 
         _ = try await collect(session, "First")
         let events = try await collect(session, "Second")
@@ -169,7 +169,7 @@ struct AnthropicToolUseTests {
             [.stopReason("end_turn")],
             [.textDelta("second"), .stopReason("end_turn")],
         ])
-        let session = makeSession(clientFactory: { _ in mock })
+        let session = makeSession(client: mock)
 
         _ = try await collect(session, "one")
         _ = try await collect(session, "two")
@@ -189,7 +189,7 @@ struct AnthropicToolUseTests {
         let mock = MockHTTPClient(responses: [
             [.toolCallReady(id: "call-1", name: "missing_tool", argsJSON: "{}"), .stopReason("max_tokens")],
         ])
-        let session = makeSession(clientFactory: { _ in mock })
+        let session = makeSession(client: mock)
 
         let stream: StructuredInferenceStream<StructuredDecision> = try await session.generateStream(
             prompt: "probe",
@@ -216,14 +216,13 @@ struct AnthropicToolUseTests {
             [.textDelta("done"), .stopReason("end_turn")],
         ])
         let session = AnthropicInferenceSession(
-            credentials: MockAPIKeyProvider("test-key"),
+            client: mock,
             defaultModel: "test-model",
             systemPrompt: nil,
             toolRuntime: testToolRuntime(
                 registry: ToolRegistry([AnyAgentTool(InferenceEchoTool())]),
                 hooks: [AnyToolHook(spy)],
             ),
-            clientFactory: { _ in mock },
         )
 
         let events = try await collect(session)
@@ -240,14 +239,13 @@ struct AnthropicToolUseTests {
             [.textDelta(#"{"answer":"done"}"#), .stopReason("end_turn")],
         ])
         let session = AnthropicInferenceSession(
-            credentials: MockAPIKeyProvider("test-key"),
+            client: mock,
             defaultModel: "test-model",
             systemPrompt: nil,
             toolRuntime: testToolRuntime(
                 registry: ToolRegistry([AnyAgentTool(InferenceEchoTool())]),
                 hooks: [AnyToolHook(spy)],
             ),
-            clientFactory: { _ in mock },
         )
 
         let stream: StructuredInferenceStream<StructuredDecision> = try await session.generateStream(

@@ -13,42 +13,35 @@ extension AnthropicInferenceSession: StructuredInferenceSession {
     ) async throws
         -> StructuredInferenceStream<T> {
         let lease = try operationGate.begin(.generate)
-        do {
-            let key = try await apiKey()
-            let system = buildStructuredSystemPrompt(schemaJSON: encodeStructuredSchema(T.jsonSchema))
-            return AsyncThrowingStream { continuation in
-                let task = Task {
-                    do {
-                        let toolTurnRuntime = toolRuntime.makeTurnRuntime(
-                            toolStepBudget: parameters.toolStepBudget,
-                            context: parameters.toolExecutionContext,
-                            toolSelection: parameters.toolSelection,
-                        )
-                        let client = clientFactory(key)
-                        var turnHistory = [AnthropicMessage(role: .user, content: [.text(prompt)])]
-                        let outcome = try await runStructuredLoop(
-                            client: client,
-                            system: system,
-                            parameters: parameters,
-                            toolTurnRuntime: toolTurnRuntime,
-                            turnHistory: &turnHistory,
-                            continuation: continuation,
-                        )
-                        let value = try decodeStructuredValue(T.self, from: outcome.text)
-                        continuation.yield(.result(value, finishReason(from: outcome.stopReason)))
-                        continuation.finish()
-                    } catch {
-                        continuation.finish(throwing: error)
-                    }
-                }
-                continuation.onTermination = { _ in
-                    lease.end()
-                    task.cancel()
+        let system = buildStructuredSystemPrompt(schemaJSON: encodeStructuredSchema(T.jsonSchema))
+        return AsyncThrowingStream { continuation in
+            let task = Task {
+                do {
+                    let toolTurnRuntime = toolRuntime.makeTurnRuntime(
+                        toolStepBudget: parameters.toolStepBudget,
+                        context: parameters.toolExecutionContext,
+                        toolSelection: parameters.toolSelection,
+                    )
+                    var turnHistory = [AnthropicMessage(role: .user, content: [.text(prompt)])]
+                    let outcome = try await runStructuredLoop(
+                        client: client,
+                        system: system,
+                        parameters: parameters,
+                        toolTurnRuntime: toolTurnRuntime,
+                        turnHistory: &turnHistory,
+                        continuation: continuation,
+                    )
+                    let value = try decodeStructuredValue(T.self, from: outcome.text)
+                    continuation.yield(.result(value, finishReason(from: outcome.stopReason)))
+                    continuation.finish()
+                } catch {
+                    continuation.finish(throwing: error)
                 }
             }
-        } catch {
-            lease.end()
-            throw error
+            continuation.onTermination = { _ in
+                lease.end()
+                task.cancel()
+            }
         }
     }
 

@@ -3,6 +3,7 @@
 
 #if canImport(Darwin) || canImport(FoundationNetworking)
 import AgentKittenCore
+import AgentKittenInferenceSupport
 import Foundation
 #if canImport(FoundationNetworking)
 import FoundationNetworking
@@ -23,7 +24,7 @@ extension AnthropicHTTPStreaming {
 
 /// Sends requests to the Anthropic Messages API and streams SSE responses.
 struct AnthropicHTTPClient: AnthropicHTTPStreaming {
-    private let apiKey: String
+    private let credentials: AnthropicCredentials
     private let urlSession: URLSession
 
     private static let endpoint = URL(string: "https://api.anthropic.com/v1/messages")!
@@ -32,9 +33,19 @@ struct AnthropicHTTPClient: AnthropicHTTPStreaming {
     private static let anthropicVersion = "2023-06-01"
     static let providerName = "Anthropic"
 
-    init(apiKey: String) {
-        self.apiKey = apiKey
+    init(credentials: AnthropicCredentials) {
+        self.credentials = credentials
         urlSession = URLSession.shared
+    }
+
+    /// Applies the `x-api-key` header for the configured credential strategy.
+    ///
+    /// ``AnthropicCredentials/noCredential`` sets no header, leaving the request
+    /// unauthenticated for proxies or local servers that accept it.
+    private func authorize(_ urlRequest: inout URLRequest) async throws {
+        if case .key(let provider) = credentials {
+            urlRequest.setValue(try await provider.apiKey(), forHTTPHeaderField: "x-api-key")
+        }
     }
 
     /// Streams SSE events from a single Anthropic Messages API request.
@@ -50,7 +61,7 @@ struct AnthropicHTTPClient: AnthropicHTTPStreaming {
         AsyncThrowingStream { continuation in
             let task = Task {
                 do {
-                    let urlRequest = try buildURLRequest(for: request)
+                    let urlRequest = try await buildURLRequest(for: request)
                     try await streamSSEEvents(for: urlRequest, continuation: continuation)
                     continuation.finish()
                 } catch is CancellationError {
@@ -66,7 +77,7 @@ struct AnthropicHTTPClient: AnthropicHTTPStreaming {
     func countTokens(request: AnthropicCountTokensRequest) async throws -> Int {
         var urlRequest = URLRequest(url: Self.countTokensEndpoint)
         urlRequest.httpMethod = "POST"
-        urlRequest.setValue(apiKey, forHTTPHeaderField: "x-api-key")
+        try await authorize(&urlRequest)
         urlRequest.setValue(Self.anthropicVersion, forHTTPHeaderField: "anthropic-version")
         urlRequest.setValue("application/json", forHTTPHeaderField: "Content-Type")
         urlRequest.httpBody = try JSONEncoder().encode(request)
@@ -82,7 +93,7 @@ struct AnthropicHTTPClient: AnthropicHTTPStreaming {
         let endpoint = Self.modelsEndpoint.appending(path: model)
         var urlRequest = URLRequest(url: endpoint)
         urlRequest.httpMethod = "GET"
-        urlRequest.setValue(apiKey, forHTTPHeaderField: "x-api-key")
+        try await authorize(&urlRequest)
         urlRequest.setValue(Self.anthropicVersion, forHTTPHeaderField: "anthropic-version")
         let (data, response) = try await urlSession.data(for: urlRequest)
         if let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode != 200 {
@@ -148,10 +159,10 @@ struct AnthropicHTTPClient: AnthropicHTTPStreaming {
         #endif
     }
 
-    private func buildURLRequest(for request: AnthropicRequest) throws -> URLRequest {
+    private func buildURLRequest(for request: AnthropicRequest) async throws -> URLRequest {
         var urlRequest = URLRequest(url: Self.endpoint)
         urlRequest.httpMethod = "POST"
-        urlRequest.setValue(apiKey, forHTTPHeaderField: "x-api-key")
+        try await authorize(&urlRequest)
         urlRequest.setValue(Self.anthropicVersion, forHTTPHeaderField: "anthropic-version")
         urlRequest.setValue("application/json", forHTTPHeaderField: "Content-Type")
         urlRequest.setValue("text/event-stream", forHTTPHeaderField: "Accept")

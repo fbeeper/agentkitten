@@ -61,11 +61,10 @@ private func makeBlockingSession(
     client: BlockingHTTPClient,
 ) -> AnthropicInferenceSession {
     AnthropicInferenceSession(
-        credentials: MockAPIKeyProvider("test-key"),
+        client: client,
         defaultModel: "test-model",
         systemPrompt: nil,
         toolRuntime: testToolRuntime(executionPolicy: AutoApprovePolicy()),
-        clientFactory: { _ in client },
     )
 }
 

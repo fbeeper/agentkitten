@@ -49,11 +49,10 @@ private func makeAnthropicToolSelectionSession(
     client: some AnthropicHTTPStreaming,
 ) -> AnthropicInferenceSession {
     AnthropicInferenceSession(
-        credentials: MockAPIKeyProvider("test-key"),
+        client: client,
         defaultModel: "test-model",
         systemPrompt: nil,
         toolRuntime: testToolRuntime(registry: registry),
-        clientFactory: { _ in client },
     )
 }
 

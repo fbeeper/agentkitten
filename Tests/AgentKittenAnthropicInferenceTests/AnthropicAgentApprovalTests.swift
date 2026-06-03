@@ -17,7 +17,7 @@ private struct AgentAnthropicRequiresApprovalPolicy: ToolExecutionPolicy {
 private struct TestAnthropicInferenceProvider: InferenceProviding {
     typealias Session = AnthropicInferenceSession
 
-    let clientFactory: @Sendable (String) -> any AnthropicHTTPStreaming
+    let client: any AnthropicHTTPStreaming
 
     func makeSession(
         systemPrompt: String?,
@@ -26,11 +26,10 @@ private struct TestAnthropicInferenceProvider: InferenceProviding {
         inferenceContext: InferenceContext,
     ) -> AnthropicInferenceSession {
         AnthropicInferenceSession(
-            credentials: MockAPIKeyProvider("test-key"),
+            client: client,
             defaultModel: "test-model",
             systemPrompt: systemPrompt,
             toolRuntime: toolRuntime,
-            clientFactory: clientFactory,
         )
     }
 }
@@ -45,7 +44,7 @@ struct AnthropicAgentApprovalTests {
             ],
             [.textDelta("Done"), .stopReason("end_turn")],
         ])
-        let session = makeAnthropicApprovalSession(clientFactory: { _ in mock })
+        let session = makeAnthropicApprovalSession(client: mock)
         let turn = try await session.send("Hi")
         var iterator = turn.events.makeAsyncIterator()
         let approval = try await nextApprovalCall(from: &iterator)
@@ -84,7 +83,7 @@ struct AnthropicAgentApprovalTests {
             ],
             [.textDelta("Done"), .stopReason("end_turn")],
         ])
-        let session = makeAnthropicApprovalSession(clientFactory: { _ in mock })
+        let session = makeAnthropicApprovalSession(client: mock)
         let turn = try await session.send("Hi")
         var iterator = turn.events.makeAsyncIterator()
         let approval = try await nextApprovalCall(from: &iterator)
@@ -113,9 +112,9 @@ struct AnthropicAgentApprovalTests {
 }
 
 private func makeAnthropicApprovalSession(
-    clientFactory: @escaping @Sendable (String) -> any AnthropicHTTPStreaming,
+    client: any AnthropicHTTPStreaming,
 ) -> AgentSession {
-    let provider = TestAnthropicInferenceProvider(clientFactory: clientFactory)
+    let provider = TestAnthropicInferenceProvider(client: client)
     let agent = Agent(
         providerRegistry: ProviderRegistry(default: InferenceProvider(provider)),
         behavior: AgentBehavior(systemPrompt: "Test"),

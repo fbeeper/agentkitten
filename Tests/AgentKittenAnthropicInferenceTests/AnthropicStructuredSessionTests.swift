@@ -74,11 +74,10 @@ private func makeSession(
     client: some AnthropicHTTPStreaming,
 ) -> AnthropicInferenceSession {
     AnthropicInferenceSession(
-        credentials: MockAPIKeyProvider("test-key"),
+        client: client,
         defaultModel: "test-model",
         systemPrompt: systemPrompt,
         toolRuntime: testToolRuntime(registry: registry, executionPolicy: toolExecutionPolicy),
-        clientFactory: { _ in client },
     )
 }
 
@@ -295,12 +294,11 @@ struct AnthropicStructuredSessionTests {
         let customFormat =
             "CUSTOM TEST SCHEMA:\n%@\nRETURN RAW JSON VALUE. OBJECT ROOT -> START { END }. ARRAY ROOT -> START [ END ]."
         let session = AnthropicInferenceSession(
-            credentials: MockAPIKeyProvider("test-key"),
+            client: client,
             defaultModel: "test-model",
             systemPrompt: nil,
             toolRuntime: testToolRuntime(),
             structuredOutputInstructionFormat: customFormat,
-            clientFactory: { _ in client },
         )
         let _: Sentiment = try await session.generate(
             prompt: "test",

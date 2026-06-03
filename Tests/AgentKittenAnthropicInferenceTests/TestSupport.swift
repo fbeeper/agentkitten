@@ -55,11 +55,10 @@ extension AnthropicHTTPStreaming {
 func makeSummaryGenerator(client: MinimalCapturingHTTPClient) -> @Sendable (String) async throws -> String {
     { @Sendable prompt in
         let ephemeral = AnthropicInferenceSession(
-            credentials: MockAPIKeyProvider("test-key"),
+            client: client,
             defaultModel: "test-model",
             systemPrompt: nil,
             toolRuntime: testToolRuntime(),
-            clientFactory: { _ in client },
         )
         let stream = try await ephemeral.run(
             UserMessage(text: prompt),
