@@ -26,7 +26,7 @@ struct OpenAIContextUsageTests {
 
         let usage = try await session.contextUsage()
         #expect(usage.contextTokens == 321)
-        #expect(usage.contextSize == nil)
+        #expect(usage.contextSize == .unknown)
     }
 
     @Test("Resolves an unknown model's context window from /models metadata")

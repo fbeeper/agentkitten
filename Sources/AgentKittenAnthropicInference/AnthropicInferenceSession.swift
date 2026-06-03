@@ -31,7 +31,7 @@ public actor AnthropicInferenceSession: InferenceSession {
     var currentModel: String
     var resolvedContextSizes: [String: Int] = [:]
     var history: [AnthropicMessage]
-    var cachedContextTokens: Int?
+    var cachedContextTokens: TokenCount = .unknown
     let operationGate = SingleFlightOperationGate<InferenceSessionOperationKind> {
         InferenceError.concurrentOperationInProgress(active: $0)
     }
@@ -191,7 +191,7 @@ public actor AnthropicInferenceSession: InferenceSession {
                 // Anthropic is stateless: every request re-sends the full message array,
                 // so `total` already covers the entire conversation history. Replace rather
                 // than accumulate — accumulating would double-count all prior messages.
-                cachedContextTokens = total
+                cachedContextTokens = TokenCount(total)
             case .error(let message):
                 throw InferenceError.invalidResponse(message)
             }

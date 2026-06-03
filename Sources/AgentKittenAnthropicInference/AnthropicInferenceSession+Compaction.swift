@@ -19,7 +19,8 @@ extension AnthropicInferenceSession: ContextCompactableSession {
         guard !history.isEmpty else {
             return .skipped(.failed("No Anthropic message history to compact."))
         }
-        let usageBefore = try await uncheckedContextUsage()
+        let contextSize = try await resolveContextSize(for: currentModel)
+        let usageBefore = try await uncheckedContextUsage(contextSize: contextSize)
         let plan = TurnPreservationPlan(
             entries: history,
             preservedRecentTurnCount: preservedRecentTurnCount,
@@ -30,8 +31,13 @@ extension AnthropicInferenceSession: ContextCompactableSession {
         } else {
             history = plan.recentEntries(from: history)
         }
-        cachedContextTokens = nil
-        let usageAfter = (try? await uncheckedContextUsage()) ?? usageBefore
+        // Invalidate the cached count so the next call re-probes with the compacted history.
+        cachedContextTokens = .unknown
+        // Retrieving contextTokens is failable, if it were to throw after compaction:
+        // - Purposefully avoiding throwing to not wrongly send the message that compaction didn't happen.
+        // - Not keeping the before count because we'd risk auto-compactions running every subsequent turn.
+        let usageAfter = (try? await uncheckedContextUsage(contextSize: contextSize))
+            ?? ContextUsage(contextTokens: .unknown, contextSize: TokenCount(contextSize))
         return .compacted(
             ContextCompactionResult.Compacted(
                 usageBefore: usageBefore,

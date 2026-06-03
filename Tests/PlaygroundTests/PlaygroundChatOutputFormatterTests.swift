@@ -91,7 +91,7 @@ struct PlaygroundChatOutputFormatterTests {
             ContextUsage(contextTokens: 25),
         )
 
-        #expect(message == "[usage: 25 tokens]")
+        #expect(message == "[usage: 25/unknown tokens]")
     }
 
     @Test func contextUsage_formatsMissingUsage() {

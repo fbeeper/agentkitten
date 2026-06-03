@@ -225,7 +225,7 @@ extension MockInferenceSession {
             lease.end()
         }
         return ContextUsage(
-            contextTokens: estimatedContextTokens,
+            contextTokens: .tokens(UInt(estimatedContextTokens)),
             contextSize: 100,
         )
     }
@@ -244,9 +244,9 @@ extension MockInferenceSession: ContextCompactableSession {
         summary: String?,
         preservedRecentTurnCount: Int,
     ) async throws -> ContextCompactionResult {
-        let before = ContextUsage(contextTokens: estimatedContextTokens, contextSize: 100)
+        let before = ContextUsage(contextTokens: .tokens(UInt(estimatedContextTokens)), contextSize: 100)
         estimatedContextTokens = min(estimatedContextTokens, max(0, preservedRecentTurnCount * 10))
-        let after = ContextUsage(contextTokens: estimatedContextTokens, contextSize: 100)
+        let after = ContextUsage(contextTokens: .tokens(UInt(estimatedContextTokens)), contextSize: 100)
         return .compacted(ContextCompactionResult.Compacted(usageBefore: before, usageAfter: after))
     }
 }
