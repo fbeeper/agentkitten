@@ -100,7 +100,7 @@ import Testing
     #expect(usage.contextSize == 1_048_576)
 }
 
-@Test func providerSession_contextUsageFallsBackToStandardModelWindowWhenLookupFails() async throws {
+@Test func providerSession_contextUsageReturnsNilContextSizeWhenLookupFails() async throws {
     let session = AnthropicInferenceSession(
         credentials: MockAPIKeyProvider("test-key"),
         defaultModel: "claude-sonnet-4-20250514",
@@ -110,7 +110,7 @@ import Testing
     )
 
     let usage = try await session.contextUsage()
-    #expect(usage.contextSize == 200_000)
+    #expect(usage.contextSize == nil)
 }
 
 @Test func providerSession_contextUsageCachesResolvedModelWindow() async throws {
@@ -163,8 +163,7 @@ import Testing
         inferenceContext: InferenceContext(),
     )
 
-    let usage = try await rebuilt.contextUsage()
-    #expect(usage.contextSize == 200_000)
+    #expect(await rebuilt.currentModel == "claude-sonnet-4-20250514")
 }
 
 @Test func anthropicCompactedHistory_summarizesOlderTurnsAndPreservesRecent() async throws {

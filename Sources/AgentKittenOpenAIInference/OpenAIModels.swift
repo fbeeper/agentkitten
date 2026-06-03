@@ -33,6 +33,25 @@ struct OpenAIRequest: Encodable {
     }
 }
 
+/// Decoded `/models/{id}` metadata, used to resolve the context window for unknown models.
+struct OpenAIModelInfoResponse: Decodable {
+    let contextWindow: Int?
+    let contextLength: Int?
+    let maxContextLength: Int?
+    let maxInputTokens: Int?
+
+    var resolvedMaxInputTokens: Int? {
+        maxInputTokens ?? contextWindow ?? contextLength ?? maxContextLength
+    }
+
+    enum CodingKeys: String, CodingKey {
+        case contextWindow = "context_window"
+        case contextLength = "context_length"
+        case maxContextLength = "max_context_length"
+        case maxInputTokens = "max_input_tokens"
+    }
+}
+
 // MARK: - Message
 
 /// A single message in an OpenAI Chat Completions history.

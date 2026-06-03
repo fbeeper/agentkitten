@@ -14,6 +14,8 @@ final class MockOpenAIHTTPClient: OpenAIHTTPStreaming, @unchecked Sendable {
     private struct State {
         var queue: [[OpenAISSEEvent]]
         var requests: [OpenAIRequest] = []
+        var maxInputTokensByModel: [String: Int]
+        var modelInfoRequests: [String] = []
     }
 
     private let state: Mutex<State>
@@ -26,8 +28,12 @@ final class MockOpenAIHTTPClient: OpenAIHTTPStreaming, @unchecked Sendable {
         state.withLock { $0.requests }
     }
 
-    init(responses: [[OpenAISSEEvent]]) {
-        state = Mutex(State(queue: responses))
+    var capturedModelInfoRequests: [String] {
+        state.withLock { $0.modelInfoRequests }
+    }
+
+    init(responses: [[OpenAISSEEvent]], maxInputTokensByModel: [String: Int] = [:]) {
+        state = Mutex(State(queue: responses, maxInputTokensByModel: maxInputTokensByModel))
     }
 
     func stream(request: OpenAIRequest) async throws -> AsyncThrowingStream<OpenAISSEEvent, Error> {
@@ -40,6 +46,13 @@ final class MockOpenAIHTTPClient: OpenAIHTTPStreaming, @unchecked Sendable {
                 continuation.yield(event)
             }
             continuation.finish()
+        }
+    }
+
+    func maxInputTokens(for model: String) async throws -> Int? {
+        state.withLock { state in
+            state.modelInfoRequests.append(model)
+            return state.maxInputTokensByModel[model]
         }
     }
 }

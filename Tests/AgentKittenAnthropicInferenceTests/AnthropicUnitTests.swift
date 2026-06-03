@@ -148,19 +148,6 @@ struct JSONValueDecodableTests {
     }
 }
 
-// MARK: - AnthropicModels: AnthropicModelContextWindow
-
-@Suite("AnthropicModelContextWindow")
-struct AnthropicModelContextWindowTests {
-    @Test func claudeModel_returns200k() {
-        #expect(AnthropicModelContextWindow.standardMaxInputTokens(for: "claude-sonnet-4-5") == 200_000)
-    }
-
-    @Test func nonClaudeModel_returnsNil() {
-        #expect(AnthropicModelContextWindow.standardMaxInputTokens(for: "gpt-4") == nil)
-    }
-}
-
 // MARK: - AnthropicContent: isErrorToolResult
 
 @Suite("AnthropicContent isErrorToolResult")
