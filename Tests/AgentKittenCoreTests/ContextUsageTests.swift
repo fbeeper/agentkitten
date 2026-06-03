@@ -68,7 +68,7 @@ struct ContextUsageTests {
     func unknownFieldsEncodeAsNull() throws {
         let usage = ContextUsage()
         let encoded = try JSONEncoder().encode(usage)
-        let json = String(decoding: encoded, as: UTF8.self)
+        let json = String(bytes: encoded, encoding: .utf8) ?? ""
         #expect(json.contains("\"contextTokens\":null"))
         #expect(json.contains("\"contextSize\":null"))
     }

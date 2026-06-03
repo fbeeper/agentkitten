@@ -109,7 +109,7 @@ struct TokenCountTests {
     @Test(".unknown round-trips through JSON as null")
     func unknownCodableRoundTrip() throws {
         let encoded = try JSONEncoder().encode(TokenCount.unknown)
-        let json = String(decoding: encoded, as: UTF8.self)
+        let json = String(bytes: encoded, encoding: .utf8) ?? ""
         #expect(json == "null")
         let decoded = try JSONDecoder().decode(TokenCount.self, from: encoded)
         #expect(decoded == .unknown)
@@ -118,7 +118,7 @@ struct TokenCountTests {
     @Test(".tokens round-trips through JSON as integer")
     func tokensCodableRoundTrip() throws {
         let encoded = try JSONEncoder().encode(TokenCount.tokens(99))
-        let json = String(decoding: encoded, as: UTF8.self)
+        let json = String(bytes: encoded, encoding: .utf8) ?? ""
         #expect(json == "99")
         let decoded = try JSONDecoder().decode(TokenCount.self, from: encoded)
         #expect(decoded == .tokens(99))

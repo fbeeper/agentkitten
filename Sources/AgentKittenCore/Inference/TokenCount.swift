@@ -45,7 +45,7 @@ public enum TokenCount: Sendable, Equatable, Hashable {
 
     /// The underlying count, or `nil` when `.unknown`.
     public var value: UInt? {
-        if case .tokens(let n) = self { return n }
+        if case .tokens(let count) = self { return count }
         return nil
     }
 }
@@ -70,9 +70,9 @@ extension TokenCount: ExpressibleByIntegerLiteral {
 extension TokenCount: Comparable {
     public static func < (lhs: TokenCount, rhs: TokenCount) -> Bool {
         switch (lhs, rhs) {
-        case (.unknown, .tokens): return true
-        case (.tokens(let a), .tokens(let b)): return a < b
-        default: return false
+        case (.unknown, .tokens): true
+        case (.tokens(let lhsCount), .tokens(let rhsCount)): lhsCount < rhsCount
+        default: false
         }
     }
 }
@@ -82,8 +82,8 @@ extension TokenCount: Comparable {
 extension TokenCount {
     /// Returns `.tokens` scaled by `fraction`, or `.unknown` when the receiver is unknown.
     public static func * (lhs: TokenCount, rhs: Double) -> TokenCount {
-        guard case .tokens(let n) = lhs else { return .unknown }
-        return .tokens(UInt(Double(n) * rhs))
+        guard case .tokens(let count) = lhs else { return .unknown }
+        return .tokens(UInt(Double(count) * rhs))
     }
 }
 
@@ -92,8 +92,8 @@ extension TokenCount {
 extension TokenCount: CustomStringConvertible {
     public var description: String {
         switch self {
-        case .unknown: return "unknown"
-        case .tokens(let n): return "\(n)"
+        case .unknown: "unknown"
+        case .tokens(let count): "\(count)"
         }
     }
 }
@@ -115,8 +115,8 @@ extension TokenCount: Codable {
         switch self {
         case .unknown:
             try container.encodeNil()
-        case .tokens(let n):
-            try container.encode(n)
+        case .tokens(let count):
+            try container.encode(count)
         }
     }
 }
