@@ -11,16 +11,13 @@ public enum AutomaticCompactionTrigger: Sendable, Codable, Equatable, Hashable {
     func isMet(by usage: ContextUsage) -> Bool {
         switch self {
         case .percentOfContextWindow(let percent):
-            if percent <= 0 {
+            guard percent > 0 else {
                 return true
             }
-            if percent > 1 {
+            guard percent <= 1 else {
                 return false
             }
-            guard usage.contextSize > 0 else {
-                return false
-            }
-            return usage.contextTokens >= usage.contextSize * percent
+            return (usage.fillPercent ?? 0) >= percent
         }
     }
 }

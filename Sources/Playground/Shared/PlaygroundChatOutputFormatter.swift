@@ -43,16 +43,11 @@ enum PlaygroundChatOutputFormatter {
             return "[usage: unavailable]"
         }
 
-        guard let size = usage.contextSize.value else {
-            return "[usage: \(usage.contextTokens) tokens]"
+        if let fill = usage.fillPercent {
+            let pct = (fill * 100).formatted(.number.precision(.fractionLength(0)))
+            return "[usage: \(usage.contextTokens)/\(usage.contextSize) tokens, \(pct)%]"
         }
 
-        guard let count = usage.contextTokens.value else {
-            return "[usage: unknown/\(size) tokens]"
-        }
-
-        let percent = Double(count) / Double(size) * 100
-        let formattedPercent = percent.formatted(.number.precision(.fractionLength(0)))
-        return "[usage: \(count)/\(size) tokens, \(formattedPercent)%]"
+        return "[usage: \(usage.contextTokens)/\(usage.contextSize) tokens]"
     }
 }
