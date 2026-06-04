@@ -37,7 +37,6 @@ enum PlaygroundProviderFactory {
             reference = .ofType(InferenceProvider<MockInferenceProvider>.self)
         #if canImport(Darwin) || canImport(FoundationNetworking)
         case .anthropic:
-            try validateEndpointOptions(endpoint, for: compactionOption, allowingModel: true)
             updatedRegistry = registry.registering(anthropicInferenceProvider(configuration: endpoint))
             reference = .ofType(InferenceProvider<AnthropicInferenceProvider>.self)
         case .openai:
@@ -74,7 +73,6 @@ enum PlaygroundProviderFactory {
             return ProviderRegistry(default: InferenceProvider.mock())
         #if canImport(Darwin) || canImport(FoundationNetworking)
         case .anthropic:
-            try validateEndpointOptions(endpoint, for: option, allowingModel: true)
             return ProviderRegistry(default: anthropicInferenceProvider(configuration: endpoint))
         case .openai:
             return ProviderRegistry(default: openAIInferenceProvider(configuration: endpoint))
@@ -106,7 +104,6 @@ enum PlaygroundProviderFactory {
             ))
         #if canImport(Darwin) || canImport(FoundationNetworking)
         case .anthropic:
-            try validateEndpointOptions(endpoint, for: option, allowingModel: true)
             return ProviderRegistry(default: anthropicInferenceProvider(configuration: endpoint))
         case .openai:
             return ProviderRegistry(default: openAIInferenceProvider(configuration: endpoint))
@@ -126,7 +123,23 @@ enum PlaygroundProviderFactory {
     static func anthropicInferenceProvider(
         configuration: ProviderEndpointConfiguration,
     ) -> InferenceProvider<AnthropicInferenceProvider> {
-        InferenceProvider.anthropic(model: configuration.model(default: "claude-sonnet-4-5"))
+        if configuration.skipCredential {
+            return InferenceProvider(
+                AnthropicInferenceProvider(
+                    credentials: .noCredential,
+                    model: configuration.model(default: "claude-sonnet-4-5"),
+                    baseURL: configuration.baseURL ?? AnthropicInferenceProvider.defaultBaseURL,
+                ),
+            )
+        }
+        if let url = configuration.baseURL {
+            return InferenceProvider.anthropic(
+                credentials: EnvironmentAPIKeyProvider("ANTHROPIC_API_KEY"),
+                model: configuration.model(default: "claude-sonnet-4-5"),
+                baseURL: url,
+            )
+        }
+        return InferenceProvider.anthropic(model: configuration.model(default: "claude-sonnet-4-5"))
     }
 
     static func openAIInferenceProvider(

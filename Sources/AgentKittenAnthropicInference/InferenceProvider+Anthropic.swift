@@ -4,6 +4,7 @@
 #if canImport(Darwin) || canImport(FoundationNetworking)
 import AgentKittenCore
 import AgentKittenInferenceSupport
+import Foundation
 
 extension InferenceProvider where Provider == AnthropicInferenceProvider {
     /// Anthropic provider that reads the API key from the `ANTHROPIC_API_KEY` environment variable.
@@ -27,10 +28,16 @@ extension InferenceProvider where Provider == AnthropicInferenceProvider {
     /// - Parameters:
     ///   - credentials: The credential source to use.
     ///   - model: The Anthropic model identifier. Defaults to `"claude-sonnet-4-5"`.
-    static func anthropic(credentials: some APIKeyProviding, model: String = "claude-sonnet-4-5") -> Self {
+    ///   - baseURL: The API base URL. Defaults to ``AnthropicInferenceProvider/defaultBaseURL``.
+    public static func anthropic(
+        credentials: some APIKeyProviding,
+        model: String = "claude-sonnet-4-5",
+        baseURL: URL = AnthropicInferenceProvider.defaultBaseURL,
+    ) -> Self {
         Self(AnthropicInferenceProvider(
             credentials: .key(credentials),
             model: model,
+            baseURL: baseURL,
         ))
     }
 }

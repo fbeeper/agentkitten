@@ -25,16 +25,15 @@ extension AnthropicHTTPStreaming {
 /// Sends requests to the Anthropic Messages API and streams SSE responses.
 struct AnthropicHTTPClient: AnthropicHTTPStreaming {
     private let credentials: AnthropicCredentials
+    private let baseURL: URL
     private let urlSession: URLSession
 
-    private static let endpoint = URL(string: "https://api.anthropic.com/v1/messages")!
-    private static let countTokensEndpoint = URL(string: "https://api.anthropic.com/v1/messages/count_tokens")!
-    private static let modelsEndpoint = URL(string: "https://api.anthropic.com/v1/models")!
     private static let anthropicVersion = "2023-06-01"
     static let providerName = "Anthropic"
 
-    init(credentials: AnthropicCredentials) {
+    init(credentials: AnthropicCredentials, baseURL: URL = AnthropicInferenceProvider.defaultBaseURL) {
         self.credentials = credentials
+        self.baseURL = baseURL
         urlSession = URLSession.shared
     }
 
@@ -75,7 +74,7 @@ struct AnthropicHTTPClient: AnthropicHTTPStreaming {
     }
 
     func countTokens(request: AnthropicCountTokensRequest) async throws -> Int {
-        var urlRequest = URLRequest(url: Self.countTokensEndpoint)
+        var urlRequest = URLRequest(url: baseURL.appending(path: "messages/count_tokens"))
         urlRequest.httpMethod = "POST"
         try await authorize(&urlRequest)
         urlRequest.setValue(Self.anthropicVersion, forHTTPHeaderField: "anthropic-version")
@@ -90,7 +89,7 @@ struct AnthropicHTTPClient: AnthropicHTTPStreaming {
     }
 
     func maxInputTokens(for model: String) async throws -> Int? {
-        let endpoint = Self.modelsEndpoint.appending(path: model)
+        let endpoint = baseURL.appending(path: "models").appending(path: model)
         var urlRequest = URLRequest(url: endpoint)
         urlRequest.httpMethod = "GET"
         try await authorize(&urlRequest)
@@ -160,7 +159,7 @@ struct AnthropicHTTPClient: AnthropicHTTPStreaming {
     }
 
     private func buildURLRequest(for request: AnthropicRequest) async throws -> URLRequest {
-        var urlRequest = URLRequest(url: Self.endpoint)
+        var urlRequest = URLRequest(url: baseURL.appending(path: "messages"))
         urlRequest.httpMethod = "POST"
         try await authorize(&urlRequest)
         urlRequest.setValue(Self.anthropicVersion, forHTTPHeaderField: "anthropic-version")
