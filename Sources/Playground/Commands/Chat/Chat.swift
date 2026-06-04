@@ -3,10 +3,6 @@
 
 import AgentKitten
 import ArgumentParser
-#if canImport(Darwin) || canImport(FoundationNetworking)
-import AgentKittenAnthropicInference
-import AgentKittenOpenAIInference
-#endif
 
 extension Playground {
     /// Multi-turn conversation that exercises the Agent layer.
@@ -89,9 +85,7 @@ extension Playground {
             if let compactionTokens, compactionTokens < 0 {
                 throw ValidationError("--compaction-tokens must not be negative.")
             }
-            if let contextWindow, contextWindow <= 0 {
-                throw ValidationError("--context-window must be positive.")
-            }
+            try validateContextWindow()
         }
 
         func run() async throws {
@@ -367,25 +361,6 @@ extension Playground.Chat {
             return .enabled(trigger: .percentOfContextWindow(compactionPercent))
         }
         return .disabled
-    }
-
-    /// Seeds the per-turn context-window override key for providers that support it,
-    /// so `/usage` and percent-based compaction work against endpoints that don't
-    /// report a window (e.g. LM Studio).
-    private func applyContextWindow(to base: inout PhaseBehavior) {
-        guard let contextWindow else {
-            return
-        }
-        #if canImport(Darwin) || canImport(FoundationNetworking)
-        switch provider {
-        case .openai:
-            base[OpenAIContextWindowKey.self] = contextWindow
-        case .anthropic:
-            base[AnthropicContextWindowKey.self] = contextWindow
-        default:
-            break
-        }
-        #endif
     }
 
     private func makeToolDefinition() -> ToolDefinition {
