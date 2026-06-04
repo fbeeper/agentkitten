@@ -111,4 +111,27 @@ struct AutomaticCompactionTriggerTests {
         let trigger = AutomaticCompactionTrigger.percentOfContextWindow(0.8)
         #expect(!trigger.isMet(by: ContextUsage(contextTokens: 79, contextSize: 100)))
     }
+
+    // MARK: - absoluteTokens
+
+    @Test("absoluteTokens triggers at or above the limit regardless of window")
+    func absoluteTokensTriggersAtOrAboveLimit() {
+        let trigger = AutomaticCompactionTrigger.absoluteTokens(100)
+        // Fires even when the context size is unknown — the whole point of this trigger.
+        #expect(trigger.isMet(by: ContextUsage(contextTokens: 100, contextSize: .unknown)))
+        #expect(trigger.isMet(by: ContextUsage(contextTokens: 150, contextSize: .unknown)))
+    }
+
+    @Test("absoluteTokens does not trigger below the limit")
+    func absoluteTokensDoesNotTriggerBelowLimit() {
+        let trigger = AutomaticCompactionTrigger.absoluteTokens(100)
+        #expect(!trigger.isMet(by: ContextUsage(contextTokens: 99, contextSize: .unknown)))
+    }
+
+    @Test("absoluteTokens does not trigger on unknown token count")
+    func absoluteTokensDoesNotTriggerWhenUnknown() {
+        let trigger = AutomaticCompactionTrigger.absoluteTokens(100)
+        #expect(!trigger.isMet(by: ContextUsage(contextTokens: .unknown, contextSize: .unknown)))
+        #expect(!trigger.isMet(by: ContextUsage()))
+    }
 }
