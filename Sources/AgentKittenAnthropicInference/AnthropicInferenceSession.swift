@@ -28,6 +28,9 @@ public actor AnthropicInferenceSession: InferenceSession {
     let structuredOutputInstructionFormat: String
     let maxEmptyToolUseFollowUps: Int
     var currentModel: String
+    /// Context-window override captured from ``AnthropicContextWindowKey`` on the most recent
+    /// request. Read by ``resolveContextSize(for:)`` and takes precedence over endpoint discovery.
+    var currentContextWindowOverride: Int?
     var resolvedContextSizes: [String: Int] = [:]
     var history: [AnthropicMessage]
     var cachedContextTokens: TokenCount = .unknown

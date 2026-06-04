@@ -71,6 +71,11 @@ extension OpenAIInferenceSession {
     }
 
     func resolveContextSize(for model: String) async throws -> Int? {
+        // An explicit override (OpenAIContextWindowKey) wins over endpoint discovery:
+        // it is the deterministic escape hatch for servers that do not report a window.
+        if let currentContextWindowOverride {
+            return currentContextWindowOverride
+        }
         if let cached = resolvedContextSizes[model] {
             return cached
         }

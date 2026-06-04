@@ -25,6 +25,9 @@ public actor OpenAIInferenceSession: InferenceSession {
     let tools: [OpenAITool]
     let historyRenderingConfiguration: HistoryRenderingConfiguration
     var currentModel: String
+    /// Context-window override captured from ``OpenAIContextWindowKey`` on the most recent
+    /// request. Read by ``resolveContextSize(for:)`` and takes precedence over endpoint discovery.
+    var currentContextWindowOverride: Int?
     var history: [OpenAIMessage]
     let structuredOutputInstructionFormat: String
     var resolvedContextSizes: [String: Int] = [:]
@@ -192,6 +195,7 @@ public actor OpenAIInferenceSession: InferenceSession {
         let effectiveTools: [OpenAITool]? = selectedTools.isEmpty ? nil : selectedTools
         let model = parameters.inferenceContext[OpenAIModelKey.self] ?? defaultModel
         currentModel = model
+        currentContextWindowOverride = parameters.inferenceContext[OpenAIContextWindowKey.self]
         var messages = turnHistory
         if let systemPrompt, !systemPrompt.isEmpty {
             messages = [OpenAIMessage.system(systemPrompt)] + messages

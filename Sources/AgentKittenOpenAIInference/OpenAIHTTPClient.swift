@@ -62,6 +62,11 @@ struct OpenAIHTTPClient: OpenAIHTTPStreaming {
 
     func maxInputTokens(for model: String) async throws -> Int? {
         let endpoint = baseURL.appending(path: "models").appending(path: model)
+        return try await modelInfo(at: endpoint).resolvedMaxInputTokens
+    }
+
+    /// Fetches and decodes model metadata from a `/models/{id}`-style endpoint.
+    private func modelInfo(at endpoint: URL) async throws -> OpenAIModelInfoResponse {
         var urlRequest = URLRequest(url: endpoint)
         urlRequest.httpMethod = "GET"
         if case .key(let provider) = credentials {
@@ -72,7 +77,7 @@ struct OpenAIHTTPClient: OpenAIHTTPStreaming {
             let body = String(bytes: data, encoding: .utf8).map { String($0.prefix(512)) } ?? ""
             throw Self.error(statusCode: httpResponse.statusCode, body: body)
         }
-        return try JSONDecoder().decode(OpenAIModelInfoResponse.self, from: data).resolvedMaxInputTokens
+        return try JSONDecoder().decode(OpenAIModelInfoResponse.self, from: data)
     }
 
     // MARK: - Private
