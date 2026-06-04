@@ -6,7 +6,20 @@ public enum AutomaticCompactionTrigger: Sendable, Codable, Equatable, Hashable {
     /// Compact when current context tokens reach or exceed this fraction of the model context window.
     ///
     /// A value of `0` triggers on every turn. A value greater than `1` never triggers.
+    ///
+    /// Requires a known context window: when the provider cannot resolve
+    /// ``ContextUsage/contextSize`` (e.g. an OpenAI-compatible server with no
+    /// model metadata), ``ContextUsage/fillPercent`` is `nil` and this trigger
+    /// never fires. Consider``absoluteTokens(_:)`` in that case.
     case percentOfContextWindow(Double)
+
+    /// Compact when current context tokens reach or exceed an absolute count.
+    ///
+    /// Unlike ``percentOfContextWindow(_:)`` this needs no context-window size, only
+    /// the token count, so it keeps working against providers that cannot report a
+    /// window (LM Studio or other local/remote OpenAI-compatible servers). When
+    /// the count is unknown the comparison is `false`, so it never fires spuriously.
+    case absoluteTokens(UInt)
 
     func isMet(by usage: ContextUsage) -> Bool {
         switch self {
@@ -18,6 +31,8 @@ public enum AutomaticCompactionTrigger: Sendable, Codable, Equatable, Hashable {
                 return false
             }
             return (usage.fillPercent ?? 0) >= percent
+        case .absoluteTokens(let limit):
+            return usage.contextTokens >= .tokens(limit)
         }
     }
 }

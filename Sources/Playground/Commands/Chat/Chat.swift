@@ -51,14 +51,35 @@ extension Playground {
         )
         var judgeProvider: ProviderOption?
 
-        @Flag(name: .long, help: "Enable automatic context compaction (triggers at 80% of the context window).")
-        var compaction = false
+        @Option(
+            name: .long,
+            help: "Enable automatic compaction at this fraction (0–1) of the context window. Needs a known window.",
+        )
+        var compactionPercent: Double?
+
+        @Option(
+            name: .long,
+            help: "Enable automatic compaction at this many tokens. Works without a known window.",
+        )
+        var compactionTokens: Int?
 
         @Option(name: .long, help: "Inference provider for context compaction. Defaults to --provider.")
         var compactionProvider: ProviderOption?
 
         @Flag(name: .long, help: "Print current provider context usage after each turn.")
         var showUsage = false
+
+        func validate() throws {
+            if compactionPercent != nil, compactionTokens != nil {
+                throw ValidationError("--compaction-percent and --compaction-tokens are mutually exclusive.")
+            }
+            if let compactionPercent, compactionPercent <= 0 || compactionPercent > 1 {
+                throw ValidationError("--compaction-percent must be greater than 0 and at most 1.")
+            }
+            if let compactionTokens, compactionTokens < 0 {
+                throw ValidationError("--compaction-tokens must not be negative.")
+            }
+        }
 
         func run() async throws {
             let effectiveJudgeProvider = judgeProvider ?? provider
@@ -265,10 +286,16 @@ extension Playground.Chat {
             "Default provider: \(provider.rawValue)",
             "Tool policy: \(toolPolicy.rawValue)",
             "Session state: \(sessionState ? "enabled" : "disabled")",
-            "Compaction: \(compaction ? "enabled" : "disabled")",
+            "Compaction: \(compactionPercent != nil || compactionTokens != nil ? "enabled" : "disabled")",
             "Show usage: \(showUsage ? "enabled" : "disabled")",
             "Min response length: \(minResponseLength)",
         ]
+        if let compactionPercent {
+            detailLines.append("Compaction trigger: \(Int(compactionPercent * 100))% of context window")
+        }
+        if let compactionTokens {
+            detailLines.append("Compaction trigger: \(compactionTokens) tokens")
+        }
         if let compactionProvider {
             detailLines.append("Compaction provider: \(compactionProvider.rawValue)")
         }
@@ -306,8 +333,22 @@ extension Playground.Chat {
         return AgentBehavior(
             systemPrompt: system,
             phaseBehaviors: phaseBehaviors,
-            defaultAutomaticCompactionPolicy: compaction ? .enabled() : .disabled,
+            defaultAutomaticCompactionPolicy: compactionPolicy(),
         )
+    }
+
+    /// Resolves the automatic compaction policy from the `--compaction-percent` and
+    /// `--compaction-tokens` options. Passing either one enables compaction; an
+    /// absolute-token trigger works even when the context window is unknown, while a
+    /// percent trigger needs a known window. They are mutually exclusive (see `validate()`).
+    private func compactionPolicy() -> AutomaticCompactionPolicy {
+        if let compactionTokens {
+            return .enabled(trigger: .absoluteTokens(UInt(compactionTokens)))
+        }
+        if let compactionPercent {
+            return .enabled(trigger: .percentOfContextWindow(compactionPercent))
+        }
+        return .disabled
     }
 
     private func makeToolDefinition() -> ToolDefinition {
