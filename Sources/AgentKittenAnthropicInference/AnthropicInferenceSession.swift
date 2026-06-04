@@ -19,12 +19,11 @@ import Foundation
 /// session deinitialization. The worker task retains the session while active,
 /// so callers must stop iterating the returned stream to cancel the request.
 public actor AnthropicInferenceSession: InferenceSession {
-    let credentials: any APIKeyProviding
+    let client: any AnthropicHTTPStreaming
     let defaultModel: String
     let systemPrompt: String?
     let toolRuntime: ToolRuntime
     let tools: [AnthropicTool]
-    let clientFactory: @Sendable (String) -> any AnthropicHTTPStreaming
     let historyRenderingConfiguration: HistoryRenderingConfiguration
     let structuredOutputInstructionFormat: String
     let maxEmptyToolUseFollowUps: Int
@@ -37,7 +36,7 @@ public actor AnthropicInferenceSession: InferenceSession {
     }
 
     init(
-        credentials: any APIKeyProviding,
+        client: any AnthropicHTTPStreaming,
         defaultModel: String,
         systemPrompt: String?,
         toolRuntime: ToolRuntime,
@@ -45,9 +44,8 @@ public actor AnthropicInferenceSession: InferenceSession {
         maxEmptyToolUseFollowUps: Int = 8,
         historyRenderingConfiguration: HistoryRenderingConfiguration = HistoryRenderingConfiguration(),
         structuredOutputInstructionFormat: String = AnthropicInferenceProvider.defaultStructuredOutputInstructionFormat,
-        clientFactory: @escaping @Sendable (String) -> any AnthropicHTTPStreaming = { AnthropicHTTPClient(apiKey: $0) },
     ) {
-        self.credentials = credentials
+        self.client = client
         self.defaultModel = defaultModel
         self.systemPrompt = systemPrompt
         self.toolRuntime = toolRuntime
@@ -60,7 +58,6 @@ public actor AnthropicInferenceSession: InferenceSession {
         self.historyRenderingConfiguration = historyRenderingConfiguration
         self.structuredOutputInstructionFormat = structuredOutputInstructionFormat
         currentModel = defaultModel
-        self.clientFactory = clientFactory
     }
 
     /// Returns a snapshot of the current conversation history, captured under actor isolation.
@@ -71,13 +68,6 @@ public actor AnthropicInferenceSession: InferenceSession {
     /// Runs a single inference turn and streams the model's response.
     public func run(_ message: UserMessage, parameters: InferenceRequestParameters) async throws -> InferenceStream {
         let lease = try operationGate.begin(.run)
-        let key: String
-        do {
-            key = try await apiKey()
-        } catch {
-            lease.end()
-            throw error
-        }
         // Multi-user: add `name: message.sender.description` to AnthropicMessage.
         // The Anthropic API surfaces the name field to the model as speaker context —
         // the right primitive for distinguishing participants without prompt hacks.
@@ -88,7 +78,6 @@ public actor AnthropicInferenceSession: InferenceSession {
         let task = Task {
             await runTurn(
                 userMessage: userMessage,
-                apiKey: key,
                 parameters: parameters,
                 continuation: continuation,
             )
@@ -104,7 +93,6 @@ public actor AnthropicInferenceSession: InferenceSession {
 
     private func runTurn(
         userMessage: AnthropicMessage,
-        apiKey: String,
         parameters: InferenceRequestParameters,
         continuation: InferenceStream.Continuation,
     ) async {
@@ -113,7 +101,6 @@ public actor AnthropicInferenceSession: InferenceSession {
             context: parameters.toolExecutionContext,
             toolSelection: parameters.toolSelection,
         )
-        let client = clientFactory(apiKey)
         // Snapshot history + the new user message into a local buffer.
         // self.history is only updated on success; cancellation and errors
         // leave it unchanged so aborted turns are invisible to future sends.

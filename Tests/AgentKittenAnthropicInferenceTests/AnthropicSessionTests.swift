@@ -35,15 +35,16 @@ private final class RotatingAPIKeyProvider: APIKeyProviding, @unchecked Sendable
     let variableName = "AGENTKITTEN_TEST_MISSING_KEY_\(Int.random(in: 100_000 ... 999_999))"
     unsetenv(variableName)
     let session = AnthropicInferenceSession(
-        credentials: EnvironmentAPIKeyProvider(variableName),
+        client: AnthropicHTTPClient(credentials: .key(EnvironmentAPIKeyProvider(variableName))),
         defaultModel: "test-model",
         systemPrompt: nil,
         toolRuntime: testToolRuntime(),
-        clientFactory: { _ in MockHTTPClient(responses: []) },
     )
 
     do {
-        _ = try await session.run(UserMessage(text: "Hi"), parameters: InferenceRequestParameters())
+        // Credential failure surfaces during iteration because the HTTP client fetches
+        // the key lazily inside the stream task, not eagerly at run() time.
+        for try await _ in try await session.run(UserMessage(text: "Hi"), parameters: InferenceRequestParameters()) {}
         Issue.record("Expected credential lookup to fail")
     } catch APIKeyError.missing(let message) {
         #expect(message.contains(variableName))
@@ -52,24 +53,22 @@ private final class RotatingAPIKeyProvider: APIKeyProviding, @unchecked Sendable
     }
 }
 
-@Test func session_fetchesFreshAPIKeyForEachTurn() async throws {
-    let credentials = RotatingAPIKeyProvider(keys: ["key-1", "key-2"])
-    let observedKeys = Mutex<[String]>([])
+@Test func session_makesTwoRequestsForTwoTurns() async throws {
+    let mock = MockHTTPClient(responses: [
+        [.textDelta("ok"), .stopReason("end_turn")],
+        [.textDelta("ok"), .stopReason("end_turn")],
+    ])
     let session = AnthropicInferenceSession(
-        credentials: credentials,
+        client: mock,
         defaultModel: "test-model",
         systemPrompt: nil,
         toolRuntime: testToolRuntime(),
-        clientFactory: { key in
-            observedKeys.withLock { $0.append(key) }
-            return MockHTTPClient(responses: [[.textDelta("ok"), .stopReason("end_turn")]])
-        },
     )
 
     for try await _ in try await session.run(UserMessage(text: "First"), parameters: InferenceRequestParameters()) {}
     for try await _ in try await session.run(UserMessage(text: "Second"), parameters: InferenceRequestParameters()) {}
 
-    #expect(observedKeys.withLock { $0 } == ["key-1", "key-2"])
+    #expect(mock.callCount == 2)
 }
 
 /// With a one-step tool budget and a mock that returns one tool_use response then a text
@@ -80,7 +79,7 @@ private final class RotatingAPIKeyProvider: APIKeyProviding, @unchecked Sendable
         [.stopReason("tool_use")],
         [.textDelta("Final answer"), .stopReason("end_turn")],
     ])
-    let session = makeSession { _ in mock }
+    let session = makeSession(client: mock)
 
     var text = ""
     for try await event in try await session.run(budgetOneMessage, parameters: budgetOneParameters) {
@@ -102,7 +101,7 @@ private final class RotatingAPIKeyProvider: APIKeyProviding, @unchecked Sendable
         [.stopReason("tool_use")],
         [.textDelta("Should not appear"), .stopReason("end_turn")],
     ])
-    let session = makeSession(maxEmptyToolUseFollowUps: 1) { _ in mock }
+    let session = makeSession(maxEmptyToolUseFollowUps: 1, client: mock)
 
     var text = ""
     for try await event in try await session.run(budgetOneMessage, parameters: budgetOneParameters) {
@@ -123,7 +122,7 @@ private final class RotatingAPIKeyProvider: APIKeyProviding, @unchecked Sendable
         ],
         [.textDelta("Done"), .stopReason("end_turn")],
     ])
-    let session = makeSession(maxEmptyToolUseFollowUps: 1) { _ in mock }
+    let session = makeSession(maxEmptyToolUseFollowUps: 1, client: mock)
 
     var text = ""
     for try await event in try await session.run(budgetOneMessage, parameters: budgetOneParameters) {
@@ -148,7 +147,7 @@ private final class RotatingAPIKeyProvider: APIKeyProviding, @unchecked Sendable
         ],
         [.textDelta("Done"), .stopReason("end_turn")],
     ])
-    let session = makeSession { _ in mock }
+    let session = makeSession(client: mock)
 
     var completedOutcomes: [String: ToolCallOutcome] = [:]
     for try await event in try await session.run(budgetOneMessage, parameters: budgetOneParameters) {
@@ -232,9 +231,7 @@ private struct InferenceImageTool: RichAgentTool {
 }
 
 @Test func session_alsoConformsToStructuredInferenceSession() {
-    let session: any StructuredInferenceSession = makeSession { _ in
-        MockHTTPClient(responses: [])
-    }
+    let session: any StructuredInferenceSession = makeSession(client: MockHTTPClient(responses: []))
 
     #expect(type(of: session) == AnthropicInferenceSession.self)
 }
@@ -244,7 +241,7 @@ private struct InferenceImageTool: RichAgentTool {
         .textDelta(#"{"answer":"structured"}"#),
         .stopReason("end_turn"),
     ])
-    let session = makeSession { _ in client }
+    let session = makeSession(client: client)
 
     let value: StructuredDecision = try await session.generate(
         prompt: "Return a structured answer",
@@ -272,14 +269,13 @@ private struct InferenceImageTool: RichAgentTool {
         registry: ToolRegistry([AnyAgentTool(InferenceEchoTool())]),
     )
     let session = AnthropicInferenceSession(
-        credentials: MockAPIKeyProvider("test-key"),
+        client: SequencedHTTPClient(clients: [client, followUp]),
         defaultModel: "test-model",
         systemPrompt: nil,
         toolRuntime: testToolRuntime(
             registry: executor.registry,
             executionPolicy: AutoApprovePolicy(),
         ),
-        clientFactory: { _ in SequencedHTTPClient(clients: [client, followUp]) },
     )
 
     let value: StructuredDecision =
@@ -305,14 +301,13 @@ private struct InferenceImageTool: RichAgentTool {
         registry: ToolRegistry([AnyAgentTool(InferenceEchoTool())]),
     )
     let session = AnthropicInferenceSession(
-        credentials: MockAPIKeyProvider("test-key"),
+        client: SequencedHTTPClient(clients: [client, followUp]),
         defaultModel: "test-model",
         systemPrompt: nil,
         toolRuntime: testToolRuntime(
             registry: executor.registry,
             executionPolicy: AutoApprovePolicy(),
         ),
-        clientFactory: { _ in SequencedHTTPClient(clients: [client, followUp]) },
     )
 
     let stream: StructuredInferenceStream<StructuredDecision> =

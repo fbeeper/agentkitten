@@ -33,14 +33,13 @@ extension AnthropicInferenceSession {
         if cachedContextTokens != .unknown {
             return ContextUsage(contextTokens: cachedContextTokens, contextSize: size)
         }
-        let key = try await apiKey()
         let request = AnthropicCountTokensRequest(
             model: currentModel,
             system: systemPrompt,
             messages: history,
             tools: tools.isEmpty ? nil : tools,
         )
-        let count = try await clientFactory(key).countTokens(request: request)
+        let count = try await client.countTokens(request: request)
         cachedContextTokens = TokenCount(count)
         return ContextUsage(contextTokens: cachedContextTokens, contextSize: size)
     }
@@ -51,8 +50,6 @@ extension AnthropicInferenceSession {
         }
 
         do {
-            let key = try await apiKey()
-            let client = clientFactory(key)
             if let resolved = try await client.maxInputTokens(for: model), resolved > 0 {
                 resolvedContextSizes[model] = resolved
                 return resolved

@@ -34,7 +34,7 @@ public actor AnthropicInferenceProvider: InferenceProviding {
     when it is an array, start with [ and end with ].
     """
 
-    private let credentials: any APIKeyProviding
+    private let credentials: AnthropicCredentials
     private let model: String
     private let historyRenderingConfiguration: HistoryRenderingConfiguration
     private let structuredOutputInstructionFormat: String
@@ -42,8 +42,9 @@ public actor AnthropicInferenceProvider: InferenceProviding {
     /// Creates an Anthropic provider.
     ///
     /// - Parameters:
-    ///   - credentials: The credential source. Defaults to reading `ANTHROPIC_API_KEY`
-    ///     from the process environment.
+    ///   - credentials: The credential strategy. Defaults to reading `ANTHROPIC_API_KEY`
+    ///     from the process environment. Pass ``AnthropicCredentials/noCredential`` to omit
+    ///     the `x-api-key` header for proxies or local servers that accept unauthenticated requests.
     ///   - model: The Anthropic model identifier. Defaults to `"claude-sonnet-4-5"`.
     ///   - historyRenderingConfiguration: Labels and format strings used when rendering history
     ///     during context compaction. Defaults to built-in English values.
@@ -52,7 +53,7 @@ public actor AnthropicInferenceProvider: InferenceProviding {
     ///     the JSON schema string at generation time. Passing a string with zero or more than
     ///     one `%@` triggers a precondition failure at init.
     public init(
-        credentials: any APIKeyProviding = EnvironmentAPIKeyProvider("ANTHROPIC_API_KEY"),
+        credentials: AnthropicCredentials = .key(EnvironmentAPIKeyProvider("ANTHROPIC_API_KEY")),
         model: String = "claude-sonnet-4-5",
         historyRenderingConfiguration: HistoryRenderingConfiguration = HistoryRenderingConfiguration(),
         structuredOutputInstructionFormat: String = AnthropicInferenceProvider.defaultStructuredOutputInstructionFormat,
@@ -103,7 +104,7 @@ public actor AnthropicInferenceProvider: InferenceProviding {
         initialHistory: [AnthropicMessage] = [],
     ) -> AnthropicInferenceSession {
         AnthropicInferenceSession(
-            credentials: credentials,
+            client: AnthropicHTTPClient(credentials: credentials),
             defaultModel: model,
             systemPrompt: systemPrompt,
             toolRuntime: toolRuntime,

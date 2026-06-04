@@ -94,15 +94,14 @@ final class SequencedHTTPClient: AnthropicHTTPStreaming, @unchecked Sendable {
 func makeSession(
     toolExecutionPolicy: some ToolExecutionPolicy = AutoApprovePolicy(),
     maxEmptyToolUseFollowUps: Int = 8,
-    clientFactory: @escaping @Sendable (String) -> any AnthropicHTTPStreaming,
+    client: any AnthropicHTTPStreaming,
 ) -> AnthropicInferenceSession {
     AnthropicInferenceSession(
-        credentials: MockAPIKeyProvider("test-key"),
+        client: client,
         defaultModel: "test-model",
         systemPrompt: nil,
         toolRuntime: testToolRuntime(executionPolicy: toolExecutionPolicy),
         maxEmptyToolUseFollowUps: maxEmptyToolUseFollowUps,
-        clientFactory: clientFactory,
     )
 }
 

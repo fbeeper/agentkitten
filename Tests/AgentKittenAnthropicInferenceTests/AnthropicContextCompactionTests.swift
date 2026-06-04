@@ -14,11 +14,10 @@ import Testing
         [.usage(150), .textDelta("Done"), .stopReason("end_turn")],
     ])
     let session = AnthropicInferenceSession(
-        credentials: MockAPIKeyProvider("test-key"),
+        client: mock,
         defaultModel: "test-model",
         systemPrompt: nil,
         toolRuntime: testToolRuntime(),
-        clientFactory: { _ in mock },
     )
 
     for try await _ in try await session.run(
@@ -50,16 +49,14 @@ import Testing
         AnthropicMessage(role: .assistant, content: [.text("Original answer.")]),
     ]
     let provider = AnthropicInferenceProvider(
-        credentials: MockAPIKeyProvider("test-key"),
         model: "test-model",
     )
     let session = AnthropicInferenceSession(
-        credentials: MockAPIKeyProvider("test-key"),
+        client: FailingCountHTTPClient(),
         defaultModel: "test-model",
         systemPrompt: nil,
         toolRuntime: testToolRuntime(),
         initialHistory: history,
-        clientFactory: { _ in FailingCountHTTPClient() },
     )
 
     let result = await ContextCompactor().compact(
@@ -104,7 +101,7 @@ import Testing
     }
 
     let session = AnthropicInferenceSession(
-        credentials: MockAPIKeyProvider("test-key"),
+        client: CachedUsageFailingCountHTTPClient(),
         defaultModel: "test-model",
         systemPrompt: nil,
         toolRuntime: testToolRuntime(),
@@ -112,7 +109,6 @@ import Testing
             AnthropicMessage(role: .user, content: [.text("Old request.")]),
             AnthropicMessage(role: .assistant, content: [.text("Old answer.")]),
         ],
-        clientFactory: { _ in CachedUsageFailingCountHTTPClient() },
     )
     let stream = try await session.run(
         UserMessage(text: "Recent request."),
@@ -145,11 +141,10 @@ import Testing
 
 @Test func providerSession_contextUsageUsesKnownModelWindow() async throws {
     let session = AnthropicInferenceSession(
-        credentials: MockAPIKeyProvider("test-key"),
+        client: ModelInfoHTTPClient(maxInputTokensValue: 1_048_576),
         defaultModel: "claude-sonnet-4-20250514",
         systemPrompt: nil,
         toolRuntime: testToolRuntime(),
-        clientFactory: { _ in ModelInfoHTTPClient(maxInputTokensValue: 1_048_576) },
     )
 
     let usage = try await session.contextUsage()
@@ -158,11 +153,10 @@ import Testing
 
 @Test func providerSession_contextUsageReturnsNilContextSizeWhenLookupFails() async throws {
     let session = AnthropicInferenceSession(
-        credentials: MockAPIKeyProvider("test-key"),
+        client: FailingModelInfoHTTPClient(),
         defaultModel: "claude-sonnet-4-20250514",
         systemPrompt: nil,
         toolRuntime: testToolRuntime(),
-        clientFactory: { _ in FailingModelInfoHTTPClient() },
     )
 
     let usage = try await session.contextUsage()
@@ -172,11 +166,10 @@ import Testing
 @Test func providerSession_contextUsageCachesResolvedModelWindow() async throws {
     let client = CountingModelInfoHTTPClient()
     let session = AnthropicInferenceSession(
-        credentials: MockAPIKeyProvider("test-key"),
+        client: client,
         defaultModel: "claude-sonnet-4-20250514",
         systemPrompt: nil,
         toolRuntime: testToolRuntime(),
-        clientFactory: { _ in client },
     )
 
     let firstUsage = try await session.contextUsage()
@@ -189,15 +182,13 @@ import Testing
 
 @Test func providerContinuingSession_resetsToDefaultModelAfterTurnOverride() async throws {
     let provider = AnthropicInferenceProvider(
-        credentials: MockAPIKeyProvider("test-key"),
         model: "claude-sonnet-4-20250514",
     )
     let session = AnthropicInferenceSession(
-        credentials: MockAPIKeyProvider("test-key"),
+        client: ModelInfoHTTPClient(maxInputTokensValue: 1_048_576),
         defaultModel: "claude-sonnet-4-20250514",
         systemPrompt: nil,
         toolRuntime: testToolRuntime(),
-        clientFactory: { _ in ModelInfoHTTPClient(maxInputTokensValue: 1_048_576) },
     )
     let parameters = InferenceRequestParameters(
         inferenceContext: {
@@ -225,7 +216,7 @@ import Testing
 @Test func anthropicCompactedHistory_summarizesOlderTurnsAndPreservesRecent() async throws {
     let client = MinimalCapturingHTTPClient(responseText: "Summary of old Anthropic history.")
     let session = AnthropicInferenceSession(
-        credentials: MockAPIKeyProvider("test-key"),
+        client: client,
         defaultModel: "claude-sonnet-4-5",
         systemPrompt: nil,
         toolRuntime: testToolRuntime(),
@@ -237,7 +228,6 @@ import Testing
             AnthropicMessage(role: .user, content: [.text("Recent request two.")]),
             AnthropicMessage(role: .assistant, content: [.text("Recent answer two.")]),
         ],
-        clientFactory: { _ in client },
     )
 
     let result = await ContextCompactor().compact(
@@ -273,7 +263,7 @@ import Testing
 
 @Test func anthropicCompactedHistory_truncatesOldMessages() async {
     let session = AnthropicInferenceSession(
-        credentials: MockAPIKeyProvider("test-key"),
+        client: MinimalCapturingHTTPClient(),
         defaultModel: "test-model",
         systemPrompt: nil,
         toolRuntime: testToolRuntime(),
@@ -283,7 +273,6 @@ import Testing
             AnthropicMessage(role: .user, content: [.text("Recent request.")]),
             AnthropicMessage(role: .assistant, content: [.text("Recent answer.")]),
         ],
-        clientFactory: { _ in MinimalCapturingHTTPClient() },
     )
 
     let result = await ContextCompactor().compact(
@@ -313,7 +302,7 @@ import Testing
     let customPrompt = "You are a medical summarizer.\n\n%@\n\nPreserve clinical facts only."
     let client = MinimalCapturingHTTPClient()
     let session = AnthropicInferenceSession(
-        credentials: MockAPIKeyProvider("test-key"),
+        client: client,
         defaultModel: "claude-sonnet-4-5",
         systemPrompt: nil,
         toolRuntime: testToolRuntime(),
@@ -323,7 +312,6 @@ import Testing
             AnthropicMessage(role: .user, content: [.text("Recent request.")]),
             AnthropicMessage(role: .assistant, content: [.text("Recent answer.")]),
         ],
-        clientFactory: { _ in client },
     )
 
     _ = await ContextCompactor().compact(session,
@@ -349,7 +337,7 @@ import Testing
 @Test func anthropicSummarizer_standardPromptPlacesHistoryWhereFormatted() async throws {
     let client = MinimalCapturingHTTPClient()
     let session = AnthropicInferenceSession(
-        credentials: MockAPIKeyProvider("test-key"),
+        client: client,
         defaultModel: "claude-sonnet-4-5",
         systemPrompt: nil,
         toolRuntime: testToolRuntime(),
@@ -359,7 +347,6 @@ import Testing
             AnthropicMessage(role: .user, content: [.text("Recent request.")]),
             AnthropicMessage(role: .assistant, content: [.text("Recent answer.")]),
         ],
-        clientFactory: { _ in client },
     )
 
     _ = await ContextCompactor().compact(
