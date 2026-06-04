@@ -4,6 +4,7 @@
 #if canImport(Darwin) || canImport(FoundationNetworking)
 import AgentKittenCore
 import AgentKittenInferenceSupport
+import Foundation
 
 /// An ``InferenceProviding`` conformer backed by Anthropic's Messages API.
 ///
@@ -34,8 +35,15 @@ public actor AnthropicInferenceProvider: InferenceProviding {
     when it is an array, start with [ and end with ].
     """
 
+    /// The default Anthropic API base URL.
+    ///
+    /// Endpoint paths (`messages`, `messages/count_tokens`, `models/{id}`) are appended to this.
+    /// Override to target an Anthropic-compatible proxy or local server.
+    public static let defaultBaseURL = URL(string: "https://api.anthropic.com/v1")!
+
     private let credentials: AnthropicCredentials
     private let model: String
+    private let baseURL: URL
     private let historyRenderingConfiguration: HistoryRenderingConfiguration
     private let structuredOutputInstructionFormat: String
 
@@ -46,6 +54,8 @@ public actor AnthropicInferenceProvider: InferenceProviding {
     ///     from the process environment. Pass ``AnthropicCredentials/noCredential`` to omit
     ///     the `x-api-key` header for proxies or local servers that accept unauthenticated requests.
     ///   - model: The Anthropic model identifier. Defaults to `"claude-sonnet-4-5"`.
+    ///   - baseURL: The API base URL. Defaults to ``defaultBaseURL``.
+    ///     Override to point at an Anthropic-compatible proxy or local server.
     ///   - historyRenderingConfiguration: Labels and format strings used when rendering history
     ///     during context compaction. Defaults to built-in English values.
     ///   - structuredOutputInstructionFormat: System-prompt instruction injected for structured
@@ -55,6 +65,7 @@ public actor AnthropicInferenceProvider: InferenceProviding {
     public init(
         credentials: AnthropicCredentials = .key(EnvironmentAPIKeyProvider("ANTHROPIC_API_KEY")),
         model: String = "claude-sonnet-4-5",
+        baseURL: URL = AnthropicInferenceProvider.defaultBaseURL,
         historyRenderingConfiguration: HistoryRenderingConfiguration = HistoryRenderingConfiguration(),
         structuredOutputInstructionFormat: String = AnthropicInferenceProvider.defaultStructuredOutputInstructionFormat,
     ) {
@@ -64,6 +75,7 @@ public actor AnthropicInferenceProvider: InferenceProviding {
         )
         self.credentials = credentials
         self.model = model
+        self.baseURL = baseURL
         self.historyRenderingConfiguration = historyRenderingConfiguration
         self.structuredOutputInstructionFormat = structuredOutputInstructionFormat
     }
@@ -104,7 +116,7 @@ public actor AnthropicInferenceProvider: InferenceProviding {
         initialHistory: [AnthropicMessage] = [],
     ) -> AnthropicInferenceSession {
         AnthropicInferenceSession(
-            client: AnthropicHTTPClient(credentials: credentials),
+            client: AnthropicHTTPClient(credentials: credentials, baseURL: baseURL),
             defaultModel: model,
             systemPrompt: systemPrompt,
             toolRuntime: toolRuntime,
