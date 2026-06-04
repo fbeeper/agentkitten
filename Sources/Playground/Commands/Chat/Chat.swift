@@ -3,6 +3,10 @@
 
 import AgentKitten
 import ArgumentParser
+#if canImport(Darwin) || canImport(FoundationNetworking)
+import AgentKittenAnthropicInference
+import AgentKittenOpenAIInference
+#endif
 
 extension Playground {
     /// Multi-turn conversation that exercises the Agent layer.
@@ -63,6 +67,12 @@ extension Playground {
         )
         var compactionTokens: Int?
 
+        @Option(
+            name: .long,
+            help: "Context-window override (tokens) for endpoints that can't report it. Drives /usage and compaction.",
+        )
+        var contextWindow: Int?
+
         @Option(name: .long, help: "Inference provider for context compaction. Defaults to --provider.")
         var compactionProvider: ProviderOption?
 
@@ -78,6 +88,9 @@ extension Playground {
             }
             if let compactionTokens, compactionTokens < 0 {
                 throw ValidationError("--compaction-tokens must not be negative.")
+            }
+            if let contextWindow, contextWindow <= 0 {
+                throw ValidationError("--context-window must be positive.")
             }
         }
 
@@ -296,6 +309,9 @@ extension Playground.Chat {
         if let compactionTokens {
             detailLines.append("Compaction trigger: \(compactionTokens) tokens")
         }
+        if let contextWindow {
+            detailLines.append("Context window override: \(contextWindow) tokens")
+        }
         if let compactionProvider {
             detailLines.append("Compaction provider: \(compactionProvider.rawValue)")
         }
@@ -323,7 +339,9 @@ extension Playground.Chat {
     }
 
     private func makeBehavior(compactionProvider: ProviderReference?) -> AgentBehavior {
-        var phaseBehaviors = PhaseBehaviorSet(base: PhaseBehavior())
+        var base = PhaseBehavior()
+        applyContextWindow(to: &base)
+        var phaseBehaviors = PhaseBehaviorSet(base: base)
         if let compactionProvider {
             phaseBehaviors.set(
                 PhaseBehavior(provider: compactionProvider),
@@ -349,6 +367,25 @@ extension Playground.Chat {
             return .enabled(trigger: .percentOfContextWindow(compactionPercent))
         }
         return .disabled
+    }
+
+    /// Seeds the per-turn context-window override key for providers that support it,
+    /// so `/usage` and percent-based compaction work against endpoints that don't
+    /// report a window (e.g. LM Studio).
+    private func applyContextWindow(to base: inout PhaseBehavior) {
+        guard let contextWindow else {
+            return
+        }
+        #if canImport(Darwin) || canImport(FoundationNetworking)
+        switch provider {
+        case .openai:
+            base[OpenAIContextWindowKey.self] = contextWindow
+        case .anthropic:
+            base[AnthropicContextWindowKey.self] = contextWindow
+        default:
+            break
+        }
+        #endif
     }
 
     private func makeToolDefinition() -> ToolDefinition {

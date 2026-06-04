@@ -45,6 +45,11 @@ extension AnthropicInferenceSession {
     }
 
     func resolveContextSize(for model: String) async throws -> Int? {
+        // An explicit override (AnthropicContextWindowKey) wins over endpoint discovery:
+        // it is the deterministic escape hatch for servers that do not report a window.
+        if let currentContextWindowOverride {
+            return currentContextWindowOverride
+        }
         if let cached = resolvedContextSizes[model] {
             return cached
         }
@@ -74,6 +79,7 @@ extension AnthropicInferenceSession {
         effectiveTools = selectedTools.isEmpty ? nil : selectedTools
         let model = parameters.inferenceContext[AnthropicModelKey.self] ?? defaultModel
         currentModel = model
+        currentContextWindowOverride = parameters.inferenceContext[AnthropicContextWindowKey.self]
         return AnthropicRequest(
             model: model,
             maxTokens: parameters.configuration.maxTokens,

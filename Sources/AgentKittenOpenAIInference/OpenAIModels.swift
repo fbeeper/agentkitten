@@ -33,7 +33,11 @@ struct OpenAIRequest: Encodable {
     }
 }
 
-/// Decoded `/models/{id}` metadata, used to resolve the context window for unknown models.
+/// Decoded model metadata from the OpenAI-compatible `/models/{id}` response, used to resolve
+/// the context window for unknown models.
+///
+/// The field set is broad because OpenAI-compatible servers report the window under varying
+/// keys (or not at all). `max_context_length` is the model's theoretical maximum.
 struct OpenAIModelInfoResponse: Decodable {
     let contextWindow: Int?
     let contextLength: Int?
