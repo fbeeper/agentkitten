@@ -57,11 +57,11 @@ public actor AnthropicInferenceProvider: InferenceProviding {
     ///   - model: The Anthropic model identifier. Defaults to `"claude-sonnet-4-5"`.
     ///   - baseURL: The API base URL. Defaults to ``defaultBaseURL``.
     ///     Override to point at an Anthropic-compatible proxy or local server.
-    ///   - probesLMStudioMetadata: When `true`, and the Anthropic-compatible `/models/{id}` does
-    ///     not report a context window, the provider additionally probes LM Studio's native
-    ///     metadata endpoint to discover it. Best-effort and never run against the Anthropic host.
-    ///     Defaults to `false`. Prefer ``AnthropicContextWindowKey`` to set a window explicitly
-    ///     for servers that report none.
+    ///   - probesLMStudioMetadata: When `true`, the provider first probes LM Studio's native
+    ///     metadata endpoint to discover the served context window, falling back to the
+    ///     Anthropic-compatible `/models/{id}` only when that yields nothing. Best-effort and never
+    ///     run against the Anthropic host. Defaults to `false`. Prefer ``AnthropicContextWindowKey``
+    ///     to set a window explicitly for servers that report none.
     ///   - historyRenderingConfiguration: Labels and format strings used when rendering history
     ///     during context compaction. Defaults to built-in English values.
     ///   - structuredOutputInstructionFormat: System-prompt instruction injected for structured

@@ -95,6 +95,15 @@ struct AnthropicHTTPClient: AnthropicHTTPStreaming {
     }
 
     func maxInputTokens(for model: String) async throws -> Int? {
+        // Opt-in: probe LM Studio's native REST API first. It reports the *served* context window
+        // (the loaded instance's configured length), which is more appropriate than the theoretical
+        // maximum — and LM Studio's Anthropic-compatible surface omits the window on `/models/{id}`
+        // (or doesn't serve that route at all). Only when this yields nothing do we fall back to the
+        // standard endpoint. Never run against the Anthropic host.
+        if probesLMStudioMetadata, baseURL != AnthropicInferenceProvider.defaultBaseURL,
+           let resolved = await LMStudioModelMetadata.contextWindow(baseURL: baseURL, model: model) {
+            return resolved
+        }
         let endpoint = baseURL.appending(path: "models").appending(path: model)
         var urlRequest = URLRequest(url: endpoint)
         urlRequest.httpMethod = "GET"
@@ -105,16 +114,7 @@ struct AnthropicHTTPClient: AnthropicHTTPStreaming {
             let body = String(bytes: data, encoding: .utf8) ?? ""
             throw Self.error(statusCode: httpResponse.statusCode, body: body)
         }
-        if let resolved = try JSONDecoder().decode(AnthropicModelInfoResponse.self, from: data).maxInputTokens {
-            return resolved
-        }
-        // Opt-in fallback: the Anthropic-compatible `/models/{id}` route omits the context window
-        // on LM Studio (which serves the Messages API too). Its native REST API reports it. Probe
-        // that only when enabled, and never against the Anthropic host.
-        guard probesLMStudioMetadata, baseURL != AnthropicInferenceProvider.defaultBaseURL else {
-            return nil
-        }
-        return await LMStudioModelMetadata.contextWindow(baseURL: baseURL, model: model)
+        return try JSONDecoder().decode(AnthropicModelInfoResponse.self, from: data).maxInputTokens
     }
 
     // MARK: - Private

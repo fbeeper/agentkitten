@@ -70,11 +70,11 @@ public actor OpenAIInferenceProvider: InferenceProviding {
     ///   - model: The model identifier. Defaults to `"gpt-4o"`.
     ///   - baseURL: The API base URL. Defaults to `https://api.openai.com/v1`.
     ///     Override to point at LM Studio, Ollama, or other local servers.
-    ///   - probesLMStudioMetadata: When `true`, and the OpenAI-compatible `/models/{id}` does
-    ///     not report a context window, the provider additionally probes LM Studio's native
-    ///     metadata endpoint to discover it. Best-effort and never run against the OpenAI host.
-    ///     Defaults to `false`. Prefer ``OpenAIContextWindowKey`` to set a window explicitly for
-    ///     servers that report none.
+    ///   - probesLMStudioMetadata: When `true`, the provider first probes LM Studio's native
+    ///     metadata endpoint to discover the served context window, falling back to the
+    ///     OpenAI-compatible `/models/{id}` only when that yields nothing. Best-effort and never
+    ///     run against the OpenAI host. Defaults to `false`. Prefer ``OpenAIContextWindowKey`` to
+    ///     set a window explicitly for servers that report none.
     ///   - historyRenderingConfiguration: Labels and format strings used when rendering history
     ///     during context compaction. Defaults to built-in English values.
     ///   - structuredOutputInstructionFormat: System-prompt instruction injected for structured

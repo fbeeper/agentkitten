@@ -68,17 +68,17 @@ struct OpenAIHTTPClient: OpenAIHTTPStreaming {
     }
 
     func maxInputTokens(for model: String) async throws -> Int? {
-        let endpoint = baseURL.appending(path: "models").appending(path: model)
-        if let resolved = try await modelInfo(at: endpoint).resolvedMaxInputTokens {
+        // Opt-in: probe LM Studio's native REST API first. It reports the *served* context window
+        // (the loaded instance's configured length), which is more appropriate than the theoretical
+        // maximum some OpenAI-compatible `/v1/models/{id}` responses report — and many local servers
+        // omit the window there entirely (or don't serve the per-model route at all). Only when this
+        // yields nothing do we fall back to the standard endpoint. Never run against the OpenAI host.
+        if probesLMStudioMetadata, baseURL != OpenAIInferenceProvider.defaultBaseURL,
+           let resolved = await LMStudioModelMetadata.contextWindow(baseURL: baseURL, model: model) {
             return resolved
         }
-        // Opt-in fallback: the OpenAI-compatible `/v1/models/{id}` endpoint omits the context
-        // window on many local servers. LM Studio exposes it on its native REST API instead.
-        // Probe that only when the caller enabled it, and never against the OpenAI host.
-        guard probesLMStudioMetadata, baseURL != OpenAIInferenceProvider.defaultBaseURL else {
-            return nil
-        }
-        return await LMStudioModelMetadata.contextWindow(baseURL: baseURL, model: model)
+        let endpoint = baseURL.appending(path: "models").appending(path: model)
+        return try await modelInfo(at: endpoint).resolvedMaxInputTokens
     }
 
     /// Fetches and decodes model metadata from a `/models/{id}`-style endpoint.
