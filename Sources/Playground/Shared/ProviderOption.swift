@@ -60,6 +60,12 @@ struct ProviderEndpointOptions: ParsableArguments {
     )
     var skipCredentialFlag = false
 
+    @Flag(
+        name: .customLong("lmstudio"),
+        help: "Probe LM Studio's native metadata endpoint for the context window (OpenAI or Anthropic provider).",
+    )
+    var lmStudioFlag = false
+
     var baseURL: URL? {
         baseURLString.flatMap { URL(string: $0) }
     }
@@ -77,6 +83,7 @@ struct ProviderEndpointOptions: ParsableArguments {
             baseURL: baseURL,
             model: model,
             skipCredential: skipCredential,
+            lmStudio: lmStudioFlag,
         )
     }
 
@@ -86,6 +93,9 @@ struct ProviderEndpointOptions: ParsableArguments {
         }
         if skipCredential, baseURLString == nil {
             throw ValidationError("--skip-credential requires --base-url.")
+        }
+        if lmStudioFlag, baseURLString == nil {
+            throw ValidationError("--lmstudio requires --base-url.")
         }
     }
 }
@@ -98,9 +108,11 @@ struct ProviderEndpointConfiguration: Sendable {
     var model: String?
     /// Whether to omit provider authentication headers.
     var skipCredential: Bool
+    /// Whether to probe LM Studio's native metadata endpoint for the context window (OpenAI/Anthropic).
+    var lmStudio: Bool
 
     /// Default provider endpoint configuration.
-    static let `default` = Self(baseURL: nil, model: nil, skipCredential: false)
+    static let `default` = Self(baseURL: nil, model: nil, skipCredential: false, lmStudio: false)
 
     /// Resolves the configured model or a provider-specific default.
     func model(default defaultModel: String) -> String {

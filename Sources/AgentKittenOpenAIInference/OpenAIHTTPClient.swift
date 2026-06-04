@@ -3,6 +3,7 @@
 
 #if canImport(Darwin) || canImport(FoundationNetworking)
 import AgentKittenCore
+import AgentKittenInferenceSupport
 import Foundation
 #if canImport(FoundationNetworking)
 import FoundationNetworking
@@ -29,13 +30,19 @@ extension OpenAIHTTPStreaming {
 struct OpenAIHTTPClient: OpenAIHTTPStreaming {
     private let credentials: OpenAICredentials
     private let baseURL: URL
+    private let probesLMStudioMetadata: Bool
     private let urlSession: URLSession
 
     static let providerName = "OpenAI"
 
-    init(credentials: OpenAICredentials, baseURL: URL = URL(string: "https://api.openai.com/v1")!) {
+    init(
+        credentials: OpenAICredentials,
+        baseURL: URL = OpenAIInferenceProvider.defaultBaseURL,
+        probesLMStudioMetadata: Bool = false,
+    ) {
         self.credentials = credentials
         self.baseURL = baseURL
+        self.probesLMStudioMetadata = probesLMStudioMetadata
         urlSession = URLSession.shared
     }
 
@@ -61,6 +68,15 @@ struct OpenAIHTTPClient: OpenAIHTTPStreaming {
     }
 
     func maxInputTokens(for model: String) async throws -> Int? {
+        // Opt-in: probe LM Studio's native REST API first. It reports the *served* context window
+        // (the loaded instance's configured length), which is more appropriate than the theoretical
+        // maximum some OpenAI-compatible `/v1/models/{id}` responses report — and many local servers
+        // omit the window there entirely (or don't serve the per-model route at all). Only when this
+        // yields nothing do we fall back to the standard endpoint. Never run against the OpenAI host.
+        if probesLMStudioMetadata, baseURL != OpenAIInferenceProvider.defaultBaseURL,
+           let resolved = await LMStudioModelMetadata.contextWindow(baseURL: baseURL, model: model) {
+            return resolved
+        }
         let endpoint = baseURL.appending(path: "models").appending(path: model)
         return try await modelInfo(at: endpoint).resolvedMaxInputTokens
     }

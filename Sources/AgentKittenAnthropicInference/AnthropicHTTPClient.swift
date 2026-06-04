@@ -26,14 +26,20 @@ extension AnthropicHTTPStreaming {
 struct AnthropicHTTPClient: AnthropicHTTPStreaming {
     private let credentials: AnthropicCredentials
     private let baseURL: URL
+    private let probesLMStudioMetadata: Bool
     private let urlSession: URLSession
 
     private static let anthropicVersion = "2023-06-01"
     static let providerName = "Anthropic"
 
-    init(credentials: AnthropicCredentials, baseURL: URL = AnthropicInferenceProvider.defaultBaseURL) {
+    init(
+        credentials: AnthropicCredentials,
+        baseURL: URL = AnthropicInferenceProvider.defaultBaseURL,
+        probesLMStudioMetadata: Bool = false,
+    ) {
         self.credentials = credentials
         self.baseURL = baseURL
+        self.probesLMStudioMetadata = probesLMStudioMetadata
         urlSession = URLSession.shared
     }
 
@@ -89,6 +95,15 @@ struct AnthropicHTTPClient: AnthropicHTTPStreaming {
     }
 
     func maxInputTokens(for model: String) async throws -> Int? {
+        // Opt-in: probe LM Studio's native REST API first. It reports the *served* context window
+        // (the loaded instance's configured length), which is more appropriate than the theoretical
+        // maximum — and LM Studio's Anthropic-compatible surface omits the window on `/models/{id}`
+        // (or doesn't serve that route at all). Only when this yields nothing do we fall back to the
+        // standard endpoint. Never run against the Anthropic host.
+        if probesLMStudioMetadata, baseURL != AnthropicInferenceProvider.defaultBaseURL,
+           let resolved = await LMStudioModelMetadata.contextWindow(baseURL: baseURL, model: model) {
+            return resolved
+        }
         let endpoint = baseURL.appending(path: "models").appending(path: model)
         var urlRequest = URLRequest(url: endpoint)
         urlRequest.httpMethod = "GET"

@@ -12,6 +12,10 @@ import AgentKittenCore
 /// automatic compaction can never trigger. Set this key to supply the window explicitly; it
 /// takes precedence over endpoint discovery (and can override a window the endpoint reports).
 ///
+/// Note: When the provider is created with `probesLMStudioMetadata`, discovery first probes
+/// LM Studio's native metadata endpoint (which reports the served window), falling back to
+/// `/models/{id}` only when that yields nothing. LM Studio serves the Messages API too.
+///
 /// Set it on ``AgentBehavior`` (phase scope, all turns) or ``TurnOverrides`` (single turn),
 /// exactly like ``AnthropicModelKey``.
 ///
