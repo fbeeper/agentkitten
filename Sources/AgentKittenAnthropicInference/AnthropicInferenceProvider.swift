@@ -44,6 +44,7 @@ public actor AnthropicInferenceProvider: InferenceProviding {
     private let credentials: AnthropicCredentials
     private let model: String
     private let baseURL: URL
+    private let probesLMStudioMetadata: Bool
     private let historyRenderingConfiguration: HistoryRenderingConfiguration
     private let structuredOutputInstructionFormat: String
 
@@ -56,6 +57,11 @@ public actor AnthropicInferenceProvider: InferenceProviding {
     ///   - model: The Anthropic model identifier. Defaults to `"claude-sonnet-4-5"`.
     ///   - baseURL: The API base URL. Defaults to ``defaultBaseURL``.
     ///     Override to point at an Anthropic-compatible proxy or local server.
+    ///   - probesLMStudioMetadata: When `true`, and the Anthropic-compatible `/models/{id}` does
+    ///     not report a context window, the provider additionally probes LM Studio's native
+    ///     metadata endpoint to discover it. Best-effort and never run against the Anthropic host.
+    ///     Defaults to `false`. Prefer ``AnthropicContextWindowKey`` to set a window explicitly
+    ///     for servers that report none.
     ///   - historyRenderingConfiguration: Labels and format strings used when rendering history
     ///     during context compaction. Defaults to built-in English values.
     ///   - structuredOutputInstructionFormat: System-prompt instruction injected for structured
@@ -66,6 +72,7 @@ public actor AnthropicInferenceProvider: InferenceProviding {
         credentials: AnthropicCredentials = .key(EnvironmentAPIKeyProvider("ANTHROPIC_API_KEY")),
         model: String = "claude-sonnet-4-5",
         baseURL: URL = AnthropicInferenceProvider.defaultBaseURL,
+        probesLMStudioMetadata: Bool = false,
         historyRenderingConfiguration: HistoryRenderingConfiguration = HistoryRenderingConfiguration(),
         structuredOutputInstructionFormat: String = AnthropicInferenceProvider.defaultStructuredOutputInstructionFormat,
     ) {
@@ -76,6 +83,7 @@ public actor AnthropicInferenceProvider: InferenceProviding {
         self.credentials = credentials
         self.model = model
         self.baseURL = baseURL
+        self.probesLMStudioMetadata = probesLMStudioMetadata
         self.historyRenderingConfiguration = historyRenderingConfiguration
         self.structuredOutputInstructionFormat = structuredOutputInstructionFormat
     }
@@ -116,7 +124,11 @@ public actor AnthropicInferenceProvider: InferenceProviding {
         initialHistory: [AnthropicMessage] = [],
     ) -> AnthropicInferenceSession {
         AnthropicInferenceSession(
-            client: AnthropicHTTPClient(credentials: credentials, baseURL: baseURL),
+            client: AnthropicHTTPClient(
+                credentials: credentials,
+                baseURL: baseURL,
+                probesLMStudioMetadata: probesLMStudioMetadata,
+            ),
             defaultModel: model,
             systemPrompt: systemPrompt,
             toolRuntime: toolRuntime,

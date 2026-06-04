@@ -3,6 +3,7 @@
 
 #if canImport(Darwin) || canImport(FoundationNetworking)
 import AgentKittenCore
+import AgentKittenInferenceSupport
 import Foundation
 #if canImport(FoundationNetworking)
 import FoundationNetworking
@@ -29,13 +30,19 @@ extension OpenAIHTTPStreaming {
 struct OpenAIHTTPClient: OpenAIHTTPStreaming {
     private let credentials: OpenAICredentials
     private let baseURL: URL
+    private let probesLMStudioMetadata: Bool
     private let urlSession: URLSession
 
     static let providerName = "OpenAI"
 
-    init(credentials: OpenAICredentials, baseURL: URL = URL(string: "https://api.openai.com/v1")!) {
+    init(
+        credentials: OpenAICredentials,
+        baseURL: URL = OpenAIInferenceProvider.defaultBaseURL,
+        probesLMStudioMetadata: Bool = false,
+    ) {
         self.credentials = credentials
         self.baseURL = baseURL
+        self.probesLMStudioMetadata = probesLMStudioMetadata
         urlSession = URLSession.shared
     }
 
@@ -62,7 +69,16 @@ struct OpenAIHTTPClient: OpenAIHTTPStreaming {
 
     func maxInputTokens(for model: String) async throws -> Int? {
         let endpoint = baseURL.appending(path: "models").appending(path: model)
-        return try await modelInfo(at: endpoint).resolvedMaxInputTokens
+        if let resolved = try await modelInfo(at: endpoint).resolvedMaxInputTokens {
+            return resolved
+        }
+        // Opt-in fallback: the OpenAI-compatible `/v1/models/{id}` endpoint omits the context
+        // window on many local servers. LM Studio exposes it on its native REST API instead.
+        // Probe that only when the caller enabled it, and never against the OpenAI host.
+        guard probesLMStudioMetadata, baseURL != OpenAIInferenceProvider.defaultBaseURL else {
+            return nil
+        }
+        return await LMStudioModelMetadata.contextWindow(baseURL: baseURL, model: model)
     }
 
     /// Fetches and decodes model metadata from a `/models/{id}`-style endpoint.

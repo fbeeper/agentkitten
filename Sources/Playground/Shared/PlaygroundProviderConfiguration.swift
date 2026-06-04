@@ -129,14 +129,18 @@ enum PlaygroundProviderFactory {
                     credentials: .noCredential,
                     model: configuration.model(default: "claude-sonnet-4-5"),
                     baseURL: configuration.baseURL ?? AnthropicInferenceProvider.defaultBaseURL,
+                    probesLMStudioMetadata: configuration.lmStudio,
                 ),
             )
         }
         if let url = configuration.baseURL {
-            return InferenceProvider.anthropic(
-                credentials: EnvironmentAPIKeyProvider("ANTHROPIC_API_KEY"),
-                model: configuration.model(default: "claude-sonnet-4-5"),
-                baseURL: url,
+            return InferenceProvider(
+                AnthropicInferenceProvider(
+                    credentials: .key(EnvironmentAPIKeyProvider("ANTHROPIC_API_KEY")),
+                    model: configuration.model(default: "claude-sonnet-4-5"),
+                    baseURL: url,
+                    probesLMStudioMetadata: configuration.lmStudio,
+                ),
             )
         }
         return InferenceProvider.anthropic(model: configuration.model(default: "claude-sonnet-4-5"))
@@ -151,14 +155,18 @@ enum PlaygroundProviderFactory {
                     credentials: .noCredential,
                     model: configuration.model(default: "gpt-4o"),
                     baseURL: configuration.baseURL ?? OpenAIInferenceProvider.defaultBaseURL,
+                    probesLMStudioMetadata: configuration.lmStudio,
                 ),
             )
         }
         if let url = configuration.baseURL {
-            return InferenceProvider.openAI(
-                credentials: EnvironmentAPIKeyProvider("OPENAI_API_KEY"),
-                model: configuration.model(default: "gpt-4o"),
-                baseURL: url,
+            return InferenceProvider(
+                OpenAIInferenceProvider(
+                    credentials: .key(EnvironmentAPIKeyProvider("OPENAI_API_KEY")),
+                    model: configuration.model(default: "gpt-4o"),
+                    baseURL: url,
+                    probesLMStudioMetadata: configuration.lmStudio,
+                ),
             )
         }
         return InferenceProvider.openAI(model: configuration.model(default: "gpt-4o"))
@@ -179,6 +187,9 @@ enum PlaygroundProviderFactory {
         }
         if configuration.skipCredential {
             unsupported.append("--skip-credential")
+        }
+        if configuration.lmStudio {
+            unsupported.append("--lmstudio")
         }
         if !unsupported.isEmpty {
             throw PlaygroundError.unsupportedProviderEndpointOptions(

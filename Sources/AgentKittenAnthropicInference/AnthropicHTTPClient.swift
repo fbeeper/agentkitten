@@ -26,14 +26,20 @@ extension AnthropicHTTPStreaming {
 struct AnthropicHTTPClient: AnthropicHTTPStreaming {
     private let credentials: AnthropicCredentials
     private let baseURL: URL
+    private let probesLMStudioMetadata: Bool
     private let urlSession: URLSession
 
     private static let anthropicVersion = "2023-06-01"
     static let providerName = "Anthropic"
 
-    init(credentials: AnthropicCredentials, baseURL: URL = AnthropicInferenceProvider.defaultBaseURL) {
+    init(
+        credentials: AnthropicCredentials,
+        baseURL: URL = AnthropicInferenceProvider.defaultBaseURL,
+        probesLMStudioMetadata: Bool = false,
+    ) {
         self.credentials = credentials
         self.baseURL = baseURL
+        self.probesLMStudioMetadata = probesLMStudioMetadata
         urlSession = URLSession.shared
     }
 
@@ -99,7 +105,16 @@ struct AnthropicHTTPClient: AnthropicHTTPStreaming {
             let body = String(bytes: data, encoding: .utf8) ?? ""
             throw Self.error(statusCode: httpResponse.statusCode, body: body)
         }
-        return try JSONDecoder().decode(AnthropicModelInfoResponse.self, from: data).maxInputTokens
+        if let resolved = try JSONDecoder().decode(AnthropicModelInfoResponse.self, from: data).maxInputTokens {
+            return resolved
+        }
+        // Opt-in fallback: the Anthropic-compatible `/models/{id}` route omits the context window
+        // on LM Studio (which serves the Messages API too). Its native REST API reports it. Probe
+        // that only when enabled, and never against the Anthropic host.
+        guard probesLMStudioMetadata, baseURL != AnthropicInferenceProvider.defaultBaseURL else {
+            return nil
+        }
+        return await LMStudioModelMetadata.contextWindow(baseURL: baseURL, model: model)
     }
 
     // MARK: - Private

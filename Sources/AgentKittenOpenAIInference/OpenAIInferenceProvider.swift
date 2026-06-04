@@ -17,21 +17,27 @@ import Foundation
 /// This provider supports plain text chat, tool use, structured output, token
 /// counting, and context compaction.
 ///
-/// Use the ``InferenceProvider`` convenience factories instead of instantiating
-/// this type directly:
+/// Use the ``InferenceProvider`` convenience factories for hosted OpenAI:
 ///
 /// ```swift
 /// // OpenAI (environment variable)
 /// let provider = InferenceProvider.openAI(model: "gpt-4o")
 ///
-/// // LM Studio (local server, no key required)
-/// let provider = InferenceProvider.lmStudio(
-///     baseURL: URL(string: "http://localhost:1234/v1")!,
-///     model: "qwen2.5-coder-7b-instruct"
-/// )
-///
 /// // Custom credentials
 /// let provider = InferenceProvider.openAI(credentials: MyVaultProvider(), model: "gpt-4o")
+/// ```
+///
+/// For a local server (no key required), e.g. LM Studio, instantiate directly with
+/// `.noCredential` and, if you want context-window discovery from LM Studio's native
+/// metadata endpoint, ``probesLMStudioMetadata``:
+///
+/// ```swift
+/// let provider = OpenAIInferenceProvider(
+///     credentials: .noCredential,
+///     model: "qwen2.5-coder-7b-instruct",
+///     baseURL: URL(string: "http://localhost:1234/v1")!,
+///     probesLMStudioMetadata: true,
+/// )
 /// ```
 public actor OpenAIInferenceProvider: InferenceProviding {
     /// The default OpenAI Chat Completions API base URL.
@@ -52,6 +58,7 @@ public actor OpenAIInferenceProvider: InferenceProviding {
     private let credentials: OpenAICredentials
     private let model: String
     private let baseURL: URL
+    private let probesLMStudioMetadata: Bool
     private let historyRenderingConfiguration: HistoryRenderingConfiguration
     private let structuredOutputInstructionFormat: String
 
@@ -63,6 +70,11 @@ public actor OpenAIInferenceProvider: InferenceProviding {
     ///   - model: The model identifier. Defaults to `"gpt-4o"`.
     ///   - baseURL: The API base URL. Defaults to `https://api.openai.com/v1`.
     ///     Override to point at LM Studio, Ollama, or other local servers.
+    ///   - probesLMStudioMetadata: When `true`, and the OpenAI-compatible `/models/{id}` does
+    ///     not report a context window, the provider additionally probes LM Studio's native
+    ///     metadata endpoint to discover it. Best-effort and never run against the OpenAI host.
+    ///     Defaults to `false`. Prefer ``OpenAIContextWindowKey`` to set a window explicitly for
+    ///     servers that report none.
     ///   - historyRenderingConfiguration: Labels and format strings used when rendering history
     ///     during context compaction. Defaults to built-in English values.
     ///   - structuredOutputInstructionFormat: System-prompt instruction injected for structured
@@ -73,6 +85,7 @@ public actor OpenAIInferenceProvider: InferenceProviding {
         credentials: OpenAICredentials = .key(EnvironmentAPIKeyProvider("OPENAI_API_KEY")),
         model: String = "gpt-4o",
         baseURL: URL = OpenAIInferenceProvider.defaultBaseURL,
+        probesLMStudioMetadata: Bool = false,
         historyRenderingConfiguration: HistoryRenderingConfiguration = HistoryRenderingConfiguration(),
         structuredOutputInstructionFormat: String = OpenAIInferenceProvider.defaultStructuredOutputInstructionFormat,
     ) {
@@ -83,6 +96,7 @@ public actor OpenAIInferenceProvider: InferenceProviding {
         self.credentials = credentials
         self.model = model
         self.baseURL = baseURL
+        self.probesLMStudioMetadata = probesLMStudioMetadata
         self.historyRenderingConfiguration = historyRenderingConfiguration
         self.structuredOutputInstructionFormat = structuredOutputInstructionFormat
     }
@@ -117,7 +131,11 @@ public actor OpenAIInferenceProvider: InferenceProviding {
         initialHistory: [OpenAIMessage] = [],
     ) -> OpenAIInferenceSession {
         OpenAIInferenceSession(
-            client: OpenAIHTTPClient(credentials: credentials, baseURL: baseURL),
+            client: OpenAIHTTPClient(
+                credentials: credentials,
+                baseURL: baseURL,
+                probesLMStudioMetadata: probesLMStudioMetadata,
+            ),
             defaultModel: model,
             systemPrompt: systemPrompt,
             toolRuntime: toolRuntime,
