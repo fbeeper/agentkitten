@@ -10,7 +10,7 @@ import Foundation
 ///
 /// Manages wire-format conversation history (`[OpenAIMessage]`) and drives a
 /// manual agentic loop: when the model requests tool calls the session executes
-/// them through the ``ToolRuntime``, appends results, and re-posts the full
+/// them through the `ToolRuntime`, appends results, and re-posts the full
 /// history until the model reaches `stop` or `length`.
 ///
 /// Compatible with any OpenAI-spec endpoint including LM Studio.

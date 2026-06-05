@@ -5,13 +5,14 @@
     </picture>
 </p>
 
-![Info:](https://img.shields.io/badge/Info:-2A2A2A.svg?style=flat)
+![Info:](https://img.shields.io/badge/Info:-2A2A2A.svg?style=flat)<br/>
 [![AgentKitten on Swift Package Manager](https://img.shields.io/badge/SPM-Compatible-brightgreen.svg?style=flat)](https://swiftpackageindex.com/fbeeper/agentkitten)
 [![Swift 6.1+](https://img.shields.io/badge/Swift-6.1+-orange.svg?style=flat)](https://developer.apple.com/swift/)
 [![iOS, macOS, visionOS, tvOS, watchOS](https://img.shields.io/badge/Platforms-iOS%20%7C%20macOS%20%7C%20visionOS%20%7C%20tvOS%20%7C%20watchOS-blue.svg?style=flat)](https://developer.apple.com/)
 [![Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-333333.svg?style=flat)](LICENSE)
+[![Documentation](https://img.shields.io/badge/📖-Documentation-orange.svg?style=flat)](https://swiftpackageindex.com/fbeeper/agentkitten/main/documentation/agentkitten)
 
-![Status:](https://img.shields.io/badge/Status:-2A2A2A.svg?style=flat)
+![Status:](https://img.shields.io/badge/Status:-2A2A2A.svg?style=flat)<br/>
 [![Build Status](https://github.com/fbeeper/agentkitten/actions/workflows/swift.yml/badge.svg)](https://github.com/fbeeper/agentkitten/actions/workflows/swift.yml)
 [![Codecov Status](https://codecov.io/gh/fbeeper/agentkitten/branch/main/graph/badge.svg)](https://codecov.io/gh/fbeeper/agentkitten)
 [![SPI Versions Status](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2Ffbeeper%2Fagentkitten%2Fbadge%3Ftype%3Dswift-versions)](https://swiftpackageindex.com/fbeeper/agentkitten)
@@ -61,7 +62,7 @@ And, of course, given the stochastic nature of LLMs, AgentKitten has also consid
 
 `AgentSession`: Start a session from your Agent. Each session is independent. Same agent, different sessions. Have multi-turn conversations and run parallel threads without stepping on each other. Lightweight and concurrent-safe by default.
 
-`Trace`: Every session keeps a detailed record of what happened in each turn: tool calls, results, compaction events, and more. Your primary resource for debugging, testing, and evaluation.
+`AgentTrace`: Every session keeps a detailed record of what happened in each turn: tool calls, results, compaction events, and more. Your primary resource for debugging, testing, and evaluation.
 
 ## Customization Seams
 
@@ -87,7 +88,7 @@ import AgentKittenAnthropicInference
 
 let provider = InferenceProvider.anthropic()
 
-let toolConfig = ToolDefinition(tools: [
+let toolDefinition = ToolDefinition(tools: [
     AnyAgentTool(MySearchTool()),
 ])
 
@@ -99,9 +100,9 @@ let behavior = AgentBehavior(
 )
 
 let agent = Agent(
-    behavior: behavior,
     provider: provider,
-    toolDefinition: toolConfig,
+    behavior: behavior,
+    toolDefinition: toolDefinition,
 )
 
 let session = agent.makeSession()
@@ -122,7 +123,7 @@ for try await event in turn.events {
 Or structured output to power your app:
 
 ```swift
-let turn = try await session.generate<[PointOfInterest]>("Find me parks near downtown.")
+let turn: Turn<[PointOfInterest]> = try await session.generate("Find me parks near downtown.")
 
 for try await event in turn.events {
     if case .result(let pois) = event.kind {
@@ -186,7 +187,7 @@ macOS 15+, iOS 17+, tvOS 17+, watchOS 10+, visionOS 1+. Swift 6.
 Add to your `Package.swift`:
 
 ```swift
-.package(url: "https://github.com/fbeeper/agentkitten", from: "0.0.1")
+.package(url: "https://github.com/fbeeper/agentkitten", from: "0.0.5")
 ```
 
 Then add `"AgentKitten"` to your target's dependencies.

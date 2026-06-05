@@ -3,10 +3,10 @@
 
 /// Per-conversation model connection.
 ///
-/// Each ``Conversation`` holds one `InferenceSession` for its lifetime.
+/// Each conversation holds one `InferenceSession` for its lifetime.
 /// Tools, execution policy, and future approval handling are bound at session
 /// creation time via the ``ToolRuntime`` passed to
-/// ``InferenceProviding/makeSession(systemPrompt:toolRuntime:)``.
+/// ``InferenceProviding/makeSession(systemPrompt:toolRuntime:toolSelection:inferenceContext:)``.
 ///
 /// **Invariants conformers must satisfy:**
 /// - **Cancellation propagates:** dropping the returned stream must cancel the

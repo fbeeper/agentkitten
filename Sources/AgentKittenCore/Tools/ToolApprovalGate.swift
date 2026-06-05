@@ -5,7 +5,7 @@
 ///
 /// Callers create one gate, pass it into ``ToolRuntime``, observe
 /// ``InferenceEvent/toolApprovalRequired(call:)`` or
-/// ``AgentEvent.Kind/toolApprovalRequired(call:)``, and resolve the pending
+/// ``AgentEvent/Kind/toolApprovalRequired(call:)``, and resolve the pending
 /// call on this gate.
 public actor ToolApprovalGate {
     private struct PendingState {

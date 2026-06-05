@@ -40,12 +40,8 @@ public struct ToolRuntime: Sendable {
     ///
     /// - Parameters:
     ///   - toolDefinition: Declarative tool setup used to derive the registry, policy, and hooks.
-    ///   - rationaleSchemaDescription: Schema description for the injected rationale field.
-    ///     Defaults to AgentKitten's built-in description; pass a custom value when the agent's
-    ///     ``ToolBehavior/rationaleSchemaDescription`` is overridden.
+    ///   - toolBehavior: Tool execution behavior used to derive runtime controls.
     ///   - approvalGate: The gate that suspends tool calls requiring interactive approval.
-    ///   - disabledReason: Reason string returned when tools are disabled.
-    ///   - unavailableReasonFormat: Format string for the reason when a specific tool is unavailable.
     public init(
         toolDefinition: ToolDefinition,
         toolBehavior: ToolBehavior,
@@ -239,7 +235,7 @@ public actor ToolTurnRuntime {
 
     /// Records the outcome of the completed round, advancing the budget state machine.
     ///
-    /// Must be called after each request, once per ``hasToolBudget`` check that returned true.
+    /// Must be called after each request, once per successful ``prepareRound()`` call.
     /// When the round ran with an exhausted budget, this allows exactly one follow-up round
     /// so the model can acknowledge ``ToolCallFailure/stepLimitExceeded`` errors before stopping.
     public func recordRound() {

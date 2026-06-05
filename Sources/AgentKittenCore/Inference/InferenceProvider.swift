@@ -4,7 +4,7 @@
 /// Abstraction over LLM providers.
 ///
 /// Conforming types power the inference step of the agent loop. Implement
-/// ``makeSession(systemPrompt:toolRuntime:)`` to return a per-conversation
+/// ``makeSession(systemPrompt:toolRuntime:toolSelection:inferenceContext:)`` to return a per-conversation
 /// session that handles both individual turns and typed structured output.
 ///
 /// Tool execution dependencies are bundled in the ``ToolRuntime`` passed at
@@ -47,7 +47,7 @@ public protocol InferenceProviding: Sendable {
     ///     bind model identity at construction time (e.g. Apple) read their key here; providers
     ///     that apply model identity per-request (e.g. Anthropic) may ignore it.
     /// - Returns: A fresh provider session that will handle all turns
-    ///   within one ``Conversation``.
+    ///   within one conversation.
     func makeSession(
         systemPrompt: String?,
         toolRuntime: ToolRuntime,
@@ -123,7 +123,7 @@ public enum SessionCompatibility: Sendable {
     case reuse
     /// Keep the existing conversation but rebuild its provider session.
     ///
-    /// The conversation's identity (``Conversation/sessionId``) and prior history are
+    /// The conversation's identity and prior history are
     /// preserved. Only the inner provider session is replaced, rebinding to the new
     /// tool set. Use this when something in the configuration changes that the provider
     /// cannot adapt to mid-session (e.g. a tool-availability change on Apple's

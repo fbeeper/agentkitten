@@ -12,9 +12,9 @@ private let logger = Logger(subsystem: "AgentKittenCore", category: "AppleInfere
 
 /// A per-conversation model connection backed by Apple's on-device LanguageModelSession.
 ///
-/// One `AppleInferenceSession` is created per ``Conversation``. Apple's
+/// One `AppleInferenceSession` is created per conversation. Apple's
 /// `LanguageModelSession` maintains its own turn history internally, so no
-/// prompt reconstruction is needed across turns — each ``send(_:configuration:)``
+/// prompt reconstruction is needed across turns; each inference call
 /// call appends directly to the session.
 ///
 /// The session is an actor to satisfy `Sendable` and ensure thread-safe access
@@ -25,11 +25,11 @@ private let logger = Logger(subsystem: "AgentKittenCore", category: "AppleInfere
 /// so callers must stop iterating the returned stream to cancel the request.
 ///
 /// ## Tool calling
-/// Tools registered on ``ToolRuntime`` are bridged via ``AppleBridgedTool``
+/// Tools registered on `ToolRuntime` are bridged via `AppleBridgedTool`
 /// and forwarded to `LanguageModelSession` at init time. The framework manages the
-/// tool-call loop internally; ``AppleBridgedTool`` emits ``InferenceEvent/toolCallRequested``
-/// and ``InferenceEvent/toolCallCompleted(_:_:_:)`` in real time through a shared
-/// ``ToolEventRelay`` as each tool executes, so consumers observe progress immediately
+/// tool-call loop internally; `AppleBridgedTool` emits `InferenceEvent.toolCallRequested`
+/// and `InferenceEvent.toolCallCompleted` in real time through a shared
+/// `ToolEventRelay` as each tool executes, so consumers observe progress immediately
 /// rather than after the full turn completes.
 @available(macOS 26, iOS 26, visionOS 26, macCatalyst 26, *)
 public actor AppleInferenceSession: InferenceSession {

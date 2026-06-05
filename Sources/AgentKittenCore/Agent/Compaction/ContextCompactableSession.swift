@@ -1,19 +1,19 @@
 // SPDX-FileCopyrightText: 2026 AgentKitten Authors
 // SPDX-License-Identifier: Apache-2.0
 
-/// Framework-facing contract for sessions that supply ingredients to ``ContextCompactor``.
+/// Framework-facing contract for sessions that supply ingredients to the context compactor.
 ///
 /// Conforming types expose their conversation history and summarization capability
-/// so the framework can compact them. ``ContextCompactor`` calls ``compactionEntries()``
+/// so the framework can compact them. The compactor calls ``compactionEntries()``
 /// to read history, runs the compaction algorithm (splitting, summarization), and calls
 /// ``applyCompaction(summary:preservedRecentTurnCount:)`` to write the result back.
-/// Sessions never reference ``ContextCompactor`` directly.
+/// Sessions never reference the compactor directly.
 ///
 /// ## History stability guarantee
 ///
 /// The framework always calls ``compactionEntries()``,
 /// the summary generator closure, and ``applyCompaction(summary:preservedRecentTurnCount:)``
-/// within the ``Conversation`` operation gate. Because ``InferenceSession/run(_:parameters:)``
+/// within the conversation operation gate. Because ``InferenceSession/run(_:parameters:)``
 /// also acquires that gate, the two operations are mutually exclusive: history cannot
 /// change between `compactionEntries` and `applyCompaction`. Implementations do not need
 /// to snapshot history defensively.

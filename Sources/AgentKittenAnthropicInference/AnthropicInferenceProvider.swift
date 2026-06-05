@@ -6,13 +6,13 @@ import AgentKittenCore
 import AgentKittenInferenceSupport
 import Foundation
 
-/// An ``InferenceProviding`` conformer backed by Anthropic's Messages API.
+/// An `InferenceProviding` conformer backed by Anthropic's Messages API.
 ///
-/// Each ``Conversation`` gets its own ``AnthropicInferenceSession`` which
-/// fetches an API key from the supplied ``APIKeyProviding`` at the start of
+/// Each conversation gets its own ``AnthropicInferenceSession`` which
+/// fetches an API key from the supplied `APIKeyProviding` at the start of
 /// the first turn and caches it for the session's lifetime.
 ///
-/// Use the ``InferenceProvider`` convenience factories instead of instantiating
+/// Use the `InferenceProvider` convenience factories instead of instantiating
 /// this type directly:
 ///
 /// ```swift
@@ -106,7 +106,7 @@ public actor AnthropicInferenceProvider: InferenceProviding {
     /// Creates a new session for a single conversation thread.
     ///
     /// `toolSelection` is ignored here; Anthropic gates tools at the API-request level on
-    /// each turn via ``InferenceConfiguration/toolsEnabled``.
+    /// each turn via `InferenceConfiguration.toolsEnabled`.
     /// Model identity is also per-request: if ``AnthropicModelKey`` is set in
     /// `inferenceContext`, it overrides `model` on every turn for this session.
     public nonisolated func makeSession(
@@ -140,7 +140,7 @@ public actor AnthropicInferenceProvider: InferenceProviding {
 
     /// Creates a new session that continues from `session`, copying its stored history.
     ///
-    /// Tools are rebound to the new ``ToolRuntime``. Prior conversation history is
+    /// Tools are rebound to the new `ToolRuntime`. Prior conversation history is
     /// preserved so the model maintains context across the session rebuild.
     /// `toolSelection` is ignored; Anthropic gates tools per-request.
     public func makeSession(

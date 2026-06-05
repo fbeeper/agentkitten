@@ -7,7 +7,6 @@ builder:
       - AgentKittenInferenceSupport
       - AgentKittenAnthropicInference
       - AgentKittenAppleInference
-      - AgentKittenMacros
     custom_documentation_parameters:
       - --enable-experimental-combined-documentation
       - --enable-experimental-overloaded-symbol-presentation

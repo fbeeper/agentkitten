@@ -3,12 +3,36 @@
 # Adapted from:
 # https://github.com/elevenlabs/elevenlabs-swift-sdk/blob/main/Scripts/generate-version.sh
 #
-# Generates Sources/AgentKittenCore/AgentKittenCore.swift from the latest git tag.
+# Generates Sources/AgentKittenCore/AgentKittenCore.swift from the latest git tag, and rewrites the install-snippet
+# version in the README and DocC guides that need it to match. Run by the maintainer at release time, after tagging the
+# release.
 
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 VERSION_FILE="$ROOT_DIR/Sources/AgentKittenCore/AgentKittenCore.swift"
+
+# Markdown files that document the install snippet:
+#   .package(url: "https://github.com/fbeeper/agentkitten", from: "X.Y.Z")
+DOC_FILES=(
+    "$ROOT_DIR/README.md"
+    "$ROOT_DIR/Sources/AgentKitten/AgentKitten.docc/GettingStarted.md"
+)
+
+# Rewrites the agentkitten install-snippet version in a markdown file to $VERSION.
+# Anchors on the package URL so other semver-looking strings are left untouched.
+patch_doc_version() {
+    local file="$1"
+    if [ ! -f "$file" ]; then
+        echo "warning: $file not found; skipping" >&2
+        return
+    fi
+    local tmp
+    tmp="$(mktemp)"
+    sed -E "s#(github\.com/fbeeper/agentkitten\", from: \")[0-9]+\.[0-9]+\.[0-9]+#\1$VERSION#g" \
+        "$file" > "$tmp" && mv "$tmp" "$file"
+    echo "Patched install-snippet version in: ${file#"$ROOT_DIR"/}"
+}
 
 # Get the latest git tag, defaulting to "0.0.0" if no tags exist.
 VERSION="$(git -C "$ROOT_DIR" describe --tags --abbrev=0 2>/dev/null || echo "0.0.0")"
@@ -30,3 +54,7 @@ public enum AgentKittenCore {
 EOF
 
 echo "Generated AgentKittenCore.swift with version: $VERSION"
+
+for doc in "${DOC_FILES[@]}"; do
+    patch_doc_version "$doc"
+done

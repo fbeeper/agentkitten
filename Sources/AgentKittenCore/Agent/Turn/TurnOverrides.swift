@@ -24,8 +24,8 @@ public struct TurnOverrides: Sendable {
     ///
     /// Unlike ``toolSelection``, ``toolStepBudget``, ``inferenceConfiguration``,
     /// and ``provider``, `turnNote` is intentionally not propagated into
-    /// ``ExecutionEnvironment`` or ``EffectiveExecutionConfiguration``.
-    /// ``ConversationProvider`` uses ``EffectiveExecutionConfiguration`` equality
+    /// `ExecutionEnvironment` or ``EffectiveExecutionConfiguration``.
+    /// `ConversationProvider` uses ``EffectiveExecutionConfiguration`` equality
     /// to decide whether to reuse, rebuild, or replace a provider session. Keeping
     /// `turnNote` out of that type ensures different notes on consecutive turns
     /// never trigger an unintended session rebuild.

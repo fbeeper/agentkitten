@@ -5,14 +5,14 @@
 public protocol ToolApproving: Sendable {
     /// Approves a pending tool call.
     ///
-    /// Call this after receiving ``AgentEvent.Kind/toolApprovalRequired(_:)``.
+    /// Call this after receiving a `.toolApprovalRequired` event.
     ///
     /// - Parameter callID: The pending tool call identifier to approve.
     func approve(callID: ToolCallID) async throws
 
     /// Denies a pending tool call.
     ///
-    /// Call this after receiving ``AgentEvent.Kind/toolApprovalRequired(_:)``.
+    /// Call this after receiving a `.toolApprovalRequired` event.
     ///
     /// - Parameters:
     ///   - callID: The pending tool call identifier to deny.

@@ -22,7 +22,7 @@ extension InferenceProvider where Provider == AnthropicInferenceProvider {
 
     /// Anthropic provider with an explicit credential source.
     ///
-    /// Pass any ``APIKeyProviding`` conformer — an environment variable reader,
+    /// Pass any `APIKeyProviding` conformer — an environment variable reader,
     /// Keychain provider, network vault, or test stub.
     ///
     /// - Parameters:

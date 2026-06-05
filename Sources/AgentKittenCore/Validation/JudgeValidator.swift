@@ -68,7 +68,7 @@ public struct JudgeValidator<Result: Codable & Sendable>: Validator {
     ///   - providerRegistry: Providers available to the inner judge agent.
     ///   - inferenceConfiguration: Inference settings for the judge.
     ///   - toolBehavior: Tool execution behavior for the judge, including step budget.
-    ///     Defaults to ``ToolBehavior/init()``.
+    ///     Defaults to `ToolBehavior()`.
     ///   - toolDefinition: Optional tools exposed to the judge. Defaults to no tools.
     ///   - sessionStateAccess: Whether the judge may inspect session state. Defaults to read-only tools.
     ///   - name: Validator name recorded in trace validation entries.
@@ -123,7 +123,7 @@ public struct JudgeValidator<Result: Codable & Sendable>: Validator {
     ///   - provider: The inference provider to use for the inner judge agent.
     ///   - inferenceConfiguration: Inference settings for the judge.
     ///   - toolBehavior: Tool execution behavior for the judge, including step budget.
-    ///     Defaults to ``ToolBehavior/init()``.
+    ///     Defaults to `ToolBehavior()`.
     ///   - toolDefinition: Optional tools exposed to the judge. Defaults to no tools.
     ///   - sessionStateAccess: Whether the judge may inspect session state. Defaults to read-only tools.
     ///   - name: Validator name recorded in trace validation entries.

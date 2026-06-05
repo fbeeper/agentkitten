@@ -42,6 +42,7 @@ public actor MockInferenceSession: InferenceSession {
     /// - Parameters:
     ///   - responses: Canned streaming responses for regular session turns.
     ///   - structuredResponses: Pre-encoded JSON strings returned by structured generation.
+    ///   - structuredMockResponses: Scripted structured-generation responses.
     public init(
         responses: [MockResponse],
         structuredResponses: [String] = [],

@@ -24,7 +24,7 @@ extension AgentSession {
     /// let turn = try await session.send("Summarize: \(paragraph)")
     /// ```
     ///
-    /// - Parameter state: Whether to clear session state. Defaults to `.clear`.
+    /// - Parameter statePolicy: Whether to clear session state. Defaults to `.clear`.
     public func clearContext(state statePolicy: StateClearPolicy = .clear) async throws {
         let lease = try operationGate.begin(InferenceSessionOperationKind.clearContext)
         defer {

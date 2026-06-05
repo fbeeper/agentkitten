@@ -8,7 +8,7 @@ import AgentKittenCore
 ///
 /// By default the size is resolved from the Anthropic Models API, where `GET /models/{id}`
 /// reports `max_input_tokens`. Compatible proxies or local servers may not expose that endpoint
-/// or field, so ``ContextUsage/contextSize`` resolves to `.unknown` and percentage-based
+/// or field, so `ContextUsage.contextSize` resolves to `.unknown` and percentage-based
 /// automatic compaction can never trigger. Set this key to supply the window explicitly; it
 /// takes precedence over endpoint discovery (and can override a window the endpoint reports).
 ///
@@ -16,7 +16,7 @@ import AgentKittenCore
 /// LM Studio's native metadata endpoint (which reports the served window), falling back to
 /// `/models/{id}` only when that yields nothing. LM Studio serves the Messages API too.
 ///
-/// Set it on ``AgentBehavior`` (phase scope, all turns) or ``TurnOverrides`` (single turn),
+/// Set it on `AgentBehavior` (phase scope, all turns) or `TurnOverrides` (single turn),
 /// exactly like ``AnthropicModelKey``.
 ///
 /// Example:

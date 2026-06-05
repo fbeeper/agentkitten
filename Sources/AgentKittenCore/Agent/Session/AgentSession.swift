@@ -124,7 +124,7 @@ public actor AgentSession: ToolApproving {
 
     /// Approves a pending tool call for this session.
     ///
-    /// Call this after receiving ``AgentEvent.Kind/toolApprovalRequired(_:)``.
+    /// Call this after receiving a `.toolApprovalRequired` event.
     ///
     /// - Parameter callID: The pending tool call identifier to approve.
     public func approve(callID: ToolCallID) async throws {
@@ -133,7 +133,7 @@ public actor AgentSession: ToolApproving {
 
     /// Denies a pending tool call for this session.
     ///
-    /// Call this after receiving ``AgentEvent.Kind/toolApprovalRequired(_:)``.
+    /// Call this after receiving a `.toolApprovalRequired` event.
     ///
     /// - Parameters:
     ///   - callID: The pending tool call identifier to deny.

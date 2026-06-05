@@ -6,18 +6,18 @@ import AgentKittenCore
 import AgentKittenInferenceSupport
 import Foundation
 
-/// An ``InferenceProviding`` conformer backed by the OpenAI Chat Completions API.
+/// An `InferenceProviding` conformer backed by the OpenAI Chat Completions API.
 ///
 /// Also compatible with any OpenAI-spec endpoint such as LM Studio, or other remote or
 /// locally-hosted model servers. Configure `baseURL` to point at the running server.
 ///
-/// Each ``Conversation`` gets its own ``OpenAIInferenceSession`` which fetches an API
-/// key from the supplied ``APIKeyProviding`` at the start of each turn.
+/// Each conversation gets its own ``OpenAIInferenceSession`` which fetches an API
+/// key from the supplied `APIKeyProviding` at the start of each turn.
 ///
 /// This provider supports plain text chat, tool use, structured output, token
 /// counting, and context compaction.
 ///
-/// Use the ``InferenceProvider`` convenience factories for hosted OpenAI:
+/// Use the `InferenceProvider` convenience factories for hosted OpenAI:
 ///
 /// ```swift
 /// // OpenAI (environment variable)
@@ -29,7 +29,7 @@ import Foundation
 ///
 /// For a local server (no key required), e.g. LM Studio, instantiate directly with
 /// `.noCredential` and, if you want context-window discovery from LM Studio's native
-/// metadata endpoint, ``probesLMStudioMetadata``:
+/// metadata endpoint, `probesLMStudioMetadata`:
 ///
 /// ```swift
 /// let provider = OpenAIInferenceProvider(
