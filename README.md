@@ -61,7 +61,7 @@ And, of course, given the stochastic nature of LLMs, AgentKitten has also consid
 
 `AgentSession`: Start a session from your Agent. Each session is independent. Same agent, different sessions. Have multi-turn conversations and run parallel threads without stepping on each other. Lightweight and concurrent-safe by default.
 
-`Trace`: Every session keeps a detailed record of what happened in each turn: tool calls, results, compaction events, and more. Your primary resource for debugging, testing, and evaluation.
+`AgentTrace`: Every session keeps a detailed record of what happened in each turn: tool calls, results, compaction events, and more. Your primary resource for debugging, testing, and evaluation.
 
 ## Customization Seams
 
@@ -87,7 +87,7 @@ import AgentKittenAnthropicInference
 
 let provider = InferenceProvider.anthropic()
 
-let toolConfig = ToolDefinition(tools: [
+let toolDefinition = ToolDefinition(tools: [
     AnyAgentTool(MySearchTool()),
 ])
 
@@ -99,9 +99,9 @@ let behavior = AgentBehavior(
 )
 
 let agent = Agent(
-    behavior: behavior,
     provider: provider,
-    toolDefinition: toolConfig,
+    behavior: behavior,
+    toolDefinition: toolDefinition,
 )
 
 let session = agent.makeSession()
@@ -122,7 +122,7 @@ for try await event in turn.events {
 Or structured output to power your app:
 
 ```swift
-let turn = try await session.generate<[PointOfInterest]>("Find me parks near downtown.")
+let turn: Turn<[PointOfInterest]> = try await session.generate("Find me parks near downtown.")
 
 for try await event in turn.events {
     if case .result(let pois) = event.kind {
@@ -186,7 +186,7 @@ macOS 15+, iOS 17+, tvOS 17+, watchOS 10+, visionOS 1+. Swift 6.
 Add to your `Package.swift`:
 
 ```swift
-.package(url: "https://github.com/fbeeper/agentkitten", from: "0.0.1")
+.package(url: "https://github.com/fbeeper/agentkitten", from: "0.0.5")
 ```
 
 Then add `"AgentKitten"` to your target's dependencies.
