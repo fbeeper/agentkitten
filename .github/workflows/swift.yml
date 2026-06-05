@@ -35,6 +35,24 @@ jobs:
     - name: Test
       run: make test
 
+  docc:
+    name: Documentation (macOS, Xcode ${{ matrix.xcode }}, Swift 6.3)
+    runs-on: macos-26
+    strategy:
+      fail-fast: false
+      matrix:
+        xcode: ["26.4.1"]
+    steps:
+    - uses: actions/checkout@v6
+    - name: Select Xcode
+      run: sudo xcode-select -s /Applications/Xcode_${{ matrix.xcode }}.app
+    - name: Show versions
+      run: |
+        xcodebuild -version
+        swift --version
+    - name: Build documentation
+      run: make docc-build
+
   test-macos-swift6_2:
     name: Build & Test (macOS, Xcode ${{ matrix.xcode }}, Swift 6.2)
     runs-on: macos-26
