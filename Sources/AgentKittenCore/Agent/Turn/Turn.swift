@@ -3,7 +3,7 @@
 
 /// A handle for a single queued inference turn.
 ///
-/// ``AgentSession/send(_:)`` returns a `Turn<AssistantMessage>` immediately.
+/// ``AgentSession/send(_:userID:validation:)`` returns a `Turn<AssistantMessage>` immediately.
 /// Iterate ``events`` to receive ``AgentEvent`` values as they are produced.
 /// Call ``cancel()`` to stop generation early.
 ///

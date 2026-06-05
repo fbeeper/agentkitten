@@ -26,6 +26,7 @@ public actor MockInferenceProvider: InferenceProviding {
     ///   - structuredResponses: Pre-encoded JSON strings for structured sessions.
     ///     Defaults to empty, which causes ``MockInferenceSession`` to throw
     ///     ``StructuredGenerationError/generationFailed(_:)`` on every call.
+    ///   - structuredMockResponses: Scripted structured-generation responses.
     public init(
         responses: [String] = ["This is a mock response."],
         structuredResponses: [String] = [],
@@ -46,6 +47,7 @@ public actor MockInferenceProvider: InferenceProviding {
     /// - Parameters:
     ///   - mockResponses: The canned responses to return in order.
     ///   - structuredResponses: Pre-encoded JSON strings for structured sessions.
+    ///   - structuredMockResponses: Scripted structured-generation responses.
     public init(
         mockResponses: [MockResponse],
         structuredResponses: [String] = [],

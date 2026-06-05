@@ -3,7 +3,7 @@
 
 /// Declares a type's JSON schema for structured output.
 ///
-/// Conform types that are used as the output of ``StructuredInferenceSession/generate(prompt:configuration:)``
+/// Conform types that are used as the output of ``StructuredInferenceSession/generate(prompt:parameters:)``
 /// to this protocol. The static ``jsonSchema`` property tells the provider how to constrain
 /// the model's response format so it can be decoded into `Self`.
 ///

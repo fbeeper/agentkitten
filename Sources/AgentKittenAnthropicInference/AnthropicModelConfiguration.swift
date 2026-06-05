@@ -13,8 +13,8 @@ struct PendingSSEToolCall {
 
 /// Overrides the Anthropic model identifier on a per-turn basis.
 ///
-/// Set this key on ``AgentBehavior`` to change the default model for all turns,
-/// or on ``TurnOverrides`` to override for a single turn. When absent, the
+/// Set this key on `AgentBehavior` to change the default model for all turns,
+/// or on `TurnOverrides` to override for a single turn. When absent, the
 /// model configured on ``AnthropicInferenceProvider`` is used.
 ///
 /// Example:

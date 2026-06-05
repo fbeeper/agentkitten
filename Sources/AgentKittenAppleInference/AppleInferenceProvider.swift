@@ -9,10 +9,10 @@ import FoundationModels
 /// Selects the Apple on-device language model for agent sessions.
 ///
 /// `SystemLanguageModel.UseCase` is `Equatable` but not `Hashable`, so AgentKitten
-/// defines this thin wrapper that satisfies the ``ExecutionConfigurationKey``
+/// defines this thin wrapper that satisfies the `ExecutionConfigurationKey`
 /// `Value: Hashable` requirement and maps to the framework type at call sites.
 ///
-/// Set this key on ``AgentBehavior`` or ``TurnOverrides`` to override the
+/// Set this key on `AgentBehavior` or `TurnOverrides` to override the
 /// default model for a session:
 ///
 /// ```swift
@@ -41,7 +41,7 @@ extension AppleLanguageModel {
 
 /// Overrides the Apple language model for a session.
 ///
-/// Changing this value between turns triggers ``SessionCompatibility/rebuildSession``
+/// Changing this value between turns triggers `SessionCompatibility.rebuildSession`
 /// so the new model takes effect while preserving conversation history.
 @available(macOS 26, iOS 26, visionOS 26, macCatalyst 26, *)
 public struct AppleLanguageModelKey: ExecutionConfigurationKey {
@@ -53,7 +53,7 @@ public struct AppleLanguageModelKey: ExecutionConfigurationKey {
 ///
 /// Requires Foundation Models support on macOS 26+, iOS 26+, visionOS 26+, or
 /// macCatalyst 26+. All inference runs locally — no data leaves the device.
-/// Each ``Conversation`` gets one ``AppleInferenceSession`` which holds a
+/// Each conversation gets one ``AppleInferenceSession`` which holds a
 /// `LanguageModelSession` for its lifetime, preserving turn history automatically.
 @available(macOS 26, iOS 26, visionOS 26, macCatalyst 26, *)
 public actor AppleInferenceProvider: InferenceProviding {
@@ -87,7 +87,7 @@ public actor AppleInferenceProvider: InferenceProviding {
         }
     }
 
-    /// Returns ``SessionCompatibility/rebuildSession`` when `toolSelection` or the language
+    /// Returns `SessionCompatibility.rebuildSession` when `toolSelection` or the language
     /// model changes.
     ///
     /// Apple applies tool availability and model selection at session construction time, so
@@ -132,7 +132,7 @@ public actor AppleInferenceProvider: InferenceProviding {
     /// Creates a new Apple session that continues from `session`'s transcript.
     ///
     /// The prior session's turn history is preserved via `LanguageModelSession.transcript`.
-    /// Tools are rebound to the new ``ToolRuntime`` and gated by `toolSelection`. The system
+    /// Tools are rebound to the new `ToolRuntime` and gated by `toolSelection`. The system
     /// prompt is carried forward within the transcript itself; Foundation Models does not
     /// accept a separate `instructions:` argument on transcript-based session construction.
     public func makeSession(

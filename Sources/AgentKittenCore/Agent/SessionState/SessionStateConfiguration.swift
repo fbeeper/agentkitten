@@ -31,6 +31,14 @@ public struct SessionStateConfiguration: Sendable, Equatable {
     /// - Parameter promptGuidance: Prompt guidance to append. Defaults to
     ///   ``defaultPromptGuidance``. Pass an empty string to suppress the
     ///   additional guidance entirely.
+    /// - Parameter getStateDescription: Description for the get-state tool.
+    /// - Parameter getStateKeyDescription: Description for the get-state tool's key parameter.
+    /// - Parameter listStateKeysDescription: Description for the list-state-keys tool.
+    /// - Parameter setStateDescription: Description for the set-state tool.
+    /// - Parameter setStateKeyDescription: Description for the set-state tool's key parameter.
+    /// - Parameter setStateValueDescription: Description for the set-state tool's value parameter.
+    /// - Parameter removeStateDescription: Description for the remove-state tool.
+    /// - Parameter removeStateKeyDescription: Description for the remove-state tool's key parameter.
     public init(
         promptGuidance: String = Self.defaultPromptGuidance,
         getStateDescription: String = Self.defaultGetStateDescription,

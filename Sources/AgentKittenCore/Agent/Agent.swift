@@ -30,7 +30,7 @@ public struct Agent: Sendable {
     ///   - toolDefinition: The tools the agent may invoke and the policy governing their execution.
     ///     Defaults to ``ToolDefinition/noTools``.
     ///   - toolBehavior: Default tool execution behavior: step budget, selection, and prompt guidance.
-    ///     Defaults to ``ToolBehavior/init()``.
+    ///     Defaults to `ToolBehavior()`.
     ///   - owner: The default user for sessions created from this agent. Defaults to ``UserID/local``.
     ///   - sessionState: Whether built-in session-state tools should be exposed.
     ///   - traceRetentionPolicy: In-memory retention policy applied to new session traces.
@@ -85,7 +85,7 @@ public struct Agent: Sendable {
     ///   - toolDefinition: The tools the agent may invoke and the policy governing their execution.
     ///     Defaults to ``ToolDefinition/noTools``.
     ///   - toolBehavior: Default tool execution behavior: step budget, selection, and prompt guidance.
-    ///     Defaults to ``ToolBehavior/init()``.
+    ///     Defaults to `ToolBehavior()`.
     ///   - owner: The default user for sessions created from this agent. Defaults to ``UserID/local``.
     ///   - sessionState: Whether built-in session-state tools should be exposed.
     ///   - traceRetentionPolicy: In-memory retention policy applied to new session traces.

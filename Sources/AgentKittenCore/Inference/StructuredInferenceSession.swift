@@ -7,8 +7,9 @@
 /// Providers may expose it on dedicated single-purpose sessions or on their regular
 /// conversation session actors.
 ///
-/// Create one via ``InferenceProviding/makeSession(systemPrompt:toolRuntime:)`` and call the
-/// structured methods when typed output is needed.
+/// Create one via
+/// ``InferenceProviding/makeSession(systemPrompt:toolRuntime:toolSelection:inferenceContext:)``
+/// and call the structured methods when typed output is needed.
 ///
 /// We cannot express a single associated stream type here because the output event
 /// payload is itself generic over `T`.
@@ -16,7 +17,7 @@ public typealias StructuredInferenceStream<T: Sendable> =
     AsyncThrowingStream<InferenceEvent<T>, Error>
 
 public protocol StructuredInferenceSession: Actor {
-    /// Starts a structured generation event stream for the given message.
+    /// Starts a structured generation event stream for the given prompt.
     ///
     /// Iterate the returned stream to observe streaming text deltas, tool-call
     /// events, and the final structured result.
@@ -26,7 +27,7 @@ public protocol StructuredInferenceSession: Actor {
     /// mechanism as unstructured turns.
     ///
     /// - Parameters:
-    ///   - message: The user message for this turn.
+    ///   - prompt: The user prompt for this turn.
     ///   - parameters: Generation settings and tool selection for this turn.
     /// - Returns: A stream of structured inference events ending with `.result`.
     /// - Throws: Underlying provider/session errors for operation failures, or
@@ -37,13 +38,13 @@ public protocol StructuredInferenceSession: Actor {
     ) async throws
         -> StructuredInferenceStream<T>
 
-    /// Generates a single typed value for the given message.
+    /// Generates a single typed value for the given prompt.
     ///
     /// The provider constrains the model's response format using `T`'s
     /// ``JSONSchemaProviding/jsonSchema`` and decodes the response into `T`.
     ///
     /// - Parameters:
-    ///   - message: The user message for this turn.
+    ///   - prompt: The user prompt for this turn.
     ///   - parameters: Generation settings and tool selection for this turn.
     /// - Returns: The decoded typed value.
     /// - Throws: Underlying provider/session errors for operation failures, or

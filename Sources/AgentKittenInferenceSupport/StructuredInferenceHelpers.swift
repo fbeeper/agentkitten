@@ -5,7 +5,7 @@
 import AgentKittenCore
 import Foundation
 
-/// Decodes a JSON string into a strongly-typed value, wrapping failures as ``StructuredGenerationError``.
+/// Decodes a JSON string into a strongly-typed value, wrapping failures as `StructuredGenerationError`.
 public func decodeStructuredValue<T: Decodable>(
     _ type: T.Type,
     from json: String,
@@ -17,7 +17,7 @@ public func decodeStructuredValue<T: Decodable>(
     }
 }
 
-/// Encodes a ``JSONSchema`` to a compact JSON string suitable for embedding in a system prompt.
+/// Encodes a `JSONSchema` to a compact JSON string suitable for embedding in a system prompt.
 public func encodeStructuredSchema(_ schema: JSONSchema) -> String {
     let value = InferenceProviderJSONValue.encoding(schema)
     guard let data = try? JSONEncoder().encode(value),

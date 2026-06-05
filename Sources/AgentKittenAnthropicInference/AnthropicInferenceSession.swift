@@ -13,7 +13,7 @@ import Foundation
 /// them, appends results, and re-posts the full history until the model reaches
 /// `end_turn` or `max_tokens`.
 ///
-/// The API key is fetched from ``APIKeyProviding`` at the start of each operation.
+/// The API key is fetched from `APIKeyProviding` at the start of each operation.
 ///
 /// In-flight request cancellation is owned by stream termination, not by
 /// session deinitialization. The worker task retains the session while active,

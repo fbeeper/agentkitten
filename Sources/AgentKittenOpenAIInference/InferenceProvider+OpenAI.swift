@@ -23,7 +23,7 @@ extension InferenceProvider where Provider == OpenAIInferenceProvider {
 
     /// OpenAI provider with an explicit credential source.
     ///
-    /// Pass any ``APIKeyProviding`` conformer. An environment variable reader,
+    /// Pass any `APIKeyProviding` conformer. An environment variable reader,
     /// Keychain provider, network vault, or test stub.
     ///
     /// - Parameters:

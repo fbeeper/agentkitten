@@ -13,8 +13,8 @@ public enum MockResponse: Sendable {
     /// then runs the registered tool through ``ToolExecutor`` (enforcing policy before
     /// execution). On success it emits ``InferenceEvent/toolCallCompleted(id:name:outcome:)``
     /// with the real tool result content; on denial or failure it emits
-    /// ``InferenceEvent/toolCallFailed(id:name:error:)``. Either way, `thenRespond` is
-    /// streamed word-by-word as the scripted model continuation.
+    /// ``InferenceEvent/toolCallCompleted(id:name:outcome:)`` with a failure outcome.
+    /// Either way, `thenRespond` is streamed word-by-word as the scripted model continuation.
     ///
     /// Register matching tools on ``Agent`` so the executor can find and run them.
     ///
