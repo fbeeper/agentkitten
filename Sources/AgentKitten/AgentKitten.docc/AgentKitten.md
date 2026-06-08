@@ -4,7 +4,21 @@ Swift package for building provider-agnostic AI agents.
 
 ## Overview
 
-AgentKitten gives you standard building blocks for easily creating agents without you having to reinvent the wheel. 
+**[AgentKitten](agentkitten) is the public umbrella for clients to import.** 
+
+Optional targets:
+- Providers: [AgentKittenAppleInference](../documentation/agentkittenappleinference), 
+  [AgentKittenAnthropicInference](../documentation/agentkittenanthropicinference), 
+  [AgentKittenOpenAIInference](../documentation/agentkittenopenaiinference)
+- Support: [AgentKittenInferenceSupport](../documentation/agentkitteninferencesupport),
+  [AgentKittenInferenceTestSupport](../documentation/agentkitteninferencetestsupport)
+
+> AgentKitten re-exports [AgentKittenCore](../documentation/agentkittencore). This will remain an implementation 
+> detail clients shouldn't care for.
+
+## Purpose
+
+AgentKitten gives you building blocks for easily creating agents without you having to reinvent the wheel. 
 And, even better, allows you to implement agents independently of the concrete inference provider you choose.
 
 With straightforward support for:
@@ -18,36 +32,41 @@ With straightforward support for:
 
 ## Basic Building Blocks
 
-- ``/AgentKittenCore/InferenceProvider``: Where the agent model lives. Could be the Claude API, local Apple Intelligence 
-  via Foundation Models, or your own inference model. Whether stateless or stateful, on-device or remote. You leave all 
-  provider specificities behind. Pick one, swap it out at no cost to your agent implementation.
-- ``/AgentKittenCore/Agent``: Your base control. Configure it with tools, set up its base behavior, and the providers it 
-  may use. The agent keeps this configuration. That's all.
-- ``/AgentKittenCore/AgentSession``: Start a session from your Agent. Each session is independent. Same agent, different 
-  sessions. Have multi-turn conversations and run parallel threads without stepping on each other. Lightweight and 
-  concurrent-safe by default.
-- ``/AgentKittenCore/AgentTrace``: Every session keeps a detailed record of what happened in each turn: tool calls, 
-  results, compaction events, and more. Your primary resource for debugging, testing, and evaluation.
+- [InferenceProvider](../documentation/agentkittencore/inferenceprovider): Where the agent model lives. Could be the 
+  Claude API, local Apple Intelligence via Foundation Models, or your own inference model. Whether stateless or 
+  stateful, on-device or remote. You leave all provider specificities behind. Pick one, swap it out at no cost to your 
+  agent implementation.
+- [Agent](../documentation/agentkittencore/agent): Your base control. Configure it with tools, set up its base 
+  behavior, and the providers it may use. The agent keeps this configuration. That's all.
+- [AgentSession](../documentation/agentkittencore/agentsession): Start a session from your Agent. Each session is 
+  independent. Same agent, different sessions. Have multi-turn conversations and run parallel threads without stepping 
+  on each other. Lightweight and concurrent-safe by default.
+- [AgentTrace](../documentation/agentkittencore/agenttrace): Every session keeps a detailed record of what happened in 
+  each turn: tool calls, results, compaction events, and more. Your primary resource for debugging, testing, and 
+  evaluation.
 
 ## Customization Seams
 
-- ``/AgentKittenCore/AgentTool``: Define what your agent can act on. Each tool is a typed, schema-described function the 
-  model can invoke (API calls, file access, app integrations, you name it...). And use the 
-  [`@Tool`](<doc:/AgentKittenCore/Tool(_:description:)>) macro to just wire up a Swift function with minimal boilerplate.
-- ``/AgentKittenCore/ToolDefinition``: Bundle the tools the agent may invoke together with the policy and hooks that 
-  govern them:
-  - ``/AgentKittenCore/ToolExecutionPolicy``: Approve, deny, or suspend any tool call before it runs, based on runtime 
-    context you choose.
-  - ``/AgentKittenCore/ToolHook``: Transform tool inputs before execution, and reshape or sanitize results before they 
-    reach the model. Hooks run in declaration order.
-- ``/AgentKittenCore/AgentBehavior`` and ``/AgentKittenCore/ToolBehavior``: Set the defaults your agent starts with, 
-  including the system  prompt, inference settings, and compaction policy for the agent; tool availability, step budget, 
-  and model guidance for the tools.
-- ``/AgentKittenCore/TurnOverrides``: Override any of the behavior defaults on a per-turn basis. Swap providers, adjust 
-  inference settings, restrict tool selection, or prepend context. Also the place to thread custom typed values (via 
-  ``/AgentKittenCore/ExecutionConfigurationKey`` subscript) through tool approval, hooks, and inference without coupling 
-  them to your agent setup.
-- ``/AgentKittenCore/Validator`` / ``/AgentKittenCore/JudgeValidator``: Define acceptance criteria for the assistant's 
+- [AgentTool](../documentation/agentkittencore/agenttool): Define what your agent can act on. Each tool is a typed, 
+  schema-described function the model can invoke (API calls, file access, app integrations, you name it...). And use 
+  the [`@Tool`](<../documentation/agentkittencore/tool(_:description:)>) macro to just wire up a Swift function with 
+  minimal boilerplate.
+- [ToolDefinition](../documentation/agentkittencore/tooldefinition): Bundle the tools the agent may invoke together 
+  with the policy and hooks that govern them:
+  - [ToolExecutionPolicy](../documentation/agentkittencore/toolexecutionpolicy): Approve, deny, or suspend any tool 
+    call before it runs, based on runtime context you choose.
+  - [ToolHook](../documentation/agentkittencore/toolhook): Transform tool inputs before execution, and reshape or 
+    sanitize results before they reach the model. Hooks run in declaration order.
+- [AgentBehavior](../documentation/agentkittencore/agentbehavior) and 
+  [ToolBehavior](../documentation/agentkittencore/toolbehavior): Set the defaults your agent starts with, including the 
+  system  prompt, inference settings, and compaction policy for the agent; tool availability, step budget, and model 
+  guidance for the tools.
+- [TurnOverrides](../documentation/agentkittencore/turnoverrides): Override any of the behavior defaults on a per-turn 
+  basis. Swap providers, adjust inference settings, restrict tool selection, or prepend context. Also the place to 
+  thread custom typed values ([ExecutionConfigurationKey](../documentation/agentkittencore/executionconfigurationkey) 
+  subscript) through tool approval, hooks, and inference without coupling them to your agent setup.
+- [Validator](../documentation/agentkittencore/validator) / 
+  [JudgeValidator](../documentation/agentkittencore/judgevalidator): Define acceptance criteria for the assistant's 
   response. If validation fails, AgentKitten retries automatically with feedback. Until it passes, or a judge model 
   approves it.
 

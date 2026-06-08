@@ -47,7 +47,8 @@ let provider = InferenceProvider.anthropic()
 
 ### Define the agent
 
-An ``/AgentKittenCore/Agent`` pairs a provider with an ``/AgentKittenCore/AgentBehavior`` that carries the
+[Agent](../../documentation/agentkittencore/agent) pairs a provider with an
+[AgentBehavior](../../documentation/agentkittencore/agentbehavior) that carries the
 system prompt and runtime behavior configuration:
 
 ```swift
@@ -61,8 +62,9 @@ let agent = Agent(
 
 ### Run a turn
 
-Open a session with ``/AgentKittenCore/Agent/makeSession()`` and call 
-``/AgentKittenCore/AgentSession/send(_:userID:validation:)``. Each call returns a ``/AgentKittenCore/Turn`` whose 
+Open a session with [makeSession()](<../../documentation/agentkittencore/agent/makesession()>) and call 
+[send(_:userID:validation:)](<../../documentation/agentkittencore/agentsession/send(_:userid:validation:)>).
+Each call returns a [Turn](../../documentation/agentkittencore/turn) whose 
 `events` sequence streams the response as it is produced:
 
 ```swift
@@ -89,12 +91,13 @@ That's it. You have a running agent!
 From here, explore:
 
 - Tools:
-  - Defining tools with ``/AgentKittenCore/AgentTool`` (or the [`@Tool`](<doc:/AgentKittenCore/Tool(_:description:)>) macro).
-  - Adding tools to your agent with ``/AgentKittenCore/ToolDefinition``.
-  - Controlling the tools agentic behavior (like enablement or budget) with ``/AgentKittenCore/ToolBehavior``,
-  - Or get fancy by adding tool hooks (``/AgentKittenCore/ToolHook``) to your tool definition.
-- Generating structured output via ``/AgentKittenCore/AgentSession/generate(_:userID:validation:)``, 
-- ``/AgentKittenCore/AutomaticCompactionTrigger/percentOfContextWindow(_:)`` enables automatic context compaction for 
+  - Defining tools with [AgentTool](../../documentation/agentkittencore/agenttool) (or the [`@Tool`](<../../documentation/agentkittencore/tool(_:description:)>) macro).
+  - Adding tools to your agent with [ToolDefinition](../../documentation/agentkittencore/tooldefinition).
+  - Controlling the tools agentic behavior (like enablement or budget) with [ToolBehavior](../../documentation/agentkittencore/toolbehavior),
+  - Or get fancy by adding tool hooks ([ToolHook](../../documentation/agentkittencore/toolhook)) to your tool definition.
+- Generating structured output via [generate(_:userID:validation:)](<../../documentation/agentkittencore/agentsession/generate(_:userid:validation:)>), 
+- [percentOfContextWindow(_:)](<../../documentation/agentkittencore/automaticcompactiontrigger/percentofcontextwindow(_:)>)
+  enables automatic context compaction for 
   long conversations.
-- Auditing the agent behavior with its ``/AgentKittenCore/AgentTrace``.
+- Auditing the agent behavior with its [AgentTrace](../../documentation/agentkittencore/agenttrace).
 - More to come!
