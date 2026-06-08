@@ -5,8 +5,10 @@ builder:
       - AgentKitten
       - AgentKittenCore
       - AgentKittenInferenceSupport
+      - AgentKittenInferenceTestSupport
       - AgentKittenAnthropicInference
       - AgentKittenAppleInference
+      - AgentKittenOpenAIInference
     custom_documentation_parameters:
       - --enable-experimental-combined-documentation
       - --enable-experimental-overloaded-symbol-presentation
