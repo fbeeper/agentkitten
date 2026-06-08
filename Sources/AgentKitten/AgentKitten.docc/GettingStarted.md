@@ -13,7 +13,7 @@ Add AgentKitten to your `Package.swift`:
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/fbeeper/agentkitten", from: "0.0.5"),
+    .package(url: "https://github.com/fbeeper/agentkitten", from: "0.0.6"),
 ],
 ```
 
