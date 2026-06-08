@@ -6,5 +6,5 @@
 /// Core building blocks for AgentKitten.
 public enum AgentKittenCore {
     /// Library version identifier.
-    public static let version = "0.0.5"
+    public static let version = "0.0.6"
 }

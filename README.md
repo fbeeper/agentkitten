@@ -132,6 +132,16 @@ for try await event in turn.events {
 }
 ```
 
+## Supported Inference Providers
+
+As of today, AgentKitten ships with 3 optional targets for you to import an utilize:
+
+- Apple Foundation Models: `import AgentKittenAppleInference`
+- Anthropic: `import AgentKittenAnthropicInference`
+- Open AI: `import AgentKittenOpenAIInference` 
+
+The latter options also open the door to defining your custom base URLs to hit your own Anthropic or OpenAI-compatible servers. Which includes handy options for experimentation like using [LM Studio](https://lmstudio.ai) running on your own device.
+
 ## What You Could Build (and some Samples)
 
 Sky is the limit, but let me say that in 2026...
@@ -174,7 +184,6 @@ Gimmicky samples aside, here are some things that are simple to reach for with A
 
 Before dreaming of adding more features, after its initial pre-release, the most important milestones reside on:
 
-- [ ] Improving documentation.
 - [ ] Improve the testing suite and Playground.
 - [ ] Try pursue symmetry between base Agent/Tools behavior and turn overrides (API breaking).
 
@@ -187,7 +196,7 @@ macOS 15+, iOS 17+, tvOS 17+, watchOS 10+, visionOS 1+. Swift 6.
 Add to your `Package.swift`:
 
 ```swift
-.package(url: "https://github.com/fbeeper/agentkitten", from: "0.0.5")
+.package(url: "https://github.com/fbeeper/agentkitten", from: "0.0.6")
 ```
 
 Then add `"AgentKitten"` to your target's dependencies.
