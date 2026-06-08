@@ -139,3 +139,7 @@ Changing the provider of this agent from Antropic to any other provider is as si
 ### Essentials
 
 - <doc:GettingStarted>
+
+### Guides
+
+- <doc:InferenceProviderGuide>
