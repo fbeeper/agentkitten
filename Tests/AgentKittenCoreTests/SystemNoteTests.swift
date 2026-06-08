@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 @testable import AgentKittenCore
+import AgentKittenInferenceTestSupport
 import Testing
 
 @Test func turnNote_prependsToUserMessage_turnCompletes() async throws {

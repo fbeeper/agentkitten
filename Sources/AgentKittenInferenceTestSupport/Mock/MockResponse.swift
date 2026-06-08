@@ -1,6 +1,8 @@
 // SPDX-FileCopyrightText: 2026 AgentKitten Authors
 // SPDX-License-Identifier: Apache-2.0
 
+import AgentKittenCore
+
 /// A canned response item for ``MockInferenceProvider``.
 public enum MockResponse: Sendable {
     /// Streams the given text word-by-word with a small artificial delay.

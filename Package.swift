@@ -75,7 +75,7 @@ let package = Package(
         ),
         .target(
             name: "AgentKittenInferenceTestSupport",
-            dependencies: ["AgentKittenCore"],
+            dependencies: ["AgentKittenCore", .product(name: "Logging", package: "swift-log")],
         ),
         .macro(
             name: "AgentKittenMacros",
@@ -91,6 +91,7 @@ let package = Package(
                 "AgentKittenAnthropicInference",
                 "AgentKittenAppleInference",
                 "AgentKittenOpenAIInference",
+                "AgentKittenInferenceTestSupport",
                 .product(name: "ArgumentParser", package: "swift-argument-parser"),
             ],
             resources: [
@@ -135,12 +136,14 @@ let package = Package(
             name: "AgentKittenCoreTests",
             dependencies: [
                 "AgentKittenCore",
+                "AgentKittenInferenceTestSupport",
             ],
         ),
         .testTarget(
             name: "AgentKittenTests",
             dependencies: [
                 "AgentKitten",
+                "AgentKittenInferenceTestSupport",
             ],
         ),
         .testTarget(

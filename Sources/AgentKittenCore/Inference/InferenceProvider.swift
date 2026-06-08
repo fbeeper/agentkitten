@@ -140,7 +140,6 @@ public enum SessionCompatibility: Sendable {
 ///
 /// ```swift
 /// let provider = InferenceProvider.apple()  // on-device, macOS 26+
-/// let provider = InferenceProvider.mock()   // canned responses for tests
 /// ```
 public struct InferenceProvider<Provider: InferenceProviding>: InferenceProviding {
     /// The concrete session type, forwarded from the wrapped provider.
@@ -202,14 +201,5 @@ public struct InferenceProvider<Provider: InferenceProviding>: InferenceProvidin
             toolSelection: toolSelection,
             inferenceContext: inferenceContext,
         )
-    }
-}
-
-extension InferenceProvider where Provider == MockInferenceProvider {
-    /// A mock provider that returns canned responses.
-    ///
-    /// Useful in tests, previews, and platforms where on-device models are unavailable.
-    public static func mock() -> Self {
-        Self(MockInferenceProvider())
     }
 }
