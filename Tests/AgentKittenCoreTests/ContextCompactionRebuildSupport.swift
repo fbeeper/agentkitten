@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 @testable import AgentKittenCore
+@testable import AgentKittenInferenceTestSupport
 
 struct RebuildingMockProvider: InferenceProviding {
     typealias Session = MockInferenceSession

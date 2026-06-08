@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 @testable import AgentKittenCore
+import AgentKittenInferenceTestSupport
 import Foundation
 
 actor SharedScript {

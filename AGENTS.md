@@ -36,7 +36,6 @@ Source Organization:
       - `Turn` - Entry: `Turn.swift`.
     - `Conversation/` - Message/turn/context model. Entry: `Conversation.swift`.
     - `Inference/` - Provider/sesion protocols & shared types.
-    - `InferenceProviders/` - In-tree mock provider (test-only, not re-exported).
     - `Localization` - Target-specific localization utils.
     - `Tools/` - Tool protocol, registry. Entry: `AgentTool.swift`.
     - `Macros/` - `@Tool`/`@RitchTool` macro surface.
@@ -48,6 +47,7 @@ Source Organization:
   - `AgentKittenAnthropicInference/` - Anthropic HTTP + SSE adapter. Entry: `AnthropicInferenceProvider.swift`.
   - `AgentKittenAppleInference/` - Apple Intelligence adapter. Entry: `AppleInferenceProvider.swift`.
   - `AgentKittenInferenceTestSupport` - Support for evaluation of inference providers. Entry: `InferenceStreamValidator.swift`.
+    - `Mock/` - In-tree mock provider (`MockInferenceProvider`, `InferenceProvider.mock()`). Public, opt-in; not re-exported by the umbrella.
   - `AgentKittenMacros/` - Swift macro plugin. Compile-time codegen for `@Tool`, `@ParameterDescription`. Entry: `Plugin.swift`, `ToolMacro.swift`.
   - `Playground/` - CLI executable. Entry: `main.swift`. Subcommands: `generate`, `chat`, `tools`, `classify`, `chicken`, `pii`, `plan-mode`.
 - `Tests/`

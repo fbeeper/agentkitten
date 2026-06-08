@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 @testable import AgentKittenCore
+import AgentKittenInferenceTestSupport
 import Testing
 
 private let defaultExecutor = ToolExecutor(registry: ToolRegistry())

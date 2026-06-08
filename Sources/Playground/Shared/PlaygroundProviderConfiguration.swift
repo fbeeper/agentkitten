@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import AgentKitten
+import AgentKittenInferenceTestSupport
 import Foundation
 #if canImport(Darwin) || canImport(FoundationNetworking)
 import AgentKittenAnthropicInference
