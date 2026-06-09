@@ -22,6 +22,29 @@
 
 Swift package for building provider-agnostic AI agents on Apple platforms.
 
+> [!IMPORTANT]
+> At WWDC 2026 Apple has presented great improvements to their **Foundation Models framework**: an open `LanguageModel` 
+> protocol, first-party model packages from Anthropic and Google, dynamic profiles for multi-model sessions, on-device 
+> RAG, evaluations, and more.
+>
+> This is exactly the future AgentKitten was betting developers needed. And it is great to see Apple is now officially 
+> supporting this strong foundation for all of us.
+>
+> On software built for versions 27, Foundation Models may be the right substrate for you, and I'd expect it's only 
+> going to get better. Here are some of the great talks from this year's WWDC 2026 on the topic:
+> 
+> - [What’s new in the Foundation Models framework](https://developer.apple.com/videos/play/wwdc2026/241)
+> - [Bring an LLM provider to the Foundation Models framework](https://developer.apple.com/videos/play/wwdc2026/339/)
+> - [Build agentic app experiences with the Foundation Models framework](https://developer.apple.com/videos/play/wwdc2026/242)
+>
+> Now, AgentKitten's job is likely changing, not ending. It will likely stop redefining the abstraction layer and 
+> instead carry the framework's best features *over* the Foundation Models. The things developers still need and Apple 
+> left room for: runtime tool permissions, approval gates and hooks, validation and judge loops... Smaller and sharper. 
+> Still aimed just at what it was born to do... **help developers experiment and build great agents in Apple 
+> platforms.**
+>
+> Expect significant API churn while AgentKitten finds how to better help you! 🐈‍⬛
+
 ## TLDR
 
 AgentKitten gives you standard building blocks for easily creating agents on Apple platforms without you having to reinvent their wheels. 
@@ -179,15 +202,6 @@ Gimmicky samples aside, here are some things that are simple to reach for with A
 - User-generated content is unpredictable by definition. An agent with an image-capable model and your rich tool providing it images can help your app moderate uploads before they go live, help pre-populate alt-text descriptions, or extract structured data from photos. Practical patterns for any app where users upload their own images.
 
   Try it at `swift run Playground tools --image-demo --provider anthropic`
-
-## Roadmap
-
-Before dreaming of adding more features, after its initial pre-release, the most important milestones reside on:
-
-- [ ] Improve the testing suite and Playground.
-- [ ] Try pursue symmetry between base Agent/Tools behavior and turn overrides (API breaking).
-
-Past that, there is a long list of possibilities to make AgentKitten better. Find an initial spill of ideas in [VISION.md](VISION.md).
 
 ## Requirements & Installation
 
